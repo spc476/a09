@@ -6,6 +6,7 @@
 
 #if defined(__clang__)
 #  pragma clang diagnostic ignored "-Wpadded"
+#  pragma clang diagnostic ignored "-Wconversion"
 #endif
 
 #include <stdbool.h>
@@ -24,11 +25,16 @@ enum admode
 
 struct a09
 {
-  FILE    *in;
-  FILE    *out;
-  FILE    *list;
-  tree__s *symtab;
-  char    *namespace;
+  char const *filename;
+  FILE       *in;
+  FILE       *out;
+  FILE       *list;
+  tree__s    *symtab;
+  char       *namespace;
+  size_t      namespacelen;
+  char       *label;
+  size_t      labelsize;
+  bool        debug;
 };
 
 struct symbol
