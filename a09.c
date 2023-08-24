@@ -152,6 +152,18 @@ int skip_space(FILE *in)
 
 /**************************************************************************/
 
+bool skip_to_eoln(FILE *in)
+{
+  int c;
+  
+  do
+    c = fgetc(in);
+  while ((c != EOF) && (c != '\n'));
+  return true;
+}
+
+/**************************************************************************/
+
 static bool parse_line(struct a09 *a09)
 {
   assert(a09 != NULL);
@@ -183,10 +195,7 @@ static bool parse_line(struct a09 *a09)
     return true;
     
   if (c == ';')
-  {
-    do { c = fgetc(a09->in); } while ((c != EOF) && (c != '\n'));
-    return true;
-  }
+    return skip_to_eoln(a09->in);
   
   ungetc(c,a09->in);
   
@@ -200,13 +209,8 @@ static bool parse_line(struct a09 *a09)
     fprintf(stderr,"DEBUG: opcode='%s'\n",op->name);
   
   op->func(op,a09);
-    
-  do
-  {
-    c = fgetc(a09->in);
-  } while ((c != EOF) && (c != '\n'));
-  
-  return true;
+
+  return skip_to_eoln(a09->in);
 }
 
 /**************************************************************************/
