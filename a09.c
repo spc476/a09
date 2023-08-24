@@ -10,34 +10,6 @@
 
 /**************************************************************************/
 
-bool set_namespace(struct a09 *a09,char const *namespace)
-{
-  assert(a09 != NULL);
-
-  free(a09->namespace);
-  
-  if (namespace == NULL)
-  {
-    a09->namespace = malloc(1);
-    if (a09->namespace == NULL)
-      return false;
-    *a09->namespace   = '\0';
-    a09->namespacelen = 0;
-    return true;
-  }
-  
-  size_t len = strlen(namespace) + 2;
-  a09->namespace = malloc(len);
-  if (a09->namespace == NULL)
-    return false;
-  a09->namespacelen = snprintf(a09->namespace,len,"%s.",namespace);
-  if (a09->debug)
-    fprintf(stderr,"DEBUG: set_namespace='%s'\n",a09->namespace);
-  return true;
-}
-
-/**************************************************************************/
-
 bool read_label(struct a09 *a09,char **plabel,size_t *plabelsize,int c)
 {
   assert(a09         != NULL);
@@ -89,10 +61,9 @@ bool read_label(struct a09 *a09,char **plabel,size_t *plabelsize,int c)
 
 static bool parse_label(struct a09 *a09,char **plabel)
 {
-  assert(a09            != NULL);
-  assert(a09->in        != NULL);
-  assert(a09->namespace != NULL);
-  assert(plabel         != NULL);
+  assert(a09     != NULL);
+  assert(a09->in != NULL);
+  assert(plabel  != NULL);
   
   int c = fgetc(a09->in);
   if ((c == '.') || (c == '_') || (c == '$') || isalpha(c))
@@ -100,25 +71,22 @@ static bool parse_label(struct a09 *a09,char **plabel)
     char   *label = NULL;
     size_t  labelsize = 0;
     char   *name = NULL;
-    size_t  len = 0;
     
     if (!read_label(a09,&label,&labelsize,c))
       return false;
     
     if (*label == '.')
     {
-      len  = a09->namespacelen + a09->labelsize + labelsize + 1;
-      name = malloc(len);
-      snprintf(name,len,"%s%s",a09->label,label);
+      name = malloc(a09->labelsize + labelsize + 1);
+      memcpy(name,a09->label,a09->labelsize);
+      memcpy(&name[a09->labelsize],label,labelsize + 1);
     }
     else
     {
-      len  = a09->namespacelen + labelsize + 1;
-      name = malloc(len);
-      snprintf(name,len,"%s%s",a09->namespace,label);
+      name = malloc(labelsize + 1);
+      memcpy(name,label,labelsize + 1);
       free(a09->label);
       a09->label     = strdup(name);
-      a09->labelsize = len - 1;
     }
     
     free(label);
@@ -247,9 +215,8 @@ static bool parse_line(struct a09 *a09)
 
 int main(int argc,char *argv[])
 {
-  struct a09           a09;
-  //struct opcode const *op;
-  int                  rc = 0;
+  struct a09 a09;
+  int        rc = 0;
   
   (void)argc;
   (void)argv;
@@ -263,9 +230,6 @@ int main(int argc,char *argv[])
   a09.symtab       = NULL;
   a09.label        = strdup("");
   a09.labelsize    = 0;
-  a09.namespace    = NULL;
-  a09.namespacelen = 0;
-  set_namespace(&a09,NULL);
   
   while(!feof(a09.in))
   {
