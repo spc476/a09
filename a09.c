@@ -86,7 +86,7 @@ static bool parse_label(struct a09 *a09,char **plabel)
       name = malloc(labelsize + 1);
       memcpy(name,label,labelsize + 1);
       free(a09->label);
-      a09->label     = strdup(name);
+      a09->label = strdup(name);
     }
     
     free(label);
@@ -223,15 +223,15 @@ int main(int argc,char *argv[])
   (void)argc;
   (void)argv;
   
-  a09.debug        = true;
-  a09.filename     = "(stdin)";
-  a09.in           = stdin;
-  a09.out          = fopen("a09.out","wb");
-  a09.lnum         = 0;
-  a09.list         = NULL;
-  a09.symtab       = NULL;
-  a09.label        = strdup("");
-  a09.labelsize    = 0;
+  a09.debug     = true;
+  a09.filename  = "(stdin)";
+  a09.in        = stdin;
+  a09.out       = fopen("a09.out","wb");
+  a09.lnum      = 0;
+  a09.list      = NULL;
+  a09.symtab    = NULL;
+  a09.label     = strdup("");
+  a09.labelsize = 0;
   
   while(!feof(a09.in))
   {
