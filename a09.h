@@ -33,6 +33,7 @@ struct a09
   FILE       *list;
   size_t      lnum;
   tree__s    *symtab;
+  List        symbols;
   char       *label;
   size_t      labelsize;
   bool        debug;
@@ -41,7 +42,8 @@ struct a09
 struct symbol
 {
   tree__s     tree;
-  char const *name;
+  Node        node;
+  char       *name;
   uint16_t    value;
   char const *filename;
   size_t      ldef;

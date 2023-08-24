@@ -17,25 +17,27 @@ struct symbol *symbol_new(void)
   struct symbol *sym = malloc(sizeof(struct symbol));
   if (sym != NULL)
   {
-    sym->tree.left   = NULL;
-    sym->tree.right  = NULL;
-    sym->tree.height = 0;
-    sym->name        = NULL;
-    sym->value       = 0;
-    sym->filename    = NULL;
-    sym->ldef        = 0;
-    sym->o16         = NULL;
-    sym->o16m        = 0;
-    sym->o16i        = 0;
-    sym->o16d        = 4;
-    sym->o8          = NULL;
-    sym->o8m         = 0;
-    sym->o8i         = 0;
-    sym->o8d         = 4;
-    sym->defined     = false;
-    sym->external    = false;
-    sym->equ         = false;
-    sym->set         = false;
+    sym->tree.left    = NULL;
+    sym->tree.right   = NULL;
+    sym->tree.height  = 0;
+    sym->node.ln_Succ = NULL;
+    sym->node.ln_Pred = NULL;
+    sym->name         = NULL;
+    sym->value        = 0;
+    sym->filename     = NULL;
+    sym->ldef         = 0;
+    sym->o16          = NULL;
+    sym->o16m         = 0;
+    sym->o16i         = 0;
+    sym->o16d         = 4;
+    sym->o8           = NULL;
+    sym->o8m          = 0;
+    sym->o8i          = 0;
+    sym->o8d          = 4;
+    sym->defined      = false;
+    sym->external     = false;
+    sym->equ          = false;
+    sym->set          = false;
   }
   return sym;
 }
@@ -93,6 +95,7 @@ struct symbol *symbol_add(struct a09 *a09,char const *name,uint16_t value)
     sym->defined  = true;
     sym->filename = a09->filename;
     sym->ldef     = a09->lnum;
+    ListAddTail(&a09->symbols,&sym->node);
     
     for (size_t i = 0 ; i < sym->o16i ; i++)
     {

@@ -3,7 +3,7 @@
 
 CC = clang -std=c99 -Weverything
 #CC = gcc -std=c99 -pedantic -Wall -Wextra
-CFLAGS = -g -D_GNU_SOURCE -DNDEBUG -O3
+CFLAGS = -g -D_GNU_SOURCE
 LDFLAGS = -g
 LDLIBS = -lcgi6
 

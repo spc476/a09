@@ -1,6 +1,7 @@
 
 /* GPL3+ */
 
+#include <cgilib6/nodelist.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -242,6 +243,7 @@ int main(int argc,char *argv[])
   a09.symtab    = NULL;
   a09.label     = strdup("");
   a09.labelsize = 0;
+  ListInit(&a09.symbols);
   
   while(!feof(a09.in))
   {
@@ -250,6 +252,17 @@ int main(int argc,char *argv[])
       rc = 1;
       break;
     }
+  }
+  
+  for(
+       Node *node = ListRemTail(&a09.symbols);
+       NodeValid(node);
+       node = ListRemTail(&a09.symbols)
+     )
+  {
+    struct symbol *sym = (struct symbol *)((char *)node - offsetof(struct symbol,node));
+    free(sym->name);
+    free(sym);
   }
   
   free(a09.label);
