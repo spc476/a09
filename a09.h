@@ -32,8 +32,6 @@ struct a09
   FILE       *list;
   size_t      lnum;
   tree__s    *symtab;
-  char       *namespace;
-  size_t      namespacelen;
   char       *label;
   size_t      labelsize;
   bool        debug;

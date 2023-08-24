@@ -243,7 +243,6 @@ int main(int argc,char *argv[])
   }
   
   free(a09.label);
-  free(a09.namespace);
   fclose(a09.out);
   return rc;
 }
