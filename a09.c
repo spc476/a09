@@ -1,6 +1,10 @@
 
 /* GPL3+ */
 
+#if defined(__clang__)
+#  pragma clang diagnostic ignored "-Wcast-align"
+#endif
+
 #include <cgilib6/nodelist.h>
 #include <stdio.h>
 #include <string.h>
