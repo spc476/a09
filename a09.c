@@ -136,16 +136,14 @@ static bool parse_op(struct a09 *a09,struct opcode const **pop)
 
 /**************************************************************************/
 
-int skip_space(struct a09 *a09)
+int skip_space(FILE *in)
 {
   int c;
   
   do
   {
-    c = fgetc(a09->in);
-    if (c == EOF)
-      return c;
-    if (c == '\n')
+    c = fgetc(in);
+    if ((c == EOF) || (c == '\n'))
       return c;
   } while (isspace(c));
   
@@ -176,7 +174,7 @@ static bool parse_line(struct a09 *a09)
   // XXX - do something with label
   free(label);
   
-  c = skip_space(a09);
+  c = skip_space(a09->in);
   
   if (c == EOF)
     return true;
