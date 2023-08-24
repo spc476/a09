@@ -1,10 +1,6 @@
 
 /* GPL3+ */
 
-#if defined(__clang__)
-#  pragma clang diagnostic ignored "-Wcast-align"
-#endif
-
 #include <cgilib6/nodelist.h>
 #include <stdio.h>
 #include <string.h>
@@ -264,7 +260,7 @@ int main(int argc,char *argv[])
        node = ListRemTail(&a09.symbols)
      )
   {
-    struct symbol *sym = (struct symbol *)((char *)node - offsetof(struct symbol,node));
+    struct symbol *sym = node2sym(node);
     free(sym->name);
     free(sym);
   }

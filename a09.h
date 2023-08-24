@@ -10,9 +10,11 @@
 #  pragma clang diagnostic ignored "-Wdeclaration-after-statement"
 #endif
 
+#include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include <cgilib6/nodelist.h>
 #include <cgilib6/tree.h>
@@ -80,5 +82,35 @@ extern struct symbol *symbol_find    (struct a09 *,char const *);
 extern struct symbol *symbol_add     (struct a09 *,char const *,uint16_t);
 extern bool           symbol_defer16 (struct symbol *,long);
 extern bool           symbol_defer8  (struct symbol *,long);
+
+/**************************************************************************/
+
+static inline struct symbol *tree2sym(tree__s *tree)
+{
+  assert(tree != NULL);
+#if defined(__clang__)
+#  pragma clang diagnostic push "-Wcast-align"
+#  pragma clang diagnostic ignored "-Wcast-align"
+#endif
+  return (struct symbol *)((char *)tree - offsetof(struct symbol,tree));
+#if defined(__clang__)
+#  pragma clang diagnostic pop "-Wcast-align"
+#endif
+}
+
+/**************************************************************************/
+
+static inline struct symbol *node2sym(Node *node)
+{
+  assert(node != NULL);
+#if defined(__clang__)
+#  pragma clang diagnostic push "-Wcast-align"
+#  pragma clang diagnostic ignored "-Wcast-align"
+#endif
+  return (struct symbol *)((char *)node - offsetof(struct symbol,node));
+#if defined(__clang__)
+#  pragma clang diagnostic pop "-Wcast-align"
+#endif
+}
 
 #endif

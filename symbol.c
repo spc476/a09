@@ -1,10 +1,6 @@
 
 /* GPL3+ */
 
-#if defined(__clang__)
-#  pragma clang diagnostic ignored "-Wcast-align"
-#endif
-
 #include <string.h>
 #include <stdlib.h>
 
@@ -67,7 +63,7 @@ struct symbol *symbol_find(struct a09 *a09,char const *name)
   tree__s *tree = tree_find(a09->symtab,name,symstrcmp);
 
   if (tree)
-    return (struct symbol *)((char *)tree - offsetof(struct symbol,tree));
+    return tree2sym(tree);
 
   struct symbol *sym = symbol_new();
   if (sym != NULL)
