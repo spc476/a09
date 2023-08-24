@@ -85,8 +85,8 @@ static bool parse_label(struct a09 *a09,char **plabel)
   {
     char   *label = NULL;
     size_t  labelsize = 0;
-    char   *name;
-    size_t  len;
+    char   *name = NULL;
+    size_t  len = 0;
     
     if (!read_label(a09,&label,&labelsize,c))
       return false;
@@ -103,9 +103,11 @@ static bool parse_label(struct a09 *a09,char **plabel)
       name = malloc(len);
       snprintf(name,len,"%s%s",a09->namespace,label);
       free(a09->label);
-      a09->label     = name;
+      a09->label     = strdup(name);
       a09->labelsize = len - 1;
     }
+    
+    free(label);
     *plabel = name;
     return true;
   }
@@ -122,11 +124,14 @@ static bool parse_label(struct a09 *a09,char **plabel)
 
 static bool parse_line(struct a09 *a09)
 {
-  char *label;
+  char *label = NULL;
   int   c;
   
   if (!parse_label(a09,&label))
+  {
+    assert(label == NULL);
     return false;
+  }
   
   if (a09->debug)
     if (label != NULL)
@@ -137,6 +142,7 @@ static bool parse_line(struct a09 *a09)
     c = fgetc(a09->in);
   } while ((c != EOF) && (c != '\n'));
   
+  free(label);
   return true;
 }
 

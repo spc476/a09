@@ -10,8 +10,8 @@ LDFLAGS = -g
 
 a09 : a09.o opcodes.o
 
-a09.c : a09.h
-opcodes.c : a09.h
+a09.o : a09.h
+opcodes.o : a09.h
 
 
 
