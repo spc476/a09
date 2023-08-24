@@ -10,22 +10,35 @@
 
 /**************************************************************************/
 
-static bool set_namespace(struct a09 *a09,char const *namespace)
+bool set_namespace(struct a09 *a09,char const *namespace)
 {
-  assert(a09       != NULL);
-  assert(namespace != NULL);
+  assert(a09 != NULL);
+
+  free(a09->namespace);
   
-  size_t len = strlen(namespace) + 1;
+  if (namespace == NULL)
+  {
+    a09->namespace = malloc(1);
+    if (a09->namespace == NULL)
+      return false;
+    *a09->namespace   = '\0';
+    a09->namespacelen = 0;
+    return true;
+  }
+  
+  size_t len = strlen(namespace) + 2;
   a09->namespace = malloc(len);
   if (a09->namespace == NULL)
     return false;
-  memcpy(a09->namespace,namespace,len);
+  a09->namespacelen = snprintf(a09->namespace,len,"%s.",namespace);
+  if (a09->debug)
+    fprintf(stderr,"DEBUG: set_namespace='%s'\n",a09->namespace);
   return true;
 }
 
 /**************************************************************************/
 
-static bool read_label(struct a09 *a09,char **plabel,size_t *plabelsize,int c)
+bool read_label(struct a09 *a09,char **plabel,size_t *plabelsize,int c)
 {
   assert(a09         != NULL);
   assert(a09->in     != NULL);
@@ -58,6 +71,7 @@ static bool read_label(struct a09 *a09,char **plabel,size_t *plabelsize,int c)
   }
   
   line[i++] = '\0';
+  fprintf(stderr,"DEBUG: read-label='%s'\n",line);
   nline     = realloc(line,i);
   
   if (nline != NULL)
@@ -95,7 +109,7 @@ static bool parse_label(struct a09 *a09,char **plabel)
     {
       len  = a09->namespacelen + a09->labelsize + labelsize + 1;
       name = malloc(len);
-      snprintf(name,len,"%s%s%s",a09->namespace,a09->label,label);
+      snprintf(name,len,"%s%s",a09->label,label);
     }
     else
     {
@@ -122,11 +136,65 @@ static bool parse_label(struct a09 *a09,char **plabel)
 
 /**************************************************************************/
 
+static bool parse_op(struct a09 *a09,struct opcode const **pop)
+{
+  assert(a09 != NULL);
+  assert(pop != NULL);
+  
+  char top[10];
+  int  c = 0;
+  
+  for (size_t i = 0 ; i < 10 ; i++)
+  {
+    c = fgetc(a09->in);
+    if (c == EOF) return false;
+    if (isspace(c))
+    {
+      ungetc(c,a09->in);
+      top[i] = '\0';
+      *pop   = op_find(top);
+      return *pop != NULL;
+    }
+    else if (!isalpha(c) && !isdigit(c))
+      break;
+
+    top[i] = toupper(c);
+  }
+  
+  assert(c != 0);
+  ungetc(c,a09->in);
+  return false;
+}
+
+/**************************************************************************/
+
+int skip_space(struct a09 *a09)
+{
+  int c;
+  
+  do
+  {
+    c = fgetc(a09->in);
+    if (c == EOF)
+      return c;
+    if (c == '\n')
+      return c;
+  } while (isspace(c));
+  
+  return c;
+}
+
+/**************************************************************************/
+
 static bool parse_line(struct a09 *a09)
 {
-  char *label = NULL;
-  int   c;
+  assert(a09 != NULL);
   
+  char                *label = NULL;
+  struct opcode const *op;
+  int                  c;
+  
+  a09->lnum++;
   if (!parse_label(a09,&label))
   {
     assert(label == NULL);
@@ -135,14 +203,43 @@ static bool parse_line(struct a09 *a09)
   
   if (a09->debug)
     if (label != NULL)
-      fprintf(stderr,"DEBUG: label='%s'\n",label);
-      
+      fprintf(stderr,"DEBUG: label='%s' line=%zu\n",label,a09->lnum);
+
+  // XXX - do something with label
+  free(label);
+  
+  c = skip_space(a09);
+  
+  if (c == EOF)
+    return true;
+    
+  if (c == '\n')
+    return true;
+    
+  if (c == ';')
+  {
+    do { c = fgetc(a09->in); } while ((c != EOF) && (c != '\n'));
+    return true;
+  }
+  
+  ungetc(c,a09->in);
+  
+  if (!parse_op(a09,&op))
+  {
+    fprintf(stderr,"%s(%zu): unknown opcode\n",a09->filename,a09->lnum);
+    return false;
+  }
+  
+  if (a09->debug)
+    fprintf(stderr,"DEBUG: opcode='%s'\n",op->name);
+  
+  op->func(op,a09);
+    
   do
   {
     c = fgetc(a09->in);
   } while ((c != EOF) && (c != '\n'));
   
-  free(label);
   return true;
 }
 
@@ -157,15 +254,18 @@ int main(int argc,char *argv[])
   (void)argc;
   (void)argv;
   
-  a09.debug     = true;
-  a09.filename  = "";
-  a09.in        = stdin;
-  a09.out       = fopen("a09.out","wb");
-  a09.list      = NULL;
-  a09.symtab    = NULL;
-  a09.label     = strdup("");
-  a09.labelsize = 0;
-  set_namespace(&a09,"");
+  a09.debug        = true;
+  a09.filename     = "(stdin)";
+  a09.in           = stdin;
+  a09.out          = fopen("a09.out","wb");
+  a09.lnum         = 0;
+  a09.list         = NULL;
+  a09.symtab       = NULL;
+  a09.label        = strdup("");
+  a09.labelsize    = 0;
+  a09.namespace    = NULL;
+  a09.namespacelen = 0;
+  set_namespace(&a09,NULL);
   
   while(!feof(a09.in))
   {

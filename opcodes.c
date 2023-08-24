@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "a09.h"
 
@@ -163,6 +164,36 @@ static bool op_exg(struct opcode const *op,struct a09 *a09)
 
 /**************************************************************************/
 
+static bool pseudo_ns(struct opcode const *op,struct a09 *a09)
+{
+  (void)op;
+  assert(a09 != NULL);
+  
+  char *label = NULL;
+  size_t len  = 0;
+  int c       = skip_space(a09);
+  
+  if (!read_label(a09,&label,&len,c))
+  {
+    fprintf(stderr,"%s(%zu): syntax error---label expected\n",a09->filename,a09->lnum);
+    return false;
+  }
+  
+  if (a09->debug)
+    fprintf(stderr,"DEBUG: namespace='%s'\n",label);
+    
+  if (!set_namespace(a09,label))
+  {
+    fprintf(stderr,"%s(%zu): could not set namespace '%s'\n",a09->filename,a09->lnum,label);
+    free(label);
+    return false;
+  }
+  free(label);
+  return true;
+}
+
+/**************************************************************************/
+
 static struct opcode const opcodes[] =
 {
   { "ABX"   , op_inh   , { 0x3A , 0x00 , 0x00 , 0x00 } , 0x00 } ,
@@ -259,6 +290,7 @@ static struct opcode const opcodes[] =
   { "NEGA"  , op_1ab   , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
   { "NEGB"  , op_1ab   , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
   { "NOP"   , op_inh   , { 0x12 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
+  { "NS"    , pseudo_ns, { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
   { "ORA"   , op_8     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
   { "ORB"   , op_8     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
   { "ORCC"  , op_imm   , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
@@ -312,7 +344,16 @@ static int opcode_cmp(void const *needle,void const *haystack)
 struct opcode const *op_find(char const *name)
 {
   assert(name != NULL);
-  return bsearch(name,opcodes,sizeof(opcodes)/sizeof(opcodes[0]),sizeof(opcodes[0]),opcode_cmp);
+
+  struct opcode const *op = bsearch(
+        name,
+        opcodes,
+        sizeof(opcodes)/sizeof(opcodes[0]),
+        sizeof(opcodes[0]),
+        opcode_cmp
+  );
+
+  return op;
 }
 
 /**************************************************************************/

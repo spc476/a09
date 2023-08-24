@@ -30,6 +30,7 @@ struct a09
   FILE       *in;
   FILE       *out;
   FILE       *list;
+  size_t      lnum;
   tree__s    *symtab;
   char       *namespace;
   size_t      namespacelen;
@@ -62,6 +63,9 @@ struct opcode
   unsigned char   page;
 };
 
-struct opcode const *op_find(char const *);
+extern bool                 set_namespace(struct a09 *,char const *);
+extern bool                 read_label   (struct a09 *,char **,size_t *,int);
+extern int                  skip_space   (struct a09 *);
+extern struct opcode const *op_find      (char const *);
 
 #endif
