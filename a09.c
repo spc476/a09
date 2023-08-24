@@ -66,7 +66,7 @@ static bool parse_label(struct a09 *a09,char **plabel)
   assert(plabel  != NULL);
   
   int c = fgetc(a09->in);
-  if ((c == '.') || (c == '_') || (c == '$') || isalpha(c))
+  if ((c == '.') || (c == '_') || isalpha(c))
   {
     char   *label = NULL;
     size_t  labelsize = 0;
