@@ -63,7 +63,8 @@ struct opcode
 
 extern bool                 set_namespace(struct a09 *,char const *);
 extern bool                 read_label   (struct a09 *,char **,size_t *,int);
-extern int                  skip_space   (struct a09 *);
+extern int                  skip_space   (FILE *);
+extern bool                 skip_to_eoln (FILE *);
 extern struct opcode const *op_find      (char const *);
 
 #endif
