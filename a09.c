@@ -43,7 +43,6 @@ bool read_label(struct a09 *a09,char **plabel,size_t *plabelsize,int c)
   }
   
   line[i++] = '\0';
-  fprintf(stderr,"DEBUG: read-label='%s'\n",line);
   nline     = realloc(line,i);
   
   if (nline != NULL)
@@ -184,18 +183,29 @@ static bool parse_line(struct a09 *a09)
       fprintf(stderr,"DEBUG: label='%s' line=%zu\n",label,a09->lnum);
 
   // XXX - do something with label
-  free(label);
   
   c = skip_space(a09->in);
   
   if (c == EOF)
+  {
+    // XXX - add label?
+    free(label);
     return true;
-    
+  }
+  
   if (c == '\n')
+  {
+    // XXX - add label?
+    free(label);
     return true;
-    
+  }
+  
   if (c == ';')
+  {
+    // XXX - add label?
+    free(label);
     return skip_to_eoln(a09->in);
+  }
   
   ungetc(c,a09->in);
   
@@ -208,8 +218,8 @@ static bool parse_line(struct a09 *a09)
   if (a09->debug)
     fprintf(stderr,"DEBUG: opcode='%s'\n",op->name);
   
-  op->func(op,a09);
-
+  op->func(op,label,a09);
+  free(label);
   return skip_to_eoln(a09->in);
 }
 
@@ -223,7 +233,7 @@ int main(int argc,char *argv[])
   (void)argc;
   (void)argv;
   
-  a09.debug     = true;
+  a09.debug     = false;
   a09.filename  = "(stdin)";
   a09.in        = stdin;
   a09.out       = fopen("a09.out","wb");

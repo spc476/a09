@@ -3,17 +3,17 @@
 
 CC = clang -std=c99 -Weverything
 #CC = gcc -std=c99 -pedantic -Wall -Wextra
-CFLAGS = -g -D_GNU_SOURCE
+CFLAGS = -g -D_GNU_SOURCE -DNDEBUG -O3
 LDFLAGS = -g
+LDLIBS = -lcgi6
 
 .PHONY: clean
 
-a09 : a09.o opcodes.o
+a09 : a09.o opcodes.o symbol.o
 
 a09.o : a09.h
 opcodes.o : a09.h
-
-
+symbol.o : a09.h
 
 clean:
 	$(RM) $(shell find . -name '*.o')
