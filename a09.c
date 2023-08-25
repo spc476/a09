@@ -11,6 +11,57 @@
 
 /**************************************************************************/
 
+static bool append_char(char **pbuf,size_t *psz,size_t *pread,int c)
+{
+  if (*pread == *psz)
+  {
+    *psz += 1024;
+    char *n = realloc(*pbuf,*psz);
+    if (n == NULL)
+      return false;
+    *pbuf = n;
+  }
+  
+  (*pbuf)[(*pread++)] = c;
+  return true;
+}
+
+/**************************************************************************/
+
+bool read_line(FILE *in,char **pbuf,size_t *psz,size_t *pread)
+{
+  assert(in    != NULL);
+  assert(pbuf  != NULL);
+  assert(psz   != NULL);
+  assert(pread != NULL);
+  
+  int c;
+  *pread = 0;
+  
+  while(!feof(in))
+  {
+    c = fgetc(in);
+    if (c == EOF) break;
+    if (c == '\n') break;
+//    if (c == '\t')
+//    {
+//      for (size_t num = 8 - (*pread & 7) , j = 0 ; j < num ; j++)
+//        if (!append_char(pbuf,psz,pread,' '))
+//          return false;
+//    }
+//    else
+//    {
+      if (!append_char(pbuf,psz,pread,c))
+        return false;
+//    }
+  }
+  
+  (*pbuf)[*pread] = '\0';
+  return true;
+}
+
+/**************************************************************************/
+
 bool read_label(struct a09 *a09,char **plabel,size_t *plabelsize,int c)
 {
   assert(a09         != NULL);
@@ -245,8 +296,24 @@ int main(int argc,char *argv[])
   a09.labelsize = 0;
   ListInit(&a09.symbols);
   
+  char *buffer = NULL;
+  size_t size = 0;
+  size_t len;
+  
   while(!feof(a09.in))
   {
+    read_line(stdin,&buffer,&size,&len);
+    puts(buffer);
+  }    
+    
+    
+    
+  
+  
+#if 0
+  
+  
+  
     if (!parse_line(&a09))
     {
       rc = 1;
@@ -267,5 +334,6 @@ int main(int argc,char *argv[])
   
   free(a09.label);
   fclose(a09.out);
+#endif
   return rc;
 }
