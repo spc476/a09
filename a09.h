@@ -29,7 +29,9 @@ enum admode
 
 struct a09
 {
-  char const *filename;
+  char const *infile;
+  char const *outfile;
+  char const *listfile;
   FILE       *in;
   FILE       *out;
   FILE       *list;

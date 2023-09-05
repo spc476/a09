@@ -15,20 +15,23 @@ static bool append_char(char **pbuf,size_t *psz,size_t *pread,int c)
 {
   if (*pread == *psz)
   {
-    *psz += 1024;
+    (*psz) += 1024;
     char *n = realloc(*pbuf,*psz);
     if (n == NULL)
       return false;
     *pbuf = n;
   }
   
-  (*pbuf)[(*pread++)] = c;
+  if (c)
+    (*pbuf)[(*pread)++] = c;
+  else
+    (*pbuf)[(*pread)] = c;
   return true;
 }
 
 /**************************************************************************/
 
-bool read_line(FILE *in,char **pbuf,size_t *psz,size_t *pread)
+static bool read_line(FILE *in,char **pbuf,size_t *psz,size_t *pread)
 {
   assert(in    != NULL);
   assert(pbuf  != NULL);
@@ -43,21 +46,20 @@ bool read_line(FILE *in,char **pbuf,size_t *psz,size_t *pread)
     c = fgetc(in);
     if (c == EOF) break;
     if (c == '\n') break;
-//    if (c == '\t')
-//    {
-//      for (size_t num = 8 - (*pread & 7) , j = 0 ; j < num ; j++)
-//        if (!append_char(pbuf,psz,pread,' '))
-//          return false;
-//    }
-//    else
-//    {
+    if (c == '\t')
+    {
+      for (size_t num = 8 - (*pread & 7) , j = 0 ; j < num ; j++)
+        if (!append_char(pbuf,psz,pread,' '))
+          return false;
+    }
+    else
+    {
       if (!append_char(pbuf,psz,pread,c))
         return false;
-//    }
+    }
   }
   
-  (*pbuf)[*pread] = '\0';
-  return true;
+  return append_char(pbuf,psz,pread,'\0');
 }
 
 /**************************************************************************/
@@ -83,7 +85,7 @@ bool read_label(struct a09 *a09,char **plabel,size_t *plabelsize,int c)
       nline  = realloc(line,max);
       if (nline == NULL)
       {
-        perror(a09->filename);
+        perror(a09->infile);
         free(line);
         return false;
       }
@@ -263,7 +265,7 @@ static bool parse_line(struct a09 *a09)
   
   if (!parse_op(a09,&op))
   {
-    fprintf(stderr,"%s(%zu): unknown opcode\n",a09->filename,a09->lnum);
+    fprintf(stderr,"%s(%zu): unknown opcode\n",a09->infile,a09->lnum);
     return false;
   }
   
@@ -277,28 +279,98 @@ static bool parse_line(struct a09 *a09)
 
 /**************************************************************************/
 
+static int parse_command(int argc,char *argv[],struct a09 *a09)
+{
+  int i;
+  
+  assert(argc >= 1);
+  assert(argv != NULL);
+  assert(a09  != NULL);
+  
+  for (i = 1 ; i < argc ; i++)
+  {
+    if (argv[i][0] == '-')
+    {
+      switch(argv[i][1])
+      {
+        case 'o':
+             if (argv[i][2] == '\0')
+               a09->outfile = argv[++i];
+             else
+               a09->outfile = argv[i][2];
+             break;
+             
+        case 'l':
+             if (argv[i][2] == '\0')
+               a09->listfile = argv[++i];
+             else
+               a09->listfile = argv[i][2];
+             break;
+             
+        case 'h':
+        default:
+             fprintf(
+                      stderr,
+                      "usage: [options] [files...]\n"
+                      "\t-o filename\toutput filename\n"
+                      "\t-o listfile\tlist filename\n"
+                      "\t-h\thelp (this text)\n"
+                    );
+             exit(1);
+      }
+    }
+    else
+      break;    
+  }
+  
+  return i;
+}
+
+/**************************************************************************/
+
 int main(int argc,char *argv[])
 {
-  struct a09 a09;
-  int        rc = 0;
+  char       *buffer = NULL;
+  size_t      size   = 0;
+  size_t      len;
+  int         fi;
+  int         rc     = 0;
+  struct a09  a09    =
+  {
+    .infile    = NULL,
+    .outfile   = "a09.out",
+    .listfile  = NULL,
+    .in        = NULL,
+    .out       = NULL,
+    .list      = NULL,
+    .lnum      = 0,
+    .symtab    = NULL,
+    .label     = NULL,
+    .labelsize = 0,
+    .debug     = false,
+  };
   
-  (void)argc;
-  (void)argv;
-  
-  a09.debug     = false;
-  a09.filename  = "(stdin)";
-  a09.in        = stdin;
-  a09.out       = fopen("a09.out","wb");
-  a09.lnum      = 0;
-  a09.list      = NULL;
-  a09.symtab    = NULL;
-  a09.label     = strdup("");
-  a09.labelsize = 0;
   ListInit(&a09.symbols);
+  fi = parse_command(argc,argv,&a09);
+  a09.in = stdin;
   
-  char *buffer = NULL;
-  size_t size = 0;
-  size_t len;
+  fprintf(
+           stderr,
+           "infile   = '%s'\n"
+           "outfile  = '%s'\n"
+           "listfile = '%s'\n"
+           "",
+           a09.infile   ? a09.infile   : "",
+           a09.outfile  ? a09.outfile  : "",
+           a09.listfile ? a09.listfile : ""
+  );
+  
+  if (fi == argc)
+  {
+    fprintf(stderr,"no input file specified\n");
+    exit(1);
+  }
+  
   
   while(!feof(a09.in))
   {

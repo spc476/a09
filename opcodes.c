@@ -44,13 +44,13 @@ static bool op_8(struct opcode const *op,char const *label,struct a09 *a09)
   
   if ((c != '.') && (c != '_') && !isalpha(c))
   {
-    fprintf(stderr,"%s(%zu): error: bad label\n",a09->filename,a09->lnum);
+    fprintf(stderr,"%s(%zu): error: bad label\n",a09->infile,a09->lnum);
     return false;
   }
   
   if (!read_label(a09,&target,&targetsize,c))
   {
-    fprintf(stderr,"%s(%zu): error: failure to read label\n",a09->filename,a09->lnum);
+    fprintf(stderr,"%s(%zu): error: failure to read label\n",a09->infile,a09->lnum);
     return false;
   }
   
@@ -59,7 +59,7 @@ static bool op_8(struct opcode const *op,char const *label,struct a09 *a09)
   
   if (sym == NULL)
   {
-    fprintf(stderr,"%s(%zu): error: symbol error\n",a09->filename,a09->lnum);
+    fprintf(stderr,"%s(%zu): error: symbol error\n",a09->infile,a09->lnum);
     return false;
   }
   
@@ -135,13 +135,13 @@ static bool op_1(struct opcode const *op,char const *label,struct a09 *a09)
   
   if ((c != '.') && (c != '_') && !isalpha(c))
   {
-    fprintf(stderr,"%s(%zu): error: bad label\n",a09->filename,a09->lnum);
+    fprintf(stderr,"%s(%zu): error: bad label\n",a09->infile,a09->lnum);
     return false;
   }
   
   if (!read_label(a09,&target,&targetsize,c))
   {
-    fprintf(stderr,"%s(%zu): error: failure to read label\n",a09->filename,a09->lnum);
+    fprintf(stderr,"%s(%zu): error: failure to read label\n",a09->infile,a09->lnum);
     return false;
   }
   
@@ -150,7 +150,7 @@ static bool op_1(struct opcode const *op,char const *label,struct a09 *a09)
   
   if (sym == NULL)
   {
-    fprintf(stderr,"%s(%zu): error: symbol error\n",a09->filename,a09->lnum);
+    fprintf(stderr,"%s(%zu): error: symbol error\n",a09->infile,a09->lnum);
     return false;
   }
   
@@ -268,7 +268,7 @@ static bool pseudo_equ(struct opcode const *op,char const *label,struct a09 *a09
 
   if (label == NULL)
   {
-    fprintf(stderr,"%s(%zu): error: missing label for EQU\n",a09->filename,a09->lnum);
+    fprintf(stderr,"%s(%zu): error: missing label for EQU\n",a09->infile,a09->lnum);
     return false;
   }
     

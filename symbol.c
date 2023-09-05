@@ -89,7 +89,7 @@ struct symbol *symbol_add(struct a09 *a09,char const *name,uint16_t value)
   {
     sym->value    = value;
     sym->defined  = true;
-    sym->filename = a09->filename;
+    sym->filename = a09->infile;
     sym->ldef     = a09->lnum;
     ListAddTail(&a09->symbols,&sym->node);
     
@@ -102,13 +102,13 @@ struct symbol *symbol_add(struct a09 *a09,char const *name,uint16_t value)
       
       if (fseek(a09->out,sym->o16[i],SEEK_SET) != 0)
       {
-        perror(a09->filename);
+        perror(a09->infile);
         return NULL;
       }
       
       if (fwrite(buffer,1,2,a09->out) != 2)
       {
-        perror(a09->filename);
+        perror(a09->infile);
         return NULL;
       }
     }
@@ -121,7 +121,7 @@ struct symbol *symbol_add(struct a09 *a09,char const *name,uint16_t value)
     
     {
       if (((value >> 8) != 255) && ((value >> 8) != 0))
-        fprintf(stderr,"%s(%zu): warning: truncating '%s' to 8-bit value\n",a09->filename,a09->lnum,name);
+        fprintf(stderr,"%s(%zu): warning: truncating '%s' to 8-bit value\n",a09->infile,a09->lnum,name);
     }
     
     for (size_t i = 0 ; i < sym->o8i ; i++)
@@ -131,13 +131,13 @@ struct symbol *symbol_add(struct a09 *a09,char const *name,uint16_t value)
       buffer[0] = value & 255;
       if (fseek(a09->out,sym->o8[i],SEEK_SET) != 0)
       {
-        perror(a09->filename);
+        perror(a09->infile);
         return NULL;
       }
       
       if (fwrite(buffer,1,1,a09->out) != 1)
       {
-        perror(a09->filename);
+        perror(a09->infile);
         return NULL;
       }
     }
@@ -154,7 +154,7 @@ struct symbol *symbol_add(struct a09 *a09,char const *name,uint16_t value)
       sym->value = value;
     else
     {
-      fprintf(stderr,"%s(%zu): error: '%s' already defined on line %zu\n",a09->filename,a09->lnum,name,sym->ldef);
+      fprintf(stderr,"%s(%zu): error: '%s' already defined on line %zu\n",a09->infile,a09->lnum,name,sym->ldef);
       return NULL;
     }
   }
