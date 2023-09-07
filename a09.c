@@ -381,17 +381,6 @@ int main(int argc,char *argv[])
   fi = parse_command(argc,argv,&a09);
   a09.in = stdin;
   
-  fprintf(
-           stderr,
-           "infile   = '%s'\n"
-           "outfile  = '%s'\n"
-           "listfile = '%s'\n"
-           "",
-           a09.infile   ? a09.infile   : "",
-           a09.outfile  ? a09.outfile  : "",
-           a09.listfile ? a09.listfile : ""
-  );
-  
   if (fi == argc)
   {
     fprintf(stderr,"no input file specified\n");
