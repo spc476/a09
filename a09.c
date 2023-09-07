@@ -318,14 +318,14 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              if (argv[i][2] == '\0')
                a09->outfile = argv[++i];
              else
-               a09->outfile = argv[i][2];
+               a09->outfile = &argv[i][2];
              break;
              
         case 'l':
              if (argv[i][2] == '\0')
                a09->listfile = argv[++i];
              else
-               a09->listfile = argv[i][2];
+               a09->listfile = &argv[i][2];
              break;
              
         case 'h':
