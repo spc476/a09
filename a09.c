@@ -415,11 +415,14 @@ int main(int argc,char *argv[])
     exit(1);
   }
   
-  a09.list = fopen(a09.listfile,"w");
-  if (a09.list == NULL)
+  if (a09.listfile != NULL)
   {
-    perror(a09.listfile);
-    exit(1);
+    a09.list = fopen(a09.listfile,"w");
+    if (a09.list == NULL)
+    {
+      perror(a09.listfile);
+      exit(1);
+    }
   }
   
   rc = assemble_pass(&a09,2);
