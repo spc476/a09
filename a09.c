@@ -164,8 +164,7 @@ static bool parse_op(struct a09 *a09,struct buffer *buffer,struct opcode const *
   for (size_t i = 0 ; i < 10 ; i++)
   {
     c = buffer->buf[buffer->ridx];
-    if (c == '\0') return false;
-    if (isspace(c))
+    if (isspace(c) || (c == '\0'))
     {    
       top[i] = '\0';
       *pop   = op_find(top);
