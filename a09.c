@@ -367,7 +367,7 @@ int main(int argc,char *argv[])
     .label     = NULL,
     .labelsize = 0,
     .pc        = 0,
-    .debug     = true,
+    .debug     = false,
     .inbuf     =
     {
       .buf   = NULL,
