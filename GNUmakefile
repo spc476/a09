@@ -18,5 +18,5 @@ symbol.o : a09.h
 clean:
 	$(RM) $(shell find . -name '*.o')
 	$(RM) $(shell find . -name '*~')
-	$(RM) $(shell find . -name '*.out')
+	$(RM) $(shell find . -name '*.obj') $(shell find . -name '*.list')
 	$(RM) a09
