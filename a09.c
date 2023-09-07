@@ -328,6 +328,10 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
                a09->listfile = &argv[i][2];
              break;
              
+        case 'd':
+             a09->debug = true;
+             break;
+             
         case 'h':
         default:
              fprintf(
@@ -335,7 +339,8 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
                       "usage: [options] [files...]\n"
                       "\t-o filename\toutput filename\n"
                       "\t-o listfile\tlist filename\n"
-                      "\t-h\thelp (this text)\n"
+                      "\t-d\t\tdebug output\n"
+                      "\t-h\t\thelp (this text)\n"
                     );
              exit(1);
       }
