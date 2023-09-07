@@ -199,6 +199,51 @@ char skip_space(struct buffer *buffer)
 
 /**************************************************************************/
 
+static bool print_list(struct a09 *a09,struct opcdata *opd)
+{
+  assert(a09 != NULL);
+  assert(opd != NULL);
+  
+  if (a09->list != NULL)
+  {
+    if (opd->sz == 0)
+      fprintf(a09->list,"                 ");
+    else
+    {
+      size_t i = 0; // index into opd->bytes[]
+      size_t c = 0; // # byte columns printed
+      
+      fprintf(a09->list,"%04X %02X",a09->pc,opd->bytes[i++]);
+      c++;
+      
+      if ((opd->bytes[0] == 0x10) || (opd->bytes[0] == 0x11))
+      {
+        fprintf(a09->list,"%02X  ",opd->bytes[i++]);
+        c++;
+      }
+      else
+      {
+        fprintf(a09->list,"    ");
+        c++;
+      }
+      
+      for ( ; i < opd->sz  ; i++)
+      {
+        fprintf(a09->list,"%02X",opd->bytes[i]);
+        c++;
+      }
+      
+      for ( ; c < 5 ; c++)
+        fprintf(a09->list,"  ");
+    }
+    
+    fprintf(a09->list," %5zu | %s\n",a09->lnum,a09->inbuf.buf);
+  }
+  return true;
+}
+
+/**************************************************************************/
+
 static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
 {
   assert(a09    != NULL);
@@ -208,6 +253,16 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   char                *label = NULL;
   struct opcode const *op;
   int                  c;
+  bool                 rc;
+  struct opcdata       opd =
+  {
+    .a09    = a09,
+    .op     = NULL,
+    .buffer = &a09->inbuf,
+    .label  = NULL,
+    .pass   = pass,
+    .sz     = 0,
+  };
   
   if (!parse_label(&label,&a09->inbuf,a09))
   {
@@ -227,14 +282,14 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   {
     // XXX - add label?
     free(label);
-    return true;
+    return print_list(a09,&opd);
   }
   
   if (c == ';')
   {
     // XXX - add label?
     free(label);
-    return true;
+    return print_list(a09,&opd);
   }
   
   a09->inbuf.ridx--; // ungetc()
@@ -245,22 +300,18 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     return false;
   }
   
+  opd.op    = op;
+  opd.label = label;
+  
   if (a09->debug)
     fprintf(stderr,"DEBUG: opcode='%s'\n",op->name);
   
-  struct opcdata opd =
-  {
-    .a09 = a09,
-    .op  = op,
-    .buffer = &a09->inbuf,
-    .label  = label,
-    .pass   = pass,
-    .sz     = 0,
-  };
-  bool rc = op->func(&opd);
+  rc = op->func(&opd);
   
   if (rc)
   {
+    print_list(a09,&opd);
+    
     a09->pc += opd.sz;
     if ((pass == 2) && (opd.sz > 0))
     {
@@ -404,8 +455,10 @@ int main(int argc,char *argv[])
     
   rewind(a09.in);
   
-  a09.pc  = 0;
-  a09.out = fopen(a09.outfile,"wb");
+  a09.lnum = 0;
+  a09.pc   = 0;
+  a09.out  = fopen(a09.outfile,"wb");
+  
   if (a09.out == NULL)
   {
     perror(a09.outfile);
@@ -422,6 +475,9 @@ int main(int argc,char *argv[])
     }
   }
   
+  if (a09.list != NULL)
+    fprintf(a09.list,"                        | FILE \"%s\"\n",a09.infile);
+    
   rc = assemble_pass(&a09,2);
   if (a09.list) fclose(a09.list);
   fclose(a09.out);

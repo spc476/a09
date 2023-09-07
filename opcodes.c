@@ -88,8 +88,17 @@ static bool op_8s(struct opcdata *opd)
 
 static bool op_16(struct opcdata *opd)
 {
-  (void)opd;
-  return false;
+  assert(opd     != NULL);
+  assert(opd->sz == 0);
+  
+  if (opd->op->page)
+    opd->bytes[opd->sz++] = opd->op->page;
+  
+  opd->bytes[opd->sz++] = opd->op->opcode[2];
+  opd->bytes[opd->sz++] = 0x9F;
+  opd->bytes[opd->sz++] = 0xFF;
+  opd->bytes[opd->sz++] = 0x00;
+  return true;
 }
 
 /**************************************************************************/
@@ -333,8 +342,8 @@ static struct opcode const opcodes[] =
   { "LDA"   , op_8       , { 0x00 , 0x00 , 0x00 , 0xB6 } , 0x00 } ,
   { "LDB"   , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
   { "LDD"   , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "LDS"   , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "LDU"   , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
+  { "LDS"   , op_16      , { 0x00 , 0x00 , 0xEE , 0x00 } , 0x11 } ,
+  { "LDU"   , op_16      , { 0x00 , 0x00 , 0xEE , 0x00 } , 0x00 } ,
   { "LDX"   , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
   { "LDY"   , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
   { "LEAS"  , op_lea     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
