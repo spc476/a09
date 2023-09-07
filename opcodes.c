@@ -12,267 +12,241 @@
 
 /**************************************************************************/
 
-static bool op_inh(struct opcode const *op,char const *label,struct a09 *a09)
+static bool op_inh(struct opcdata *opd)
 {
-  assert(op       != NULL);
-  assert(a09      != NULL);
-  assert(a09->out != NULL);
+  assert(opd     != NULL);
+  assert(opd->sz == 0);
   
-  (void)label;
-  if (op->page)
+  if (opd->op->page)
+    opd->bytes[opd->sz++] = opd->op->page;
+  
+  opd->bytes[opd->sz++] = opd->op->opcode[0];
+  return true;  
+}
+
+/**************************************************************************/
+
+static bool op_8(struct opcdata *opd)
+{
+  assert(opd         != NULL);
+  assert(opd->a09    != NULL);
+  assert(opd->buffer != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  struct symbol *sym;
+  uint16_t       value;
+  char          *target     = NULL;
+  size_t         targetsize = 0;
+  char           c          = skip_space(opd->buffer);
+  
+  if ((c != '.') && (c != '_') && !isalpha(c))
   {
-    if (fwrite(&op->page,1,1,a09->out) != 1)
-      return false;
-  }
-  if (fwrite(&op->opcode[0],1,1,a09->out) != 1)
+    fprintf(stderr,"%s(%zu): error: bad label\n",opd->a09->infile,opd->a09->lnum);
     return false;
+  }
+  
+  if (!read_label(opd->buffer,&target,&targetsize,c))
+  {
+    fprintf(stderr,"%s(%zu): error: failure to read label\n",opd->a09->infile,opd->a09->lnum);
+    return false;
+  }
+  
+  sym = symbol_find(opd->a09,target);
+  free(target);
+  
+  if (sym == NULL)
+  {
+    if (opd->pass == 2)
+    {
+      fprintf(stderr,"%s(%zu): error: symbol error\n",opd->a09->infile,opd->a09->lnum);
+      return false;
+    }
+    
+    value = 0;
+  }
+  else
+    value = sym->value;
+  
+  if (opd->op->page)
+    opd->bytes[opd->sz++] = opd->op->page;
+    
+  opd->bytes[opd->sz++] = opd->op->opcode[3];
+  opd->bytes[opd->sz++] = value >> 8;
+  opd->bytes[opd->sz++] = value & 255;  
   return true;
 }
 
 /**************************************************************************/
 
-static bool op_8(struct opcode const *op,char const *label,struct a09 *a09)
+static bool op_8s(struct opcdata *opd)
 {
-  assert(op != NULL);
-  (void)label;
-  assert(a09 != NULL);
+  (void)opd;
+  return false;
+}
 
+/**************************************************************************/
+
+static bool op_16(struct opcdata *opd)
+{
+  (void)opd;
+  return false;
+}
+
+/**************************************************************************/
+
+static bool op_16s(struct opcdata *opd)
+{
+  (void)opd;
+  return false;
+}
+
+/**************************************************************************/
+
+static bool op_imm(struct opcdata *opd)
+{
+  (void)opd;
+  return false;
+}
+
+/**************************************************************************/
+
+static bool op_1(struct opcdata *opd)
+{
+  assert(opd         != NULL);
+  assert(opd->a09    != NULL);
+  assert(opd->buffer != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
   struct symbol *sym;
+  uint16_t       value;
   char          *target     = NULL;
   size_t         targetsize = 0;
-  int            c = skip_space(a09->in);
+  char           c = skip_space(opd->buffer);
   
   if ((c != '.') && (c != '_') && !isalpha(c))
   {
-    fprintf(stderr,"%s(%zu): error: bad label\n",a09->infile,a09->lnum);
+    fprintf(stderr,"%s(%zu): error: bad label\n",opd->a09->infile,opd->a09->lnum);
     return false;
   }
   
-  if (!read_label(a09,&target,&targetsize,c))
+  if (!read_label(opd->buffer,&target,&targetsize,c))
   {
-    fprintf(stderr,"%s(%zu): error: failure to read label\n",a09->infile,a09->lnum);
+    fprintf(stderr,"%s(%zu): error: failure to read label\n",opd->a09->infile,opd->a09->lnum);
     return false;
   }
   
-  sym = symbol_find(a09,target);
+  sym = symbol_find(opd->a09,target);
   free(target);
   
   if (sym == NULL)
   {
-    fprintf(stderr,"%s(%zu): error: symbol error\n",a09->infile,a09->lnum);
-    return false;
-  }
-  
-  if (op->page)
-  {
-    if (fwrite(&op->page,1,1,a09->out) != 1)
+    if (opd->pass == 2)
+    {
+      fprintf(stderr,"%s(%zu): error: symbol error\n",opd->a09->infile,opd->a09->lnum);
       return false;
-  }
-  if (fwrite(&op->opcode[3],1,1,a09->out) != 1)
-    return false;
-   
-  if (!sym->defined)
-    symbol_defer16(sym,ftell(a09->out));
-  
-  unsigned char v[2];
-  v[0] = sym->value >> 8;
-  v[1] = sym->value & 255;
-  return fwrite(&v,1,2,a09->out) == 2;
-}
-
-/**************************************************************************/
-
-static bool op_8s(struct opcode const *op,char const *label,struct a09 *a09)
-{
-  (void)op;
-  (void)label;
-  (void)a09;
-  return false;
-}
-
-/**************************************************************************/
-
-static bool op_16(struct opcode const *op,char const *label,struct a09 *a09)
-{
-  (void)op;
-  (void)label;
-  (void)a09;
-  return false;
-}
-
-/**************************************************************************/
-
-static bool op_16s(struct opcode const *op,char const *label,struct a09 *a09)
-{
-  (void)op;
-  (void)label;
-  (void)a09;
-  return false;
-}
-
-/**************************************************************************/
-
-static bool op_imm(struct opcode const *op,char const *label,struct a09 *a09)
-{
-  (void)op;
-  (void)label;
-  (void)a09;
-  return false;
-}
-
-/**************************************************************************/
-
-static bool op_1(struct opcode const *op,char const *label,struct a09 *a09)
-{
-  assert(op    != NULL);
-  (void)label;
-  assert(a09   != NULL);
-  
-  struct symbol *sym;
-  char          *target     = NULL;
-  size_t         targetsize = 0;
-  int            c = skip_space(a09->in);
-  
-  if ((c != '.') && (c != '_') && !isalpha(c))
-  {
-    fprintf(stderr,"%s(%zu): error: bad label\n",a09->infile,a09->lnum);
-    return false;
-  }
-  
-  if (!read_label(a09,&target,&targetsize,c))
-  {
-    fprintf(stderr,"%s(%zu): error: failure to read label\n",a09->infile,a09->lnum);
-    return false;
-  }
-  
-  sym = symbol_find(a09,target);
-  free(target);
-  
-  if (sym == NULL)
-  {
-    fprintf(stderr,"%s(%zu): error: symbol error\n",a09->infile,a09->lnum);
-    return false;
-  }
-  
-  if (op->page)
-  {
-    if (fwrite(&op->page,1,1,a09->out) != 1)
-      return false;
-  }
-  if (fwrite(&op->opcode[0],1,1,a09->out) != 1)
-    return false;
-   
-  if (!sym->defined)
-    symbol_defer8(sym,ftell(a09->out));
-  
-  unsigned char v = sym->value & 255;
-  return fwrite(&v,1,1,a09->out) == 1;
-}
-
-/**************************************************************************/
-
-static bool op_1ab(struct opcode const *op,char const *label,struct a09 *a09)
-{
-  (void)op;
-  (void)label;
-  (void)a09;
-  return false;
-}
-
-/**************************************************************************/
-
-static bool op_br(struct opcode const *op,char const *label,struct a09 *a09)
-{
-  (void)op;
-  (void)label;
-  (void)a09;
-  return false;
-}
-
-/**************************************************************************/
-
-static bool op_lbr(struct opcode const *op,char const *label,struct a09 *a09)
-{
-  (void)op;
-  (void)label;
-  (void)a09;
-  return false;
-}
-
-/**************************************************************************/
-
-static bool op_lea(struct opcode const *op,char const *label,struct a09 *a09)
-{
-  (void)op;
-  (void)label;
-  (void)a09;
-  return false;
-}
-
-/**************************************************************************/
-
-static bool op_pushx(struct opcode const *op,char const *label,struct a09 *a09)
-{
-  (void)op;
-  (void)label;
-  (void)a09;
-  return false;
-}
-
-/**************************************************************************/
-
-static bool op_pullx(struct opcode const *op,char const *label,struct a09 *a09)
-{
-  (void)op;
-  (void)label;
-  (void)a09;
-  return false;
-}
-
-/**************************************************************************/
-
-static bool op_pushu(struct opcode const *op,char const *label,struct a09 *a09)
-{
-  (void)op;
-  (void)label;
-  (void)a09;
-  return false;
-}
-
-/**************************************************************************/
-
-static bool op_pullu(struct opcode const *op,char const *label,struct a09 *a09)
-{
-  (void)op;
-  (void)label;
-  (void)a09;
-  return false;
-}
-
-/**************************************************************************/
-
-static bool op_exg(struct opcode const *op,char const *label,struct a09 *a09)
-{
-  (void)op;
-  (void)label;
-  (void)a09;
-  return false;
-}
-
-/**************************************************************************/
-
-static bool pseudo_equ(struct opcode const *op,char const *label,struct a09 *a09)
-{
-  (void)op;
-  assert(a09 != NULL);
-
-  if (label == NULL)
-  {
-    fprintf(stderr,"%s(%zu): error: missing label for EQU\n",a09->infile,a09->lnum);
-    return false;
-  }
+    }
     
-  symbol_add(a09,label,0x80);
+    value = 0;
+  }
+  else
+    value = sym->value;
+    
+  if (opd->op->page)
+    opd->bytes[opd->sz++] = opd->op->page;
+    
+  opd->bytes[opd->sz++] = opd->op->opcode[0];
+  opd->bytes[opd->sz++] = value & 255;
+  return true;
+}
+
+/**************************************************************************/
+
+static bool op_1ab(struct opcdata *opd)
+{
+  (void)opd;
+  return false;
+}
+
+/**************************************************************************/
+
+static bool op_br(struct opcdata *opd)
+{
+  (void)opd;
+  return false;
+}
+
+/**************************************************************************/
+
+static bool op_lbr(struct opcdata *opd)
+{
+  (void)opd;
+  return false;
+}
+
+/**************************************************************************/
+
+static bool op_lea(struct opcdata *opd)
+{
+  (void)opd;
+  return false;
+}
+
+/**************************************************************************/
+
+static bool op_pushx(struct opcdata *opd)
+{
+  (void)opd;
+  return false;
+}
+
+/**************************************************************************/
+
+static bool op_pullx(struct opcdata *opd)
+{
+  (void)opd;
+  return false;
+}
+
+/**************************************************************************/
+
+static bool op_pushu(struct opcdata *opd)
+{
+  (void)opd;
+  return false;
+}
+
+/**************************************************************************/
+
+static bool op_pullu(struct opcdata *opd)
+{
+  (void)opd;
+  return false;
+}
+
+/**************************************************************************/
+
+static bool op_exg(struct opcdata *opd)
+{
+  (void)opd;
+  return false;
+}
+
+/**************************************************************************/
+
+static bool pseudo_equ(struct opcdata *opd)
+{
+  assert(opd != NULL);
+  assert(opd->label != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->label == NULL)
+  {
+    fprintf(stderr,"%s(%zu): error: missing label for EQU\n",opd->a09->infile,opd->a09->lnum);
+    return false;
+  }
+  
+  if (opd->pass == 1)
+    symbol_add(opd->a09,opd->label,0x80);
   return true;
 }
 

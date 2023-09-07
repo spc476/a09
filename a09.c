@@ -11,81 +11,76 @@
 
 /**************************************************************************/
 
-static bool append_char(char **pbuf,size_t *psz,size_t *pread,int c)
+static bool append_char(struct buffer *buffer,char c)
 {
-  if (*pread == *psz)
+  if (buffer->widx == buffer->size)
   {
-    (*psz) += 1024;
-    char *n = realloc(*pbuf,*psz);
+    buffer->size += 1024;
+    char *n       = realloc(buffer->buf,buffer->size);
     if (n == NULL)
       return false;
-    *pbuf = n;
+    buffer->buf = n;
   }
   
+  buffer->buf[buffer->widx] = c;
   if (c)
-    (*pbuf)[(*pread)++] = c;
-  else
-    (*pbuf)[(*pread)] = c;
+    buffer->widx++;
   return true;
 }
 
 /**************************************************************************/
 
-static bool read_line(FILE *in,char **pbuf,size_t *psz,size_t *pread)
+static bool read_line(FILE *in,struct buffer *buffer)
 {
-  assert(in    != NULL);
-  assert(pbuf  != NULL);
-  assert(psz   != NULL);
-  assert(pread != NULL);
+  assert(in     != NULL);
+  assert(buffer != NULL);
   
-  int c;
-  *pread = 0;
+  buffer->widx = 0;
+  buffer->ridx = 0;
   
   while(!feof(in))
   {
-    c = fgetc(in);
-    if (c == EOF) break;
+    int c = fgetc(in);
+    if (c == EOF)  break;
     if (c == '\n') break;
     if (c == '\t')
     {
-      for (size_t num = 8 - (*pread & 7) , j = 0 ; j < num ; j++)
-        if (!append_char(pbuf,psz,pread,' '))
+      for (size_t num = 8 - (buffer->widx & 7) , j = 0 ; j < num ; j++)
+        if (!append_char(buffer,' '))
           return false;
     }
     else
     {
-      if (!append_char(pbuf,psz,pread,c))
+      if (!append_char(buffer,c))
         return false;
     }
   }
   
-  return append_char(pbuf,psz,pread,'\0');
+  return append_char(buffer,'\0');
 }
 
 /**************************************************************************/
 
-bool read_label(struct a09 *a09,char **plabel,size_t *plabelsize,int c)
+bool read_label(struct buffer *buffer,char **plabel,size_t *plabelsize,char c)
 {
-  assert(a09         != NULL);
-  assert(a09->in     != NULL);
+  assert(buffer      != NULL);
   assert(plabel      != NULL);
   assert(plabelsize  != NULL);
   assert(*plabelsize == 0);
   
   char *nline = NULL;
   char *line  = NULL;
-  size_t i    = 0;
-  size_t max  = 0;
+  size_t i     = 0;
+  size_t max   = 0;
   
   while((c == '.') || (c == '_') || (c == '$') || isalpha(c) || isdigit(c))
   {
     if (i == max)
     {
-      max   += 64;
-      nline  = realloc(line,max);
+      max += 64;
+      nline = realloc(line,max);
       if (nline == NULL)
       {
-        perror(a09->infile);
         free(line);
         return false;
       }
@@ -93,7 +88,7 @@ bool read_label(struct a09 *a09,char **plabel,size_t *plabelsize,int c)
     }
     
     line[i++] = toupper(c);
-    c = fgetc(a09->in);
+    c = buffer->buf[buffer->ridx++];
   }
   
   line[i++] = '\0';
@@ -101,9 +96,9 @@ bool read_label(struct a09 *a09,char **plabel,size_t *plabelsize,int c)
   
   if (nline != NULL)
     line = nline;
-  
-  if (c != EOF)
-    ungetc(c,a09->in);
+    
+  if (buffer->ridx > 0)
+    buffer->ridx--;
   
   *plabel     = line;
   *plabelsize = i - 1;
@@ -112,20 +107,22 @@ bool read_label(struct a09 *a09,char **plabel,size_t *plabelsize,int c)
 
 /**************************************************************************/
 
-static bool parse_label(struct a09 *a09,char **plabel)
+static bool parse_label(char **plabel,struct buffer *buffer,struct a09 *a09)
 {
-  assert(a09     != NULL);
-  assert(a09->in != NULL);
-  assert(plabel  != NULL);
+  assert(plabel != NULL);
+  assert(buffer != NULL);
+  assert(a09    != NULL);
   
-  int c = fgetc(a09->in);
+  char c = buffer->buf[buffer->ridx];
+
   if ((c == '.') || (c == '_') || isalpha(c))
   {
-    char   *label = NULL;
+    char   *label     = NULL;
+    char   *name      = NULL;
     size_t  labelsize = 0;
-    char   *name = NULL;
     
-    if (!read_label(a09,&label,&labelsize,c))
+    buffer->ridx++;
+    if (!read_label(buffer,&label,&labelsize,c))
       return false;
     
     if (*label == '.')
@@ -148,8 +145,6 @@ static bool parse_label(struct a09 *a09,char **plabel)
   }
   else
   {
-    if (c != EOF)
-      ungetc(c,a09->in);
     *plabel = NULL;
     return true;
   }
@@ -157,21 +152,21 @@ static bool parse_label(struct a09 *a09,char **plabel)
 
 /**************************************************************************/
 
-static bool parse_op(struct a09 *a09,struct opcode const **pop)
+static bool parse_op(struct a09 *a09,struct buffer *buffer,struct opcode const **pop)
 {
-  assert(a09 != NULL);
-  assert(pop != NULL);
+  assert(a09    != NULL);
+  assert(buffer != NULL);
+  assert(pop    != NULL);
   
   char top[10];
-  int  c = 0;
+  char c = 0;
   
   for (size_t i = 0 ; i < 10 ; i++)
   {
-    c = fgetc(a09->in);
-    if (c == EOF) return false;
+    c = buffer->buf[buffer->ridx];
+    if (c == '\0') return false;
     if (isspace(c))
-    {
-      ungetc(c,a09->in);
+    {    
       top[i] = '\0';
       *pop   = op_find(top);
       return *pop != NULL;
@@ -180,23 +175,23 @@ static bool parse_op(struct a09 *a09,struct opcode const **pop)
       break;
 
     top[i] = toupper(c);
+    buffer->ridx++;
   }
   
   assert(c != 0);
-  ungetc(c,a09->in);
   return false;
 }
 
 /**************************************************************************/
 
-int skip_space(FILE *in)
+char skip_space(struct buffer *buffer)
 {
-  int c;
+  char c;
   
   do
   {
-    c = fgetc(in);
-    if ((c == EOF) || (c == '\n'))
+    c = buffer->buf[buffer->ridx++];
+    if ((c == '\0') || (c == '\n'))
       return c;
   } while (isspace(c));
   
@@ -205,28 +200,17 @@ int skip_space(FILE *in)
 
 /**************************************************************************/
 
-bool skip_to_eoln(FILE *in)
+static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
 {
-  int c;
-  
-  do
-    c = fgetc(in);
-  while ((c != EOF) && (c != '\n'));
-  return true;
-}
-
-/**************************************************************************/
-
-static bool parse_line(struct a09 *a09)
-{
-  assert(a09 != NULL);
+  assert(a09    != NULL);
+  assert(buffer != NULL);
+  assert((pass == 1) || (pass == 2));
   
   char                *label = NULL;
   struct opcode const *op;
   int                  c;
   
-  a09->lnum++;
-  if (!parse_label(a09,&label))
+  if (!parse_label(&label,&a09->inbuf,a09))
   {
     assert(label == NULL);
     return false;
@@ -238,16 +222,9 @@ static bool parse_line(struct a09 *a09)
 
   // XXX - do something with label
   
-  c = skip_space(a09->in);
+  c = skip_space(&a09->inbuf);
   
-  if (c == EOF)
-  {
-    // XXX - add label?
-    free(label);
-    return true;
-  }
-  
-  if (c == '\n')
+  if (c == '\0')
   {
     // XXX - add label?
     free(label);
@@ -258,12 +235,12 @@ static bool parse_line(struct a09 *a09)
   {
     // XXX - add label?
     free(label);
-    return skip_to_eoln(a09->in);
+    return true;
   }
   
-  ungetc(c,a09->in);
+  a09->inbuf.ridx--; // ungetc()
   
-  if (!parse_op(a09,&op))
+  if (!parse_op(a09,&a09->inbuf,&op))
   {
     fprintf(stderr,"%s(%zu): unknown opcode\n",a09->infile,a09->lnum);
     return false;
@@ -272,9 +249,51 @@ static bool parse_line(struct a09 *a09)
   if (a09->debug)
     fprintf(stderr,"DEBUG: opcode='%s'\n",op->name);
   
-  op->func(op,label,a09);
+  struct opcdata opd =
+  {
+    .a09 = a09,
+    .op  = op,
+    .buffer = &a09->inbuf,
+    .label  = label,
+    .pass   = pass,
+    .sz     = 0,
+  };
+  bool rc = op->func(&opd);
+  
+  if (rc)
+  {
+    a09->pc += opd.sz;
+    if ((pass == 2) && (opd.sz > 0))
+      if (!fwrite(opd.bytes,1,opd.sz,a09->out) != opd.sz)
+        rc = false;
+  }
+  
   free(label);
-  return skip_to_eoln(a09->in);
+  return rc;
+}
+
+/**************************************************************************/
+
+static bool assemble_pass(struct a09 *a09,int pass)
+{
+  assert(a09     != NULL);
+  assert(a09->in != NULL);
+  assert(pass    >= 1);
+  assert(pass    <= 2);
+  
+  if (a09->debug)
+    fprintf(stderr,"Pass %d\n",pass);
+    
+  while(!feof(a09->in))
+  {
+    if (!read_line(a09->in,&a09->inbuf))
+      return false;
+    a09->lnum++;
+    if (!parse_line(a09,&a09->inbuf,pass))
+      return false;
+  }
+  
+  return true;
 }
 
 /**************************************************************************/
@@ -330,15 +349,12 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
 
 int main(int argc,char *argv[])
 {
-  char       *buffer = NULL;
-  size_t      size   = 0;
-  size_t      len;
   int         fi;
-  int         rc     = 0;
-  struct a09  a09    =
+  bool        rc;
+  struct a09  a09 =
   {
     .infile    = NULL,
-    .outfile   = "a09.out",
+    .outfile   = "a09.obj",
     .listfile  = NULL,
     .in        = NULL,
     .out       = NULL,
@@ -347,7 +363,15 @@ int main(int argc,char *argv[])
     .symtab    = NULL,
     .label     = NULL,
     .labelsize = 0,
-    .debug     = false,
+    .pc        = 0,
+    .debug     = true,
+    .inbuf     =
+    {
+      .buf   = NULL,
+      .size  = 0,
+      .widx  = 0,
+      .ridx  = 0,
+    },
   };
   
   ListInit(&a09.symbols);
@@ -371,26 +395,42 @@ int main(int argc,char *argv[])
     exit(1);
   }
   
-  
-  while(!feof(a09.in))
+  a09.infile = argv[fi];
+  a09.in = fopen(a09.infile,"r");
+  if (a09.in == NULL)
   {
-    read_line(stdin,&buffer,&size,&len);
-    puts(buffer);
-  }    
+    perror(a09.infile);
+    exit(1);
+  }
+  
+  if (!assemble_pass(&a09,1))
+    exit(1);
     
-    
-    
+  rewind(a09.in);
   
+  a09.out = fopen(a09.outfile,"wb");
+  if (a09.out == NULL)
+  {
+    perror(a09.outfile);
+    exit(1);
+  }
   
-#if 0
+  a09.list = fopen(a09.listfile,"w");
+  if (a09.list == NULL)
+  {
+    perror(a09.listfile);
+    exit(1);
+  }
   
+  rc = assemble_pass(&a09,2);
+  if (a09.list) fclose(a09.list);
+  fclose(a09.out);
+  fclose(a09.in);
   
-  
-    if (!parse_line(&a09))
-    {
-      rc = 1;
-      break;
-    }
+  if (!rc)
+  {
+    if (a09.listfile) remove(a09.listfile);
+    remove(a09.outfile);
   }
   
   for(
@@ -405,7 +445,6 @@ int main(int argc,char *argv[])
   }
   
   free(a09.label);
-  fclose(a09.out);
-#endif
-  return rc;
+  free(a09.inbuf.buf);
+  return rc ? 0 : 1;
 }

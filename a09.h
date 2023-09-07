@@ -7,7 +7,6 @@
 #if defined(__clang__)
 #  pragma clang diagnostic ignored "-Wpadded"
 #  pragma clang diagnostic ignored "-Wconversion"
-#  pragma clang diagnostic ignored "-Wdeclaration-after-statement"
 #endif
 
 #include <stddef.h>
@@ -27,20 +26,30 @@ enum admode
   AM_EXTENDED,
 };
 
+struct buffer
+{
+  char   *buf;
+  size_t  size;
+  size_t  widx;
+  size_t  ridx;
+};
+
 struct a09
 {
-  char const *infile;
-  char const *outfile;
-  char const *listfile;
-  FILE       *in;
-  FILE       *out;
-  FILE       *list;
-  size_t      lnum;
-  tree__s    *symtab;
-  List        symbols;
-  char       *label;
-  size_t      labelsize;
-  bool        debug;
+  char const    *infile;
+  char const    *outfile;
+  char const    *listfile;
+  FILE          *in;
+  FILE          *out;
+  FILE          *list;
+  struct buffer  inbuf;
+  size_t         lnum;
+  tree__s       *symtab;
+  List           symbols;
+  char          *label;
+  size_t         labelsize;
+  uint16_t       pc;
+  bool           debug;
 };
 
 struct symbol
@@ -51,39 +60,37 @@ struct symbol
   uint16_t    value;
   char const *filename;
   size_t      ldef;
-  long       *o16;
-  size_t      o16m;
-  size_t      o16i;
-  size_t      o16d;
-  long       *o8;
-  size_t      o8m;
-  size_t      o8i;
-  size_t      o8d;
-  bool        defined;
   bool        external;
   bool        equ;
   bool        set;
 };
 
+struct opcdata
+{
+  struct a09          *a09;
+  struct opcode const *op;
+  struct buffer       *buffer;
+  char const          *label;
+  int                  pass;
+  uint16_t             sz;
+  unsigned char        bytes[5];
+};
+
 struct opcode
 {
   char            name[6];
-  bool          (*func)(struct opcode const *,char const *,struct a09 *);
+  bool          (*func)(struct opcdata *);
   unsigned char   opcode[4];
   unsigned char   page;
 };
 
-extern bool                 set_namespace(struct a09 *,char const *);
-extern bool                 read_label   (struct a09 *,char **,size_t *,int);
-extern int                  skip_space   (FILE *);
-extern bool                 skip_to_eoln (FILE *);
+
+extern bool                 read_label   (struct buffer *,char **,size_t *,char);
+extern char                 skip_space   (struct buffer *);
 extern struct opcode const *op_find      (char const *);
 
-extern struct symbol *symbol_new     (void);
-extern struct symbol *symbol_find    (struct a09 *,char const *);
-extern struct symbol *symbol_add     (struct a09 *,char const *,uint16_t);
-extern bool           symbol_defer16 (struct symbol *,long);
-extern bool           symbol_defer8  (struct symbol *,long);
+extern struct symbol *symbol_find (struct a09 *,char const *);
+extern struct symbol *symbol_add  (struct a09 *,char const *,uint16_t);
 
 /**************************************************************************/
 
@@ -114,5 +121,7 @@ static inline struct symbol *node2sym(Node *node)
 #  pragma clang diagnostic pop "-Wcast-align"
 #endif
 }
+
+/**************************************************************************/
 
 #endif
