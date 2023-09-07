@@ -408,6 +408,7 @@ int main(int argc,char *argv[])
     
   rewind(a09.in);
   
+  a09.pc  = 0;
   a09.out = fopen(a09.outfile,"wb");
   if (a09.out == NULL)
   {
