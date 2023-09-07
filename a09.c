@@ -264,8 +264,11 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   {
     a09->pc += opd.sz;
     if ((pass == 2) && (opd.sz > 0))
-      if (!fwrite(opd.bytes,1,opd.sz,a09->out) != opd.sz)
+    {
+      size_t x = fwrite(opd.bytes,1,opd.sz,a09->out);
+      if (x != opd.sz)
         rc = false;
+    }
   }
   
   free(label);
