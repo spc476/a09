@@ -9,7 +9,7 @@ LDLIBS = -lcgi6
 
 .PHONY: clean
 
-a09 : a09.o opcodes.o symbol.o
+a09 : a09.o opcodes.o symbol.o expr.o
 
 a09.o : a09.h
 opcodes.o : a09.h

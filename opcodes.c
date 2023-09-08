@@ -39,17 +39,30 @@ static bool op_8(struct opcdata *opd)
   size_t         targetsize = 0;
   char           c          = skip_space(opd->buffer);
   
-  if ((c != '.') && (c != '_') && !isalpha(c))
+  if (c == '#') /* immediate mode */
   {
-    fprintf(stderr,"%s(%zu): error: bad label\n",opd->a09->infile,opd->a09->lnum);
-    return false;
+    uint16_t v;
+    opd->buffer->ridx++;
+    if (!expr(&v,opd->a09,opd->buffer,opd->pass))
+      return message(opd->a09,MSG_ERROR,"bad value");
+    unsigned char hi = v >> 8;
+    unsigned char lo = v & 255;
+    if ((hi == 255) && (lo < 128))
+      message(opd->a09,MSG_WARNING,"16-bit value truncated");
+    else if (hi > 0)
+      message(opd->a09,MSG_WARNING,"16-bit value truncated");
+    if (opd->op->page)
+      opd->bytes[opd->sz++] = opd->op->page;
+    opd->bytes[opd->sz++] = opd->op->opcode[AM_IMMED];
+    opd->bytes[opd->sz++] = lo;
+    return true;
   }
   
+  if ((c != '.') && (c != '_') && !isalpha(c))
+    return message(opd->a09,MSG_ERROR,"bad label");
+  
   if (!read_label(opd->buffer,&target,&targetsize,c))
-  {
-    fprintf(stderr,"%s(%zu): error: failure to read label\n",opd->a09->infile,opd->a09->lnum);
-    return false;
-  }
+    return message(opd->a09,MSG_ERROR,"failure to read label");
   
   sym = symbol_find(opd->a09,target);
   free(target);
@@ -57,11 +70,7 @@ static bool op_8(struct opcdata *opd)
   if (sym == NULL)
   {
     if (opd->pass == 2)
-    {
-      fprintf(stderr,"%s(%zu): error: symbol error\n",opd->a09->infile,opd->a09->lnum);
-      return false;
-    }
-    
+      return message(opd->a09,MSG_ERROR,"symbol error");
     value = 0;
   }
   else
@@ -133,28 +142,23 @@ static bool op_1(struct opcdata *opd)
   char           c = skip_space(opd->buffer);
   
   if ((c != '.') && (c != '_') && !isalpha(c))
-  {
-    fprintf(stderr,"%s(%zu): error: bad label\n",opd->a09->infile,opd->a09->lnum);
-    return false;
-  }
+    return message(opd->a09,MSG_ERROR,"bad label");
   
   if (!read_label(opd->buffer,&target,&targetsize,c))
-  {
-    fprintf(stderr,"%s(%zu): error: failure to read label\n",opd->a09->infile,opd->a09->lnum);
-    return false;
-  }
+    return message(opd->a09,MSG_ERROR,"failure to read label");
   
   sym = symbol_find(opd->a09,target);
-  free(target);
   
   if (sym == NULL)
   {
     if (opd->pass == 2)
     {
-      fprintf(stderr,"%s(%zu): error: symbol error\n",opd->a09->infile,opd->a09->lnum);
+      message(opd->a09,MSG_ERROR,"symbol '%s' not found",target);
+      free(target);
       return false;
     }
     
+    free(target);
     value = 0;
   }
   else
@@ -249,10 +253,7 @@ static bool pseudo_equ(struct opcdata *opd)
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->label == NULL)
-  {
-    fprintf(stderr,"%s(%zu): error: missing label for EQU\n",opd->a09->infile,opd->a09->lnum);
-    return false;
-  }
+    return message(opd->a09,MSG_ERROR,"missing label for EQU");
   
   if (opd->pass == 1)
     symbol_add(opd->a09,opd->label,0x80);
@@ -266,7 +267,7 @@ static struct opcode const opcodes[] =
   { "ABX"   , op_inh     , { 0x3A , 0x00 , 0x00 , 0x00 } , 0x00 } ,
   { "ADCA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
   { "ADCB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ADDA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
+  { "ADDA"  , op_8       , { 0x48 , 0x49 , 0x4A , 0x4B } , 0x00 } ,
   { "ADDB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
   { "ADDD"  , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
   { "ANDA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,

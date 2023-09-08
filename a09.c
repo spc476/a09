@@ -5,9 +5,37 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <ctype.h>
 
 #include "a09.h"
+
+/**************************************************************************/
+
+char const MSG_DEBUG[]   = "debug";
+char const MSG_INFO[]    = "info";
+char const MSG_WARNING[] = "warning";
+char const MSG_ERROR[]   = "error";
+
+/**************************************************************************/
+
+bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,...)
+{
+  va_list ap;
+  fprintf(stderr,"%s(%zu): %s: ",a09->infile,a09->lnum,tag);
+  va_start(ap,fmt);
+#if defined(__clang__)
+#  pragma clang diagnostic push "-Wformat-nonliteral"
+#  pragma clang diagnostic ignored "-Wformat-nonliteral"
+#endif
+  vfprintf(stderr,fmt,ap);
+#if defined(__clang__)
+#  pragma clang diagnostic pop "-Wformat-nonliteral"
+#endif
+  va_end(ap);
+  fprintf(stderr,"\n");
+  return tag != MSG_ERROR;
+}
 
 /**************************************************************************/
 
@@ -207,13 +235,13 @@ static bool print_list(struct a09 *a09,struct opcdata *opd)
   if (a09->list != NULL)
   {
     if (opd->sz == 0)
-      fprintf(a09->list,"                 ");
+      fprintf(a09->list,"                  ");
     else
     {
       size_t i = 0; // index into opd->bytes[]
       size_t c = 0; // # byte columns printed
       
-      fprintf(a09->list,"%04X %02X",a09->pc,opd->bytes[i++]);
+      fprintf(a09->list,"%04X: %02X",a09->pc,opd->bytes[i++]);
       c++;
       
       if ((opd->bytes[0] == 0x10) || (opd->bytes[0] == 0x11))
@@ -272,7 +300,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   
   if (a09->debug)
     if (label != NULL)
-      fprintf(stderr,"DEBUG: label='%s' line=%zu\n",label,a09->lnum);
+      message(a09,MSG_DEBUG,"label='%s'",label);
 
   // XXX - do something with label
   
@@ -295,16 +323,13 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   a09->inbuf.ridx--; // ungetc()
   
   if (!parse_op(a09,&a09->inbuf,&op))
-  {
-    fprintf(stderr,"%s(%zu): unknown opcode\n",a09->infile,a09->lnum);
-    return false;
-  }
+    return message(a09,MSG_ERROR,"unknown opcode");
   
   opd.op    = op;
   opd.label = label;
   
   if (a09->debug)
-    fprintf(stderr,"DEBUG: opcode='%s'\n",op->name);
+    message(a09,MSG_DEBUG,"opcode='%s'",op->name);
   
   rc = op->func(&opd);
   
@@ -335,7 +360,7 @@ static bool assemble_pass(struct a09 *a09,int pass)
   assert(pass    <= 2);
   
   if (a09->debug)
-    fprintf(stderr,"Pass %d\n",pass);
+    message(a09,MSG_DEBUG,"Pass %d",pass);
     
   while(!feof(a09->in))
   {
@@ -476,7 +501,7 @@ int main(int argc,char *argv[])
   }
   
   if (a09.list != NULL)
-    fprintf(a09.list,"                        | FILE \"%s\"\n",a09.infile);
+    fprintf(a09.list,"                         | FILE %s\n",a09.infile);
     
   rc = assemble_pass(&a09,2);
   if (a09.list) fclose(a09.list);

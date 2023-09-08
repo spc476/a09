@@ -74,7 +74,7 @@ struct symbol *symbol_add(struct a09 *a09,char const *name,uint16_t value)
   }    
   else
   {
-    fprintf(stderr,"%s(%zu): error: '%s' already defined on line %zu\n",a09->infile,a09->lnum,name,sym->ldef);
+    message(a09,MSG_ERROR,"'%s' already defined on line %zu",name,sym->ldef);
     return NULL;
   }
   

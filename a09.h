@@ -84,10 +84,17 @@ struct opcode
   unsigned char   page;
 };
 
+extern char const MSG_DEBUG[];
+extern char const MSG_INFO[];
+extern char const MSG_WARNING[];
+extern char const MSG_ERROR[];
 
+extern bool                 message      (struct a09 *,char const *restrict,char const *restrict,...);
 extern bool                 read_label   (struct buffer *,char **,size_t *,char);
 extern char                 skip_space   (struct buffer *);
 extern struct opcode const *op_find      (char const *);
+
+extern bool           expr        (uint16_t *,struct a09 *,struct buffer *,int);
 
 extern struct symbol *symbol_find (struct a09 *,char const *);
 extern struct symbol *symbol_add  (struct a09 *,char const *,uint16_t);
