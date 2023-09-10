@@ -1,8 +1,8 @@
 
 /* GPL3+ */
 
-#ifndef FOO
-#define FOO
+#ifndef I_CBED9C6E_E5CA_55A4_A099_890E6F362B3C
+#define I_CBED9C6E_E5CA_55A4_A099_890E6F362B3C
 
 #if defined(__clang__)
 #  pragma clang diagnostic ignored "-Wpadded"
