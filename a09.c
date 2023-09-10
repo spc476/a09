@@ -25,7 +25,7 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
   if ((tag == MSG_DEBUG) && !a09->debug)
     return true;
   
-  fprintf(stderr,"%s(%zu): %s: ",a09->infile,a09->lnum,tag);
+  fprintf(stderr,"%s:%zu: %s: ",a09->infile,a09->lnum,tag);
   va_start(ap,fmt);
 #if defined(__clang__)
 #  pragma clang diagnostic push "-Wformat-nonliteral"
@@ -183,9 +183,8 @@ static bool parse_label(char **plabel,struct buffer *buffer,struct a09 *a09)
 
 /**************************************************************************/
 
-static bool parse_op(struct a09 *a09,struct buffer *buffer,struct opcode const **pop)
+static bool parse_op(struct buffer *buffer,struct opcode const **pop)
 {
-  assert(a09    != NULL);
   assert(buffer != NULL);
   assert(pop    != NULL);
   
@@ -320,7 +319,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   {
     .a09    = a09,
     .op     = NULL,
-    .buffer = &a09->inbuf,
+    .buffer = buffer,
     .label  = NULL,
     .pass   = pass,
     .sz     = 0,
@@ -351,7 +350,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   
   a09->inbuf.ridx--; // ungetc()
   
-  if (!parse_op(a09,&a09->inbuf,&opd.op))
+  if (!parse_op(&a09->inbuf,&opd.op))
     return message(a09,MSG_ERROR,"unknown opcode");
   
   if (!parse_operand(a09,&a09->inbuf,&opd))

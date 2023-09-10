@@ -3,9 +3,11 @@
 
 #CC = clang -std=c99 -Weverything
 CC = gcc -std=c99 -pedantic -Wall -Wextra
-CFLAGS = -g -D_GNU_SOURCE
+CFLAGS = -g
 LDFLAGS = -g
 LDLIBS = -lcgi6
+
+override CFLAGS += -D_GNU_SOURCE
 
 .PHONY: clean
 
