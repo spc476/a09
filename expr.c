@@ -113,24 +113,28 @@ static bool factor(uint16_t *pv,struct a09 *a09,struct buffer *buffer,int pass)
   else if ((c == '_') || (c == '.') || isalpha(c))
   {
     struct symbol *sym;
-    char *label;
-    size_t len = 0;
+    char          *label = NULL;
+    size_t         len   = 0;
+    
     if (!read_label(buffer,&label,&len,c))
+    {
+      assert(label == NULL);
       return false;
+    }
     sym = symbol_find(a09,label);
     if (sym == NULL)
     {
       if (pass == 2)
       {
-        fprintf(stderr,"%s(%zu): unknown symbol '%s'\n",a09->infile,a09->lnum,label);
+        message(a09,MSG_ERROR,"unknown symbol '%s'",label);
         free(label);
         return false;
       }
-      free(label);
-      return true;
+      *pv = 0;
     }
-    
-    *pv = sym->value;
+    else
+      *pv = sym->value;
+    free(label);
   }
   else if (c == '\'')
   {

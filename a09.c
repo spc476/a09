@@ -96,13 +96,14 @@ bool read_label(struct buffer *buffer,char **plabel,size_t *plabelsize,char c)
 {
   assert(buffer      != NULL);
   assert(plabel      != NULL);
+  assert(*plabel     == NULL);
   assert(plabelsize  != NULL);
   assert(*plabelsize == 0);
   
   char *nline = NULL;
   char *line  = NULL;
-  size_t i     = 0;
-  size_t max   = 0;
+  size_t i    = 0;
+  size_t max  = 0;
   
   while((c == '.') || (c == '_') || (c == '$') || isalpha(c) || isdigit(c))
   {
