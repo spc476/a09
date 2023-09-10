@@ -97,7 +97,7 @@ extern char const MSG_DEBUG[];
 extern char const MSG_WARNING[];
 extern char const MSG_ERROR[];
 
-extern bool                 message      (struct a09 *,char const *restrict,char const *restrict,...);
+extern bool                 message      (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
 extern bool                 read_label   (struct buffer *,char **,size_t *,char);
 extern char                 skip_space   (struct buffer *);
 extern struct opcode const *op_find      (char const *);
