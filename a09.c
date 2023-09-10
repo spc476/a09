@@ -13,7 +13,6 @@
 /**************************************************************************/
 
 char const MSG_DEBUG[]   = "debug";
-char const MSG_INFO[]    = "info";
 char const MSG_WARNING[] = "warning";
 char const MSG_ERROR[]   = "error";
 
@@ -22,6 +21,10 @@ char const MSG_ERROR[]   = "error";
 bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,...)
 {
   va_list ap;
+  
+  if ((tag == MSG_DEBUG) && !a09->debug)
+    return true;
+  
   fprintf(stderr,"%s(%zu): %s: ",a09->infile,a09->lnum,tag);
   va_start(ap,fmt);
 #if defined(__clang__)
@@ -115,7 +118,7 @@ bool read_label(struct buffer *buffer,char **plabel,size_t *plabelsize,char c)
       line = nline;
     }
     
-    line[i++] = toupper(c);
+    line[i++] = c;
     c = buffer->buf[buffer->ridx++];
   }
   
@@ -211,6 +214,39 @@ static bool parse_op(struct a09 *a09,struct buffer *buffer,struct opcode const *
 
 /**************************************************************************/
 
+static bool parse_operand(struct a09 *a09,struct buffer *buffer,struct opcdata *opd)
+{
+  assert(a09    != NULL);
+  assert(buffer != NULL);
+  assert(opd    != NULL);
+  
+  char c = skip_space(buffer);
+  
+  if ((c == ';') || (c == '\0'))
+  {
+    assert(opd->mode == AM_INHERENT);
+    return true;
+  }
+  
+  if (c == '#')
+  {
+    opd->mode = AM_IMMED;
+    if (!expr(&opd->value,a09,buffer,opd->pass))
+      return message(a09,MSG_ERROR,"bad immedate value");
+    return true;
+  }
+  
+  buffer->ridx--; // ungetc()
+
+  if (!expr(&opd->value,a09,buffer,opd->pass))
+    return message(a09,MSG_ERROR,"bad value");
+    
+  opd->mode = AM_EXTENDED;
+  return true;
+}
+
+/**************************************************************************/
+
 char skip_space(struct buffer *buffer)
 {
   char c;
@@ -278,11 +314,9 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   assert(buffer != NULL);
   assert((pass == 1) || (pass == 2));
   
-  char                *label = NULL;
-  struct opcode const *op;
-  int                  c;
-  bool                 rc;
-  struct opcdata       opd =
+  int            c;
+  bool           rc;
+  struct opcdata opd =
   {
     .a09    = a09,
     .op     = NULL,
@@ -290,48 +324,40 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     .label  = NULL,
     .pass   = pass,
     .sz     = 0,
+    .data   = false,
+    .mode   = AM_INHERENT,
+    .value  = 0,
+    .ireg   = -1,
+    .bits   = 16,
   };
   
-  if (!parse_label(&label,&a09->inbuf,a09))
+  if (!parse_label(&opd.label,&a09->inbuf,a09))
   {
-    assert(label == NULL);
+    assert(opd.label == NULL);
     return false;
   }
   
-  if (a09->debug)
-    if (label != NULL)
-      message(a09,MSG_DEBUG,"label='%s'",label);
-
-  // XXX - do something with label
+  if ((opd.label != NULL) && (pass == 1))
+    if (symbol_add(a09,opd.label,a09->pc) == NULL)
+      return false;
   
   c = skip_space(&a09->inbuf);
   
-  if (c == '\0')
+  if ((c == ';') || (c == '\0'))
   {
-    // XXX - add label?
-    free(label);
-    return print_list(a09,&opd);
-  }
-  
-  if (c == ';')
-  {
-    // XXX - add label?
-    free(label);
+    free(opd.label);
     return print_list(a09,&opd);
   }
   
   a09->inbuf.ridx--; // ungetc()
   
-  if (!parse_op(a09,&a09->inbuf,&op))
+  if (!parse_op(a09,&a09->inbuf,&opd.op))
     return message(a09,MSG_ERROR,"unknown opcode");
   
-  opd.op    = op;
-  opd.label = label;
-  
-  if (a09->debug)
-    message(a09,MSG_DEBUG,"opcode='%s'",op->name);
-  
-  rc = op->func(&opd);
+  if (!parse_operand(a09,&a09->inbuf,&opd))
+    return false;
+    
+  rc = opd.op->func(&opd);
   
   if (rc)
   {
@@ -346,7 +372,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     }
   }
   
-  free(label);
+  free(opd.label);
   return rc;
 }
 
@@ -359,8 +385,11 @@ static bool assemble_pass(struct a09 *a09,int pass)
   assert(pass    >= 1);
   assert(pass    <= 2);
   
-  if (a09->debug)
-    message(a09,MSG_DEBUG,"Pass %d",pass);
+  rewind(a09->in);
+  a09->lnum = 0;
+  a09->pc   = 0;
+  
+  message(a09,MSG_DEBUG,"Pass %d",pass);
     
   while(!feof(a09->in))
   {
@@ -430,6 +459,37 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
 
 /**************************************************************************/
 
+static void dump_symbols(FILE *out,tree__s *tree)
+{
+  assert(out != NULL);
+  if (tree != NULL)
+  {
+    dump_symbols(out,tree->left);
+    
+    struct symbol *sym = tree2sym(tree);
+    char const    *tag;
+    
+    if (sym->equ)
+      tag = "equate";
+    else if (sym->set)
+      tag = "set";
+    else
+      tag = "address";
+    
+    fprintf(
+             out,
+             "%5zu | %-11.11s %04X %s\n",
+             sym->ldef,
+             tag,
+             sym->value,
+             sym->name
+          );
+    dump_symbols(out,tree->right);
+  }
+}
+
+/**************************************************************************/
+
 int main(int argc,char *argv[])
 {
   int         fi;
@@ -478,10 +538,6 @@ int main(int argc,char *argv[])
   if (!assemble_pass(&a09,1))
     exit(1);
     
-  rewind(a09.in);
-  
-  a09.lnum = 0;
-  a09.pc   = 0;
   a09.out  = fopen(a09.outfile,"wb");
   
   if (a09.out == NULL)
@@ -504,7 +560,14 @@ int main(int argc,char *argv[])
     fprintf(a09.list,"                         | FILE %s\n",a09.infile);
     
   rc = assemble_pass(&a09,2);
-  if (a09.list) fclose(a09.list);
+  
+  if (a09.list != NULL)
+  {
+    fprintf(a09.list,"\n");
+    dump_symbols(a09.list,a09.symtab);
+    fclose(a09.list);
+  }
+  
   fclose(a09.out);
   fclose(a09.in);
   

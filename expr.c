@@ -50,6 +50,7 @@ static bool s2num(uint16_t *pv,struct buffer *buffer,uint16_t base)
     *pv *= base;
     *pv += v;
     buffer->ridx++;
+    cnt++;
   }
 }
 
@@ -99,20 +100,11 @@ static bool factor(uint16_t *pv,struct a09 *a09,struct buffer *buffer,int pass)
   } while(false);
   
   if (c == '$')
-  {
-    buffer->ridx++;
     rc = s2num(pv,buffer,16);
-  }
   else if (c == '&')
-  {
-    buffer->ridx++;
     rc = s2num(pv,buffer,8);
-  }
   else if (c == '%')
-  {
-    buffer->ridx++;
     rc = s2num(pv,buffer,2);
-  }
   else if (isdigit(c))
   {
     buffer->ridx--;
@@ -123,7 +115,6 @@ static bool factor(uint16_t *pv,struct a09 *a09,struct buffer *buffer,int pass)
     struct symbol *sym;
     char *label;
     size_t len = 0;
-    buffer->ridx--;
     if (!read_label(buffer,&label,&len,c))
       return false;
     sym = symbol_find(a09,label);
@@ -140,6 +131,17 @@ static bool factor(uint16_t *pv,struct a09 *a09,struct buffer *buffer,int pass)
     }
     
     *pv = sym->value;
+  }
+  else if (c == '\'')
+  {
+    c = buffer->buf[buffer->ridx++];
+    if (isgraph(c))
+    {
+      *pv = c;
+      return true;
+    }
+    else
+      return false;
   }
   else
     return false;

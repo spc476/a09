@@ -20,102 +20,138 @@ static bool op_inh(struct opcdata *opd)
   if (opd->op->page)
     opd->bytes[opd->sz++] = opd->op->page;
   
-  opd->bytes[opd->sz++] = opd->op->opcode[0];
+  opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
   return true;  
+}
+
+/**************************************************************************/
+
+static unsigned char value_lsb(struct a09 *a09,uint16_t value,int pass)
+{
+  assert(a09 != NULL);
+  assert((pass == 1) || (pass == 2));
+  
+  unsigned char hi = value >> 8;
+  unsigned char lo = value & 255;
+  
+  if (pass == 2)
+  {
+    if ((hi == 255) && (lo < 128))
+      message(a09,MSG_WARNING,"16-bit value truncated");
+    else if ((hi > 0) && (hi < 255))
+      message(a09,MSG_WARNING,"16-bit value truncated");
+  }
+  
+  return lo;
 }
 
 /**************************************************************************/
 
 static bool op_8(struct opcdata *opd)
 {
-  assert(opd         != NULL);
-  assert(opd->a09    != NULL);
-  assert(opd->buffer != NULL);
+  assert(opd       != NULL);
+  assert(opd->sz   == 0);
+  assert(opd->a09  != NULL);
+  assert(opd->mode != AM_INHERENT);
   assert((opd->pass == 1) || (opd->pass == 2));
-  
-  struct symbol *sym;
-  uint16_t       value;
-  char          *target     = NULL;
-  size_t         targetsize = 0;
-  char           c          = skip_space(opd->buffer);
-  
-  if (c == '#') /* immediate mode */
-  {
-    uint16_t v;
-    opd->buffer->ridx++;
-    if (!expr(&v,opd->a09,opd->buffer,opd->pass))
-      return message(opd->a09,MSG_ERROR,"bad value");
-    unsigned char hi = v >> 8;
-    unsigned char lo = v & 255;
-    if ((hi == 255) && (lo < 128))
-      message(opd->a09,MSG_WARNING,"16-bit value truncated");
-    else if (hi > 0)
-      message(opd->a09,MSG_WARNING,"16-bit value truncated");
-    if (opd->op->page)
-      opd->bytes[opd->sz++] = opd->op->page;
-    opd->bytes[opd->sz++] = opd->op->opcode[AM_IMMED];
-    opd->bytes[opd->sz++] = lo;
-    return true;
-  }
-  
-  if ((c != '.') && (c != '_') && !isalpha(c))
-    return message(opd->a09,MSG_ERROR,"bad label");
-  
-  if (!read_label(opd->buffer,&target,&targetsize,c))
-    return message(opd->a09,MSG_ERROR,"failure to read label");
-  
-  sym = symbol_find(opd->a09,target);
-  free(target);
-  
-  if (sym == NULL)
-  {
-    if (opd->pass == 2)
-      return message(opd->a09,MSG_ERROR,"symbol error");
-    value = 0;
-  }
-  else
-    value = sym->value;
   
   if (opd->op->page)
     opd->bytes[opd->sz++] = opd->op->page;
     
-  opd->bytes[opd->sz++] = opd->op->opcode[3];
-  opd->bytes[opd->sz++] = value >> 8;
-  opd->bytes[opd->sz++] = value & 255;  
-  return true;
+  switch(opd->mode)
+  {
+    case AM_IMMED:
+         opd->bytes[opd->sz++] = opd->op->opcode[AM_IMMED];
+         opd->bytes[opd->sz++] = value_lsb(opd->a09,opd->value,opd->pass);
+         return true;
+         
+    case AM_DIRECT:
+         opd->bytes[opd->sz++] = opd->op->opcode[AM_DIRECT];
+         opd->bytes[opd->sz++] = opd->value & 255;
+         return true;
+         
+    case AM_INDEX:
+         return message(opd->a09,MSG_ERROR,"unsupported");
+         
+    case AM_EXTENDED:
+         opd->bytes[opd->sz++] = opd->op->opcode[AM_EXTENDED];
+         opd->bytes[opd->sz++] = opd->value >> 8;
+         opd->bytes[opd->sz++] = opd->value & 255;
+         return true;
+         
+    case AM_INHERENT:
+         return message(opd->a09,MSG_ERROR,"How did this happen?");
+  }
+  
+  return false;
 }
 
 /**************************************************************************/
 
 static bool op_8s(struct opcdata *opd)
 {
-  (void)opd;
-  return false;
+  assert(opd       != NULL);
+  assert(opd->mode != AM_INHERENT);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->mode == AM_IMMED)
+    return message(opd->a09,MSG_ERROR,"immedate mode not supported");
+  return op_8(opd);
 }
 
 /**************************************************************************/
 
 static bool op_16(struct opcdata *opd)
 {
-  assert(opd     != NULL);
-  assert(opd->sz == 0);
+  assert(opd       != NULL);
+  assert(opd->sz   == 0);
+  assert(opd->a09  != NULL);
+  assert(opd->mode != AM_INHERENT);
+  assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->op->page)
     opd->bytes[opd->sz++] = opd->op->page;
   
-  opd->bytes[opd->sz++] = opd->op->opcode[2];
-  opd->bytes[opd->sz++] = 0x9F;
-  opd->bytes[opd->sz++] = 0xFF;
-  opd->bytes[opd->sz++] = 0x00;
-  return true;
+  switch(opd->mode)
+  {
+    case AM_IMMED:
+         opd->bytes[opd->sz++] = opd->op->opcode[AM_IMMED];
+         opd->bytes[opd->sz++] = opd->value >> 8;
+         opd->bytes[opd->sz++] = opd->value & 255;
+         return true;
+         
+    case AM_DIRECT:
+         opd->bytes[opd->sz++] = opd->op->opcode[AM_DIRECT];
+         opd->bytes[opd->sz++] = opd->value & 255;
+         return true;
+         
+    case AM_INDEX:
+         return message(opd->a09,MSG_ERROR,"unsupported");
+         
+    case AM_EXTENDED:
+         opd->bytes[opd->sz++] = opd->op->opcode[AM_EXTENDED];
+         opd->bytes[opd->sz++] = opd->value >> 8;
+         opd->bytes[opd->sz++] = opd->value & 255;
+         return true;
+         
+    case AM_INHERENT:
+         return message(opd->a09,MSG_ERROR,"How did this happen?");
+  }
+  
+  return false;
 }
 
 /**************************************************************************/
 
 static bool op_16s(struct opcdata *opd)
 {
-  (void)opd;
-  return false;
+  assert(opd       != NULL);
+  assert(opd->mode != AM_INHERENT);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->mode == AM_IMMED)
+    return message(opd->a09,MSG_ERROR,"immedate mode not supported");
+  return op_16(opd);
 }
 
 /**************************************************************************/
@@ -130,53 +166,38 @@ static bool op_imm(struct opcdata *opd)
 
 static bool op_1(struct opcdata *opd)
 {
-  assert(opd         != NULL);
-  assert(opd->a09    != NULL);
-  assert(opd->buffer != NULL);
+  assert(opd       != NULL);
+  assert(opd->sz   == 0);
+  assert(opd->a09  != NULL);
+  assert(opd->mode != AM_INHERENT);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  struct symbol *sym;
-  uint16_t       value;
-  char          *target     = NULL;
-  size_t         targetsize = 0;
-  char           c = skip_space(opd->buffer);
-  
-  if ((c != '.') && (c != '_') && !isalpha(c))
-    return message(opd->a09,MSG_ERROR,"bad label");
-  
-  if (!read_label(opd->buffer,&target,&targetsize,c))
-    return message(opd->a09,MSG_ERROR,"failure to read label");
-  
-  sym = symbol_find(opd->a09,target);
-  
-  if (sym == NULL)
-  {
-    if (opd->pass == 2)
-    {
-      message(opd->a09,MSG_ERROR,"symbol '%s' not found",target);
-      free(target);
-      return false;
-    }
-    
-    free(target);
-    value = 0;
-  }
-  else
-    value = sym->value;
-    
   if (opd->op->page)
     opd->bytes[opd->sz++] = opd->op->page;
-    
-  opd->bytes[opd->sz++] = opd->op->opcode[0];
-  opd->bytes[opd->sz++] = value & 255;
-  return true;
-}
-
-/**************************************************************************/
-
-static bool op_1ab(struct opcdata *opd)
-{
-  (void)opd;
+  
+  switch(opd->mode)
+  {
+    case AM_IMMED:
+         return message(opd->a09,MSG_ERROR,"immediate mode not supported");
+         
+    case AM_DIRECT:
+         opd->bytes[opd->sz++] = opd->op->opcode[AM_DIRECT];
+         opd->bytes[opd->sz++] = opd->value & 255;
+         return true;
+         
+    case AM_INDEX:
+         return message(opd->a09,MSG_ERROR,"unsupported");
+         
+    case AM_EXTENDED:
+         opd->bytes[opd->sz++] = opd->op->opcode[AM_EXTENDED];
+         opd->bytes[opd->sz++] = opd->value >> 8;
+         opd->bytes[opd->sz++] = opd->value & 255;
+         return true;
+         
+    case AM_INHERENT:
+         return message(opd->a09,MSG_ERROR,"How did this happen?");
+  }
+  
   return false;
 }
 
@@ -256,7 +277,13 @@ static bool pseudo_equ(struct opcdata *opd)
     return message(opd->a09,MSG_ERROR,"missing label for EQU");
   
   if (opd->pass == 1)
-    symbol_add(opd->a09,opd->label,0x80);
+  {
+    struct symbol *sym = symbol_find(opd->a09,opd->label);
+    assert(sym != NULL); /* this should always be the case */
+    sym->value         = opd->value;
+    sym->equ           = true;
+  }
+  
   return true;
 }
 
@@ -264,137 +291,137 @@ static bool pseudo_equ(struct opcdata *opd)
 
 static struct opcode const opcodes[] =
 {
-  { "ABX"   , op_inh     , { 0x3A , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ADCA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ADCB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ADDA"  , op_8       , { 0x48 , 0x49 , 0x4A , 0x4B } , 0x00 } ,
-  { "ADDB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ADDD"  , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ANDA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ANDB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ANDCC" , op_imm     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ASL"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ASLA"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ASLB"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ASR"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ASRA"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ASRB"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BEQ"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BGE"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BGT"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BHI"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BHS"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BITA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BITB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BLE"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BLO"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BLS"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BLT"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BMI"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BNE"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BPL"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BRA"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BRN"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BSR"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "BVC"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "CLR"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "CLRA"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "CLRB"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "CMPA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "CMPB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "CMPD"  , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "CMPS"  , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x11 } ,
-  { "CMPU"  , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x11 } ,
-  { "CMPX"  , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "CMPY"  , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "COM"   , op_1       , { 0x03 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "COMA"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "COMB"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "CWAI"  , op_imm     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "DAA"   , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "DEC"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "DECA"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "DECB"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "EORA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "EORB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "EQU"   , pseudo_equ , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "EXG"   , op_exg     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "INC"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "INCA"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "INCB"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "JMP"   , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "JSR"   , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "LBEQ"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LBGE"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LBGT"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LBHI"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LBLE"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LBLO"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LBLS"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LBLT"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LBMI"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LBNE"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LBPL"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LBRA"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LBRN"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LBSH"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LBSR"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LBVC"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LDA"   , op_8       , { 0x00 , 0x00 , 0x00 , 0xB6 } , 0x00 } ,
-  { "LDB"   , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "LDD"   , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "LDS"   , op_16      , { 0x00 , 0x00 , 0xEE , 0x00 } , 0x10 } ,
-  { "LDU"   , op_16      , { 0x00 , 0x00 , 0xEE , 0x00 } , 0x00 } ,
-  { "LDX"   , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "LDY"   , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "LEAS"  , op_lea     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "LEAU"  , op_lea     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "LEAX"  , op_lea     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "LEAY"  , op_lea     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "LSR"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "LSRA"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "LSRB"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "MUL"   , op_inh     , { 0x3D , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "NEG"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "NEGA"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "NEGB"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "NOP"   , op_inh     , { 0x12 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ORA"   , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ORB"   , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ORCC"  , op_imm     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "PSHS"  , op_pushx   , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "PSHU"  , op_pullx   , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "PULS"  , op_pushu   , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "PULU"  , op_pullu   , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ROL"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ROLA"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ROLB"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "ROR"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "RORA"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "RORB"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "RTI"   , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "RTS"   , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "SBCA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "SBCB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "SEX"   , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "STA"   , op_8s      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "STB"   , op_8s      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "STD"   , op_16s     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "STS"   , op_16s     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "STU"   , op_16s     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "STX"   , op_16s     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "STY"   , op_16s     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "SUBA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "SUBB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "SUBD"  , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "SWI"   , op_inh     , { 0x3F , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "SWI2"  , op_inh     , { 0x3F , 0x00 , 0x00 , 0x00 } , 0x10 } ,
-  { "SWI3"  , op_inh     , { 0x3F , 0x00 , 0x00 , 0x00 } , 0x11 } ,
-  { "SYNC"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "TFR"   , op_exg     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "TST"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "TSTA"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
-  { "TSTB"  , op_1ab     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 } ,
+  { "ABX"   , op_inh     , { 0x3A , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ADCA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ADCB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ADDA"  , op_8       , { 0x48 , 0x49 , 0x4A , 0x4B } , 0x00 , false } ,
+  { "ADDB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ADDD"  , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ANDA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ANDB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ANDCC" , op_imm     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ASL"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ASLA"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ASLB"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ASR"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ASRA"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ASRB"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BEQ"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BGE"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BGT"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BHI"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BHS"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BITA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BITB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BLE"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BLO"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BLS"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BLT"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BMI"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BNE"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BPL"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BRA"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BRN"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BSR"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "BVC"   , op_br      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "CLR"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "CLRA"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "CLRB"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "CMPA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "CMPB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "CMPD"  , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "CMPS"  , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x11 , true  } ,
+  { "CMPU"  , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x11 , true  } ,
+  { "CMPX"  , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , true  } ,
+  { "CMPY"  , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "COM"   , op_1       , { 0x00 , 0x03 , 0x63 , 0x73 } , 0x00 , false } ,
+  { "COMA"  , op_inh     , { 0x43 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "COMB"  , op_inh     , { 0x53 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "CWAI"  , op_imm     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "DAA"   , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "DEC"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "DECA"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "DECB"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "EORA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "EORB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "EQU"   , pseudo_equ , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "EXG"   , op_exg     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "INC"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "INCA"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "INCB"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "JMP"   , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "JSR"   , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "LBEQ"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LBGE"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LBGT"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LBHI"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LBLE"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LBLO"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LBLS"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LBLT"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LBMI"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LBNE"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LBPL"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LBRA"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LBRN"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LBSH"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LBSR"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LBVC"  , op_lbr     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LDA"   , op_8       , { 0x00 , 0x00 , 0x00 , 0xB6 } , 0x00 , false } ,
+  { "LDB"   , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "LDD"   , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , true  } ,
+  { "LDS"   , op_16      , { 0xCE , 0xDE , 0xEE , 0xFE } , 0x10 , true  } ,
+  { "LDU"   , op_16      , { 0xCE , 0xDE , 0xEE , 0xFE } , 0x00 , true  } ,
+  { "LDX"   , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , true  } ,
+  { "LDY"   , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "LEAS"  , op_lea     , { 0x00 , 0x00 , 0x32 , 0x00 } , 0x00 , true  } ,
+  { "LEAU"  , op_lea     , { 0x00 , 0x00 , 0x33 , 0x00 } , 0x00 , true  } ,
+  { "LEAX"  , op_lea     , { 0x00 , 0x00 , 0x30 , 0x00 } , 0x00 , true  } ,
+  { "LEAY"  , op_lea     , { 0x00 , 0x00 , 0x31 , 0x00 } , 0x00 , true  } ,
+  { "LSR"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "LSRA"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "LSRB"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "MUL"   , op_inh     , { 0x3D , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "NEG"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "NEGA"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "NEGB"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "NOP"   , op_inh     , { 0x12 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ORA"   , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ORB"   , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ORCC"  , op_imm     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "PSHS"  , op_pushx   , { 0x34 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "PSHU"  , op_pullx   , { 0x36 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "PULS"  , op_pushu   , { 0x35 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "PULU"  , op_pullu   , { 0x37 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ROL"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ROLA"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ROLB"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "ROR"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "RORA"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "RORB"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "RTI"   , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "RTS"   , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "SBCA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "SBCB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "SEX"   , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "STA"   , op_8s      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "STB"   , op_8s      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "STD"   , op_16s     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , true  } ,
+  { "STS"   , op_16s     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "STU"   , op_16s     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , true  } ,
+  { "STX"   , op_16s     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , true  } ,
+  { "STY"   , op_16s     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x10 , true  } ,
+  { "SUBA"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "SUBB"  , op_8       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "SUBD"  , op_16      , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , true  } ,
+  { "SWI"   , op_inh     , { 0x3F , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "SWI2"  , op_inh     , { 0x3F , 0x00 , 0x00 , 0x00 } , 0x10 , false } ,
+  { "SWI3"  , op_inh     , { 0x3F , 0x00 , 0x00 , 0x00 } , 0x11 , false } ,
+  { "SYNC"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "TFR"   , op_exg     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "TST"   , op_1       , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "TSTA"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "TSTB"  , op_inh     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
 };
 
 /**************************************************************************/
