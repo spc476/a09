@@ -24,7 +24,7 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
   
   if ((tag == MSG_DEBUG) && !a09->debug)
     return true;
-  
+    
   fprintf(stderr,"%s:%zu: %s: ",a09->infile,a09->lnum,tag);
   va_start(ap,fmt);
 #if defined(__clang__)
@@ -92,94 +92,66 @@ static bool read_line(FILE *in,struct buffer *buffer)
 
 /**************************************************************************/
 
-bool read_label(struct buffer *buffer,char **plabel,size_t *plabelsize,char c)
+static void read_label(struct buffer *buffer,label *label,char c)
 {
-  assert(buffer      != NULL);
-  assert(plabel      != NULL);
-  assert(*plabel     == NULL);
-  assert(plabelsize  != NULL);
-  assert(*plabelsize == 0);
+  assert(buffer != NULL);
+  assert(label  != NULL);
+  assert(isgraph(c));
   
-  char *nline = NULL;
-  char *line  = NULL;
-  size_t i    = 0;
-  size_t max  = 0;
+  size_t i = 0;
   
-  while((c == '.') || (c == '_') || (c == '$') || isalpha(c) || isdigit(c))
+  while((c == '.') || (c == '_') || (c == '$') || isalnum(c))
   {
-    if (i == max)
-    {
-      max += 64;
-      nline = realloc(line,max);
-      if (nline == NULL)
-      {
-        free(line);
-        return false;
-      }
-      line = nline;
-    }
-    
-    line[i++] = c;
+    if (i < sizeof(label->text))
+      label->text[i++] = c;
     c = buffer->buf[buffer->ridx++];
   }
   
-  line[i++] = '\0';
-  nline     = realloc(line,i);
-  
-  if (nline != NULL)
-    line = nline;
-    
-  if (buffer->ridx > 0)
-    buffer->ridx--;
-  
-  *plabel     = line;
-  *plabelsize = i - 1;
-  return true;
+  label->s = i;
+  assert(buffer->ridx > 0);
+  buffer->ridx--;
 }
 
 /**************************************************************************/
 
-static bool parse_label(char **plabel,struct buffer *buffer,struct a09 *a09)
+static inline size_t min(size_t a,size_t b)
 {
-  assert(plabel != NULL);
+  return a < b ? a : b;
+}
+
+bool parse_label(label *res,struct buffer *buffer,struct a09 *a09)
+{
+  assert(res    != NULL);
   assert(buffer != NULL);
   assert(a09    != NULL);
   
-  char c = buffer->buf[buffer->ridx];
-
+  label tmp;
+  char  c = buffer->buf[buffer->ridx];
+  
   if ((c == '.') || (c == '_') || isalpha(c))
   {
-    char   *label     = NULL;
-    char   *name      = NULL;
-    size_t  labelsize = 0;
-    
     buffer->ridx++;
-    if (!read_label(buffer,&label,&labelsize,c))
-      return false;
-    
-    if (*label == '.')
+    read_label(buffer,&tmp,c);
+    if (tmp.text[0] == '.')
     {
-      name = malloc(a09->labelsize + labelsize + 1);
-      memcpy(name,a09->label,a09->labelsize);
-      memcpy(&name[a09->labelsize],label,labelsize + 1);
+      memcpy(res->text,a09->label.text,a09->label.s);
+      size_t s = min(tmp.s,sizeof(tmp.text) - tmp.s);
+      assert(s <= sizeof(res->text));
+      memcpy(&res->text[a09->label.s],tmp.text,s);
+      if (a09->label.s + tmp.s > sizeof(res->text))
+        message(a09,MSG_WARNING,"label '%.*s%.*s' exceeds %zu characters",a09->label.s,a09->label.text,tmp.s,tmp.text,sizeof(res->text));
+      res->s = a09->label.s + s;
     }
     else
     {
-      name = malloc(labelsize + 1);
-      memcpy(name,label,labelsize + 1);
-      free(a09->label);
-      a09->label = strdup(name);
+      a09->label = tmp;
+      *res       = tmp;
     }
     
-    free(label);
-    *plabel = name;
     return true;
   }
   else
-  {
-    *plabel = NULL;
-    return true;
-  }
+    return false;
 }
 
 /**************************************************************************/
@@ -196,53 +168,20 @@ static bool parse_op(struct buffer *buffer,struct opcode const **pop)
   {
     c = buffer->buf[buffer->ridx];
     if (isspace(c) || (c == '\0'))
-    {    
+    {
       top[i] = '\0';
       *pop   = op_find(top);
       return *pop != NULL;
     }
     else if (!isalpha(c) && !isdigit(c))
       break;
-
+      
     top[i] = toupper(c);
     buffer->ridx++;
   }
   
   assert(c != 0);
   return false;
-}
-
-/**************************************************************************/
-
-static bool parse_operand(struct a09 *a09,struct buffer *buffer,struct opcdata *opd)
-{
-  assert(a09    != NULL);
-  assert(buffer != NULL);
-  assert(opd    != NULL);
-  
-  char c = skip_space(buffer);
-  
-  if ((c == ';') || (c == '\0'))
-  {
-    assert(opd->mode == AM_INHERENT);
-    return true;
-  }
-  
-  if (c == '#')
-  {
-    opd->mode = AM_IMMED;
-    if (!expr(&opd->value,a09,buffer,opd->pass))
-      return message(a09,MSG_ERROR,"bad immedate value");
-    return true;
-  }
-  
-  buffer->ridx--; // ungetc()
-
-  if (!expr(&opd->value,a09,buffer,opd->pass))
-    return message(a09,MSG_ERROR,"bad value");
-    
-  opd->mode = AM_EXTENDED;
-  return true;
 }
 
 /**************************************************************************/
@@ -321,41 +260,37 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     .a09    = a09,
     .op     = NULL,
     .buffer = buffer,
-    .label  = NULL,
+    .label  = { .s = 0 },
     .pass   = pass,
     .sz     = 0,
     .data   = false,
     .mode   = AM_INHERENT,
-    .value  = 0,
-    .ireg   = -1,
+    .value  =
+    {
+      .name         = NULL,
+      .value        = 0,
+      .bits         = 0,
+      .unknownpass1 = false,
+      .defined      = false,
+    },
     .bits   = 16,
   };
   
-  if (!parse_label(&opd.label,&a09->inbuf,a09))
+  if (parse_label(&opd.label,&a09->inbuf,a09))
   {
-    assert(opd.label == NULL);
-    return false;
-  }
-  
-  if ((opd.label != NULL) && (pass == 1))
-    if (symbol_add(a09,opd.label,a09->pc) == NULL)
+    if ((pass == 1) && (symbol_add(a09,&opd.label,a09->pc) == NULL))
       return false;
+  }
   
   c = skip_space(&a09->inbuf);
   
   if ((c == ';') || (c == '\0'))
-  {
-    free(opd.label);
     return print_list(a09,&opd);
-  }
-  
+    
   a09->inbuf.ridx--; // ungetc()
   
   if (!parse_op(&a09->inbuf,&opd.op))
     return message(a09,MSG_ERROR,"unknown opcode");
-  
-  if (!parse_operand(a09,&a09->inbuf,&opd))
-    return false;
     
   rc = opd.op->func(&opd);
   
@@ -372,7 +307,6 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     }
   }
   
-  free(opd.label);
   return rc;
 }
 
@@ -390,7 +324,7 @@ static bool assemble_pass(struct a09 *a09,int pass)
   a09->pc   = 0;
   
   message(a09,MSG_DEBUG,"Pass %d",pass);
-    
+  
   while(!feof(a09->in))
   {
     if (!read_line(a09->in,&a09->inbuf))
@@ -451,7 +385,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       }
     }
     else
-      break;    
+      break;
   }
   
   return i;
@@ -464,25 +398,23 @@ static void dump_symbols(FILE *out,tree__s *tree)
   assert(out != NULL);
   if (tree != NULL)
   {
+    static char const *const symtypes[] =
+    {
+      [SYM_UNDEF]   = "undefined",
+      [SYM_ADDRESS] = "address",
+      [SYM_EQU]     = "equate",
+      [SYM_SET]     = "set",
+    };
+    
     dump_symbols(out,tree->left);
-    
     struct symbol *sym = tree2sym(tree);
-    char const    *tag;
-    
-    if (sym->equ)
-      tag = "equate";
-    else if (sym->set)
-      tag = "set";
-    else
-      tag = "address";
-    
     fprintf(
              out,
-             "%5zu | %-11.11s %04X %s\n",
+             "%5zu | %-11.11s %04X %.*s\n",
              sym->ldef,
-             tag,
+             symtypes[sym->type],
              sym->value,
-             sym->name
+             sym->name.s,sym->name.text
           );
     dump_symbols(out,tree->right);
   }
@@ -504,8 +436,11 @@ int main(int argc,char *argv[])
     .list      = NULL,
     .lnum      = 0,
     .symtab    = NULL,
-    .label     = NULL,
-    .labelsize = 0,
+    .label     =
+    {
+      .s = 0,
+      .text = { '\0' },
+    },
     .pc        = 0,
     .debug     = false,
     .inbuf     =
@@ -584,11 +519,9 @@ int main(int argc,char *argv[])
      )
   {
     struct symbol *sym = node2sym(node);
-    free(sym->name);
     free(sym);
   }
   
-  free(a09.label);
   free(a09.inbuf.buf);
   return rc ? 0 : 1;
 }

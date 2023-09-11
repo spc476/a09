@@ -6,13 +6,26 @@
 
 #include "a09.h"
 
+static inline size_t min(size_t a,size_t b)
+{
+  return a < b ? a : b;
+}
+
 /**************************************************************************/
 
 static int symstrcmp(void const *restrict needle,void const *restrict haystack)
 {
-  char          const *key   = needle;
+  label         const *key   = needle;
   struct symbol const *value = haystack;
-  return strcmp(key,value->name);
+  int rc = memcmp(key->text,value->name.text,min(key->s,value->name.s));
+  if (rc == 0)
+  {
+    if (key->s < value->name.s)
+      rc = -1;
+    else if (key->s > value->name.s)
+      rc = 1;
+  }
+  return rc;
 }
 
 /**************************************************************************/
@@ -21,24 +34,32 @@ static int symtreecmp(void const *restrict needle,void const *restrict haystack)
 {
   struct symbol const *key   = needle;
   struct symbol const *value = haystack;
-  return strcmp(key->name,value->name);
+  int rc = memcmp(key->name.text,value->name.text,min(key->name.s,value->name.s));
+  if (rc == 0)
+  {
+    if (key->name.s < value->name.s)
+      rc = -1;
+    else if (key->name.s > value->name.s)
+      rc = 1;
+  }
+  return rc;
 }
 
 /**************************************************************************/
 
-struct symbol *symbol_find(struct a09 *a09,char const *name)
+struct symbol *symbol_find(struct a09 *a09,label const *name)
 {
   tree__s *tree = tree_find(a09->symtab,name,symstrcmp);
-
+  
   if (tree)
     return tree2sym(tree);
   else
-    return NULL;    
+    return NULL;
 }
 
 /**************************************************************************/
 
-struct symbol *symbol_add(struct a09 *a09,char const *name,uint16_t value)
+struct symbol *symbol_add(struct a09 *a09,label const *name,uint16_t value)
 {
   assert(a09  != NULL);
   assert(name != NULL);
@@ -55,26 +76,26 @@ struct symbol *symbol_add(struct a09 *a09,char const *name,uint16_t value)
       sym->tree.height  = 0;
       sym->node.ln_Succ = NULL;
       sym->node.ln_Pred = NULL;
-      sym->name         = strdup(name);
+      sym->name         = *name;
+      sym->type         = SYM_ADDRESS;
       sym->value        = value;
       sym->filename     = a09->infile;
       sym->ldef         = a09->lnum;
       sym->external     = false;
-      sym->equ          = false;
-      sym->set          = false;
+      sym->public       = false;
       ListAddTail(&a09->symbols,&sym->node);
       a09->symtab = tree_insert(a09->symtab,&sym->tree,symtreecmp);
     }
   }
-  else if (sym->set)
+  else if (sym->type == SYM_SET)
   {
     sym->value    = value;
     sym->filename = a09->infile;
     sym->ldef     = a09->lnum;
-  }    
+  }
   else
   {
-    message(a09,MSG_ERROR,"'%s' already defined on line %zu",name,sym->ldef);
+    message(a09,MSG_ERROR,"'%.*s' already defined on line %zu",name->s,name->text,sym->ldef);
     return NULL;
   }
   

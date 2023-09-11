@@ -28,6 +28,16 @@ enum admode
   AM_INHERENT,
 };
 
+enum symtype
+{
+  SYM_UNDEF,
+  SYM_ADDRESS,
+  SYM_EQU,
+  SYM_SET,
+};
+
+typedef struct label { unsigned char s; char text[63]; } label;
+
 struct buffer
 {
   char   *buf;
@@ -48,23 +58,33 @@ struct a09
   size_t         lnum;
   tree__s       *symtab;
   List           symbols;
-  char          *label;
-  size_t         labelsize;
+  label          label;
   uint16_t       pc;
   bool           debug;
 };
 
 struct symbol
 {
-  tree__s     tree;
-  Node        node;
-  char       *name;
-  uint16_t    value;
-  char const *filename;
-  size_t      ldef;
-  bool        external;
-  bool        equ;
-  bool        set;
+  tree__s       tree;
+  Node          node;
+  label         name;
+  enum symtype  type;
+  uint16_t      value;
+  char const   *filename;
+  size_t        ldef;
+  size_t        bits;
+  bool          external;
+  bool          public;
+};
+
+struct value
+{
+  label         *name;
+  uint16_t       value;
+  size_t         bits;
+  unsigned char  postbyte;
+  bool           unknownpass1;
+  bool           defined;
 };
 
 struct opcdata
@@ -72,14 +92,13 @@ struct opcdata
   struct a09          *a09;
   struct opcode const *op;
   struct buffer       *buffer;
-  char                *label;
+  label                label;
   int                  pass;
   uint16_t             sz;
-  unsigned char        bytes[5];
+  unsigned char        bytes[6];
   bool                 data;
   enum admode          mode;
-  uint16_t             value;
-  int                  ireg;
+  struct value         value;
   size_t               bits;
 };
 
@@ -92,20 +111,19 @@ struct opcode
   bool            bit16;
 };
 
+/**************************************************************************/
 
 extern char const MSG_DEBUG[];
 extern char const MSG_WARNING[];
 extern char const MSG_ERROR[];
 
-extern bool                 message      (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
-extern bool                 read_label   (struct buffer *,char **,size_t *,char);
-extern char                 skip_space   (struct buffer *);
-extern struct opcode const *op_find      (char const *);
-
-extern bool           expr        (uint16_t *,struct a09 *,struct buffer *,int);
-
-extern struct symbol *symbol_find (struct a09 *,char const *);
-extern struct symbol *symbol_add  (struct a09 *,char const *,uint16_t);
+extern bool                 message       (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
+extern bool                 parse_label   (label *,struct buffer *,struct a09 *);
+extern char                 skip_space    (struct buffer *);
+extern struct opcode const *op_find       (char const *);
+extern bool                 expr          (struct value *,struct a09 *,struct buffer *,int);
+extern struct symbol       *symbol_find   (struct a09 *,label const *);
+extern struct symbol       *symbol_add    (struct a09 *,label const *,uint16_t);
 
 /**************************************************************************/
 

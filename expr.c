@@ -23,8 +23,7 @@ static bool s2num(uint16_t *pv,struct buffer *buffer,uint16_t base)
   while(true)
   {
     static char const trans[16] = "0123456789ABCDEF";
-    char *p;
-    char  c = buffer->buf[buffer->ridx];
+    char              c         = buffer->buf[buffer->ridx];
     
     if (c == '_')
     {
@@ -34,19 +33,16 @@ static bool s2num(uint16_t *pv,struct buffer *buffer,uint16_t base)
     
     if (c == '\0')
       return cnt > 0;
-    
     if (!isxdigit(c))
       return cnt > 0;
+      
+    uint16_t v = (uint16_t)((char const *)memchr(trans,toupper(c),sizeof(trans)) - trans);
     
-    c = toupper(c);
-    p = strchr(trans,toupper(c));
-    if (p == NULL)
-      return cnt > 0;
-    uint16_t v = (uint16_t)(p - trans);
     if (v >= base)
       return false;
     if (*pv > UINT16_MAX - v)
       return false;
+      
     *pv *= base;
     *pv += v;
     buffer->ridx++;
@@ -56,11 +52,12 @@ static bool s2num(uint16_t *pv,struct buffer *buffer,uint16_t base)
 
 /**************************************************************************/
 
-static bool factor(uint16_t *pv,struct a09 *a09,struct buffer *buffer,int pass)
+static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
 {
   assert(pv     != NULL);
   assert(a09    != NULL);
   assert(buffer != NULL);
+  assert((pass == 1) || (pass == 2));
   
   bool neg  = false;
   bool not  = false;
@@ -68,10 +65,28 @@ static bool factor(uint16_t *pv,struct a09 *a09,struct buffer *buffer,int pass)
   char c    = skip_space(buffer);
   bool rc;
   
+  pv->defined = true; /* optimistic setting */
+  
   if (c == '*')
   {
-    *pv = a09->pc;
+    pv->value = a09->pc;
     return true;
+  }
+  
+  if (c == '>')
+  {
+    pv->bits = 16;
+    c = buffer->buf[buffer->ridx++];
+  }
+  else if (c == '<')
+  {
+    if (buffer->buf[buffer->ridx] == '<')
+    {
+      buffer->ridx++;
+      pv->bits = 5;
+    }
+    else
+      pv->bits = 8;
   }
   
   do
@@ -100,48 +115,46 @@ static bool factor(uint16_t *pv,struct a09 *a09,struct buffer *buffer,int pass)
   } while(false);
   
   if (c == '$')
-    rc = s2num(pv,buffer,16);
+    rc = s2num(&pv->value,buffer,16);
   else if (c == '&')
-    rc = s2num(pv,buffer,8);
+    rc = s2num(&pv->value,buffer,8);
   else if (c == '%')
-    rc = s2num(pv,buffer,2);
+    rc = s2num(&pv->value,buffer,2);
   else if (isdigit(c))
   {
     buffer->ridx--;
-    rc = s2num(pv,buffer,10);
+    rc = s2num(&pv->value,buffer,10);
   }
   else if ((c == '_') || (c == '.') || isalpha(c))
   {
     struct symbol *sym;
-    char          *label = NULL;
-    size_t         len   = 0;
+    label          label;
     
-    if (!read_label(buffer,&label,&len,c))
-    {
-      assert(label == NULL);
+    buffer->ridx--;
+    if (!parse_label(&label,buffer,a09))
       return false;
-    }
-    sym = symbol_find(a09,label);
+      
+    sym = symbol_find(a09,&label);
     if (sym == NULL)
     {
       if (pass == 2)
       {
-        message(a09,MSG_ERROR,"unknown symbol '%s'",label);
-        free(label);
+        message(a09,MSG_ERROR,"unknown symbol '%.*s'",label.s,label.text);
         return false;
       }
-      *pv = 0;
+      pv->defined      = false;
+      pv->unknownpass1 = pass == 1;
+      pv->value       = 0;
     }
     else
-      *pv = sym->value;
-    free(label);
+      pv->value = sym->value;
   }
   else if (c == '\'')
   {
     c = buffer->buf[buffer->ridx++];
     if (isgraph(c))
     {
-      *pv = c;
+      pv->value = c;
       return true;
     }
     else
@@ -149,27 +162,33 @@ static bool factor(uint16_t *pv,struct a09 *a09,struct buffer *buffer,int pass)
   }
   else
     return false;
-  
+    
   if (neg)
   {
-    if (*pv > INT16_MAX)
+    if (pv->value > INT16_MAX)
       return false;
-    *pv = -*pv;
+    pv->value = -pv->value;
   }
   else if (not)
-    *pv = ~*pv;
+    pv->value = ~pv->value;
     
   return true;
 }
 
 /**************************************************************************/
 
-bool expr(uint16_t *pv,struct a09 *a09,struct buffer *buffer,int pass)
+bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
 {
   assert(pv     != NULL);
   assert(a09    != NULL);
   assert(buffer != NULL);
   assert((pass == 1) || (pass == 2));
+  
+  pv->name         = NULL;
+  pv->value        = 0;
+  pv->bits         = 0;
+  pv->unknownpass1 = false;
+  pv->defined      = false;
   return factor(pv,a09,buffer,pass);
 }
 
