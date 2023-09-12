@@ -87,6 +87,7 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
     }
     else
       pv->bits = 8;
+    c = buffer->buf[buffer->ridx++];
   }
   
   do
