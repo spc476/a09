@@ -79,7 +79,6 @@ struct symbol
 
 struct value
 {
-  label         *name;
   uint16_t       value;
   size_t         bits;
   unsigned char  postbyte;
@@ -100,6 +99,7 @@ struct opcdata
   enum admode          mode;
   struct value         value;
   size_t               bits;
+  bool                 pcrel;
 };
 
 struct opcode

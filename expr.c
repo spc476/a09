@@ -144,11 +144,14 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
         return false;
       }
       pv->defined      = false;
-      pv->unknownpass1 = pass == 1;
-      pv->value       = 0;
+      pv->unknownpass1 = true;
+      pv->value        = 0;
     }
     else
-      pv->value = sym->value;
+    {
+      pv->unknownpass1 = sym->ldef > a09->lnum;
+      pv->value        = sym->value;
+    }
   }
   else if (c == '\'')
   {
@@ -185,7 +188,6 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   assert(buffer != NULL);
   assert((pass == 1) || (pass == 2));
   
-  pv->name         = NULL;
   pv->value        = 0;
   pv->bits         = 0;
   pv->unknownpass1 = false;

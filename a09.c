@@ -202,7 +202,7 @@ char skip_space(struct buffer *buffer)
 
 /**************************************************************************/
 
-static bool print_list(struct a09 *a09,struct opcdata *opd)
+static bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
 {
   assert(a09 != NULL);
   assert(opd != NULL);
@@ -210,7 +210,12 @@ static bool print_list(struct a09 *a09,struct opcdata *opd)
   if (a09->list != NULL)
   {
     if (opd->sz == 0)
-      fprintf(a09->list,"                  ");
+    {
+      if (labelonly && opd->label.s > 0)
+        fprintf(a09->list,"%04X:             ",a09->pc);
+      else
+        fprintf(a09->list,"                  ");
+    }
     else
     {
       size_t i = 0; // index into opd->bytes[]
@@ -267,13 +272,13 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     .mode   = AM_INHERENT,
     .value  =
     {
-      .name         = NULL,
       .value        = 0,
       .bits         = 0,
       .unknownpass1 = false,
       .defined      = false,
     },
     .bits   = 16,
+    .pcrel  = false,
   };
   
   if (parse_label(&opd.label,&a09->inbuf,a09))
@@ -285,7 +290,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   c = skip_space(&a09->inbuf);
   
   if ((c == ';') || (c == '\0'))
-    return print_list(a09,&opd);
+    return print_list(a09,&opd,true);
     
   a09->inbuf.ridx--; // ungetc()
   
@@ -296,7 +301,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   
   if (rc)
   {
-    print_list(a09,&opd);
+    print_list(a09,&opd,false);
     
     a09->pc += opd.sz;
     if ((pass == 2) && (opd.sz > 0))

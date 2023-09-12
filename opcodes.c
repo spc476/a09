@@ -73,15 +73,15 @@ static bool parse_index(struct opcdata *opd)
         opd->value.postbyte = opd->value.value & 0x1F;
         opd->bits           = 5;
       }
-      else if (((opd->value.value < 16) || (opd->value.value > 65519)) && !indexindirect)
-      {
-        opd->value.postbyte = opd->value.value & 0x1F;
-        opd->bits           = 5;
-      }
       else if (opd->value.bits == 8)
       {
         opd->value.postbyte = 0x88;
         opd->bits           = 8;
+      }
+      else if (((opd->value.value < 16) || (opd->value.value > 65519)) && !indexindirect)
+      {
+        opd->value.postbyte = opd->value.value & 0x1F;
+        opd->bits           = 5;
       }
       else if ((opd->value.value < 0x80) || (opd->value.value > 0xFF7F))
       {
@@ -114,28 +114,35 @@ static bool parse_index(struct opcdata *opd)
            if (opd->buffer->buf[opd->buffer->ridx++] != 'c')
              return message(opd->a09,MSG_ERROR,"syntax error 3");
              
-           if (opd->bits == 8)
+           opd->pcrel = true;
+           
+           if (opd->value.bits == 0)
            {
+             if (opd->value.unknownpass1)
+             {
+               opd->value.postbyte = 0x8D;
+               opd->bits           = 16;
+             }
+             else
+             {
+               uint16_t pc = opd->a09->pc + 2 + (opd->op->page != 0);
+               uint16_t delta = opd->value.value - pc;
+               if ((delta < 0x80) || (delta > 0xFF7F))
+               {
+                 opd->value.postbyte = 0x8C;
+                 opd->bits           = 8;
+               }
+               else
+               {
+                 opd->value.postbyte = 0x8D;
+                 opd->bits           = 16;
+               }
+             }
            }
-           else if (opd->bits == 16)
-           {
-           }
-           
- //          uint16_t delta = opd->value.value - (opd->
-           
-           
-           
-           if ((opd->value.value < 0x80) || (opd->value.value > 0xFF7F))
+           else if (opd->value.bits == 8)
              opd->value.postbyte = 0x8C;
            else
              opd->value.postbyte = 0x8D;
-             
-             
-             
-             
-             
-             
-             
            break;
            
       default:
@@ -299,6 +306,41 @@ static unsigned char value_lsb(struct a09 *a09,uint16_t value,int pass)
 
 /**************************************************************************/
 
+static bool finish_index_bytes(struct opcdata *opd)
+{
+  assert(opd != NULL);
+  assert(opd->mode == AM_INDEX);
+  
+  opd->bytes[opd->sz++] = opd->op->opcode[AM_INDEX];
+  opd->bytes[opd->sz++] = opd->value.postbyte;
+  if (opd->bits == 8)
+  {
+    if (opd->pcrel)
+    {
+      uint16_t pc = opd->a09->pc + opd->sz + 1;
+      uint16_t dt = opd->value.value - pc;
+      message(opd->a09,MSG_DEBUG,"pc=%04X t=%04X dt=%04X",pc,opd->value.value,dt);
+      opd->value.value = dt; // opd->value.value - (opd->a09->pc + opd->sz + 1);
+    }
+    opd->bytes[opd->sz++] = opd->value.value & 255;
+  }
+  else if (opd->bits == 16)
+  {
+    if (opd->pcrel)
+    {
+      uint16_t pc = opd->a09->pc + opd->sz + 2;
+      uint16_t dt = opd->value.value - pc;
+      message(opd->a09,MSG_DEBUG,"pc=%04X t=%04X dt=%04X",pc,opd->value.value,dt);
+      opd->value.value = opd->value.value - (opd->a09->pc + opd->sz + 2);
+    }
+    opd->bytes[opd->sz++] = opd->value.value >> 8;
+    opd->bytes[opd->sz++] = opd->value.value & 255;
+  }
+  return true;
+}
+
+/**************************************************************************/
+
 static bool op_idie(struct opcdata *opd)
 {
   assert(opd       != NULL);
@@ -331,16 +373,7 @@ static bool op_idie(struct opcdata *opd)
          return true;
          
     case AM_INDEX:
-         opd->bytes[opd->sz++] = opd->op->opcode[AM_INDEX];
-         opd->bytes[opd->sz++] = opd->value.postbyte;
-         if (opd->value.bits == 8)
-           opd->bytes[opd->sz++] = opd->value.value & 255;
-         else if (opd->value.bits == 16)
-         {
-           opd->bytes[opd->sz++] = opd->value.value >> 8;
-           opd->bytes[opd->sz++] = opd->value.value & 255;
-         }
-         return true;
+         return finish_index_bytes(opd);
          
     case AM_EXTENDED:
          opd->bytes[opd->sz++] = opd->op->opcode[AM_EXTENDED];
@@ -381,16 +414,7 @@ static bool op_die(struct opcdata *opd)
          return true;
          
     case AM_INDEX:
-         opd->bytes[opd->sz++] = opd->op->opcode[AM_INDEX];
-         opd->bytes[opd->sz++] = opd->value.postbyte;
-         if (opd->bits == 8)
-           opd->bytes[opd->sz++] = opd->value.value & 255;
-         else if (opd->bits == 16)
-         {
-           opd->bytes[opd->sz++] = opd->value.value >> 8;
-           opd->bytes[opd->sz++] = opd->value.value & 255;
-         }
-         return true;
+         return finish_index_bytes(opd);
          
     case AM_EXTENDED:
          opd->bytes[opd->sz++] = opd->op->opcode[AM_EXTENDED];
@@ -488,21 +512,13 @@ static bool op_lea(struct opcdata *opd)
   
   if (!parse_operand(opd))
     return false;
+    
   if (opd->mode != AM_INDEX)
     return message(opd->a09,MSG_ERROR,"bad operand");
     
   if (opd->op->page)
     opd->bytes[opd->sz++] = opd->op->page;
-  opd->bytes[opd->sz++] = opd->op->opcode[AM_INDEX];
-  opd->bytes[opd->sz++] = opd->value.postbyte;
-  if (opd->bits == 8)
-    opd->bytes[opd->sz++] = opd->value.value & 255;
-  else if (opd->bits == 16)
-  {
-    opd->bytes[opd->sz++] = opd->value.value >> 8;
-    opd->bytes[opd->sz++] = opd->value.value & 255;
-  }
-  return true;
+  return finish_index_bytes(opd);
 }
 
 /**************************************************************************/
@@ -603,7 +619,7 @@ static struct opcode const opcodes[] =
   { "ABX"   , op_inh     , { 0x3A , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
   { "ADCA"  , op_idie    , { 0x89 , 0x99 , 0xA9 , 0xB9 } , 0x00 , false } ,
   { "ADCB"  , op_idie    , { 0xC9 , 0xD9 , 0xE9 , 0xF9 } , 0x00 , false } ,
-  { "ADDA"  , op_idie    , { 0x8B , 0x9B , 0xAA , 0xBB } , 0x00 , false } ,
+  { "ADDA"  , op_idie    , { 0x8B , 0x9B , 0xAB , 0xBB } , 0x00 , false } ,
   { "ADDB"  , op_idie    , { 0xCB , 0xDB , 0xEB , 0xFB } , 0x00 , false } ,
   { "ADDD"  , op_idie    , { 0xC3 , 0xD3 , 0xE3 , 0xF3 } , 0x00 , true  } ,
   { "ANDA"  , op_idie    , { 0x84 , 0x94 , 0xA4 , 0xB4 } , 0x00 , false } ,
