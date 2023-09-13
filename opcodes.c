@@ -642,6 +642,27 @@ static bool pseudo_equ(struct opcdata *opd)
 
 /**************************************************************************/
 
+static bool pseudo_set(struct opcdata *opd)
+{
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (!parse_dirext(opd))
+    return message(opd->a09,MSG_ERROR,"missing label for SET");
+    
+  if (opd->pass == 1)
+  {
+    struct symbol  *sym = symbol_find(opd->a09,&opd->label);
+    assert(sym != NULL);
+    sym->value          = opd->value.value;
+    sym->type           = SYM_SET;
+  }
+  
+  return true;
+}
+
+/**************************************************************************/
+
 static int opcode_cmp(void const *needle,void const *haystack)
 {
   char          const *key    = needle;
@@ -773,6 +794,7 @@ struct opcode const *op_find(char const *name)
     { "RTS"   , op_inh     , { 0x39 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
     { "SBCA"  , op_idie    , { 0x82 , 0x92 , 0xA2 , 0xB2 } , 0x00 , false } ,
     { "SBCB"  , op_idie    , { 0xC2 , 0xD2 , 0xE2 , 0xF2 } , 0x00 , false } ,
+    { "SET"   , pseudo_set , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
     { "SEX"   , op_inh     , { 0x1D , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
     { "STA"   , op_die     , { 0x00 , 0x97 , 0xA7 , 0xB7 } , 0x00 , false } ,
     { "STB"   , op_die     , { 0x00 , 0xD7 , 0xE7 , 0xF7 } , 0x00 , false } ,
