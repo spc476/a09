@@ -317,22 +317,16 @@ static bool finish_index_bytes(struct opcdata *opd)
   {
     if (opd->pcrel)
     {
-      uint16_t pc = opd->a09->pc + opd->sz + 1;
-      uint16_t dt = opd->value.value - pc;
-      message(opd->a09,MSG_DEBUG,"pc=%04X t=%04X dt=%04X",pc,opd->value.value,dt);
-      opd->value.value = dt; // opd->value.value - (opd->a09->pc + opd->sz + 1);
+      uint16_t pc      = opd->a09->pc + opd->sz + 1;
+      uint16_t dt      = opd->value.value - pc;
+      opd->value.value = dt;
     }
     opd->bytes[opd->sz++] = opd->value.value & 255;
   }
   else if (opd->bits == 16)
   {
     if (opd->pcrel)
-    {
-      uint16_t pc = opd->a09->pc + opd->sz + 2;
-      uint16_t dt = opd->value.value - pc;
-      message(opd->a09,MSG_DEBUG,"pc=%04X t=%04X dt=%04X",pc,opd->value.value,dt);
       opd->value.value = opd->value.value - (opd->a09->pc + opd->sz + 2);
-    }
     opd->bytes[opd->sz++] = opd->value.value >> 8;
     opd->bytes[opd->sz++] = opd->value.value & 255;
   }

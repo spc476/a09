@@ -459,7 +459,6 @@ int main(int argc,char *argv[])
   
   ListInit(&a09.symbols);
   fi = parse_command(argc,argv,&a09);
-  a09.in = stdin;
   
   if (fi == argc)
   {
