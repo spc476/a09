@@ -478,7 +478,6 @@ static bool op_lbr(struct opcdata *opd)
   assert(opd             != NULL);
   assert(opd->a09        != NULL);
   assert(opd->sz         == 0);
-  assert(opd->op->opcode != 0);
   
   if (!parse_operand(opd))
     return false;
