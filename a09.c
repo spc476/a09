@@ -193,7 +193,7 @@ char skip_space(struct buffer *buffer)
   do
   {
     c = buffer->buf[buffer->ridx++];
-    if ((c == '\0') || (c == '\n'))
+    if (c == '\0')
       return c;
   } while (isspace(c));
   
