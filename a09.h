@@ -7,6 +7,7 @@
 #if defined(__clang__)
 #  pragma clang diagnostic ignored "-Wpadded"
 #  pragma clang diagnostic ignored "-Wconversion"
+#  pragma clang diagnostic ignored "-Wdeclaration-after-statement"
 #endif
 
 #include <stddef.h>
