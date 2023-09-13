@@ -63,7 +63,7 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
   bool not  = false;
   bool plus = false;
   char c    = skip_space(buffer);
-  bool rc;
+  bool rc   = true;
   
   pv->defined = true; /* optimistic setting */
   
@@ -176,7 +176,7 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
   else if (not)
     pv->value = ~pv->value;
     
-  return true;
+  return rc;
 }
 
 /**************************************************************************/
