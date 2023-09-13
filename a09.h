@@ -112,6 +112,15 @@ struct opcode
   bool            bit16;
 };
 
+struct indexregs
+{
+  char          reg[3];
+  unsigned char pushpull;
+  unsigned char tehi;
+  unsigned char telo;
+  bool          b16;
+};
+
 /**************************************************************************/
 
 extern char const MSG_DEBUG[];
