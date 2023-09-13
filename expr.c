@@ -52,7 +52,7 @@ static bool s2num(uint16_t *pv,struct buffer *buffer,uint16_t base)
 
 /**************************************************************************/
 
-static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
+static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
 {
   assert(pv     != NULL);
   assert(a09    != NULL);
@@ -181,6 +181,104 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
 
 /**************************************************************************/
 
+static bool eval(struct a09 *a09,struct value *v1,char op,struct value *v2)
+{
+  assert(v1 != NULL);
+  assert(v2 != NULL);
+  
+  switch(op)
+  {
+    case '+': v1->value += v2->value; break;
+    case '-': v1->value -= v2->value; break;
+    case '*': v1->value *= v2->value; break;
+    case '/':
+         if (v2->value == 0)
+           return message(a09,MSG_ERROR,"divide by 0 error");
+         v1->value /= v2->value;
+         break;
+         
+    default:
+         return message(a09,MSG_ERROR,"internal error");
+  }
+  
+  v1->unknownpass1 = v1->unknownpass1 || v2->unknownpass1;
+  v1->defined      = v1->defined      && v2->defined;
+  return true;
+}
+
+/**************************************************************************/
+
+static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
+{
+  assert(pv     != NULL);
+  assert(a09    != NULL);
+  assert(buffer != NULL);
+  assert((pass == 1) || (pass == 2));
+  
+  char c = skip_space(buffer);
+  if (c == '\0')
+    return message(a09,MSG_ERROR,"unexpected end of input");
+    
+  if (c == '(')
+  {
+    c = skip_space(buffer);
+    if (c == '\0')
+      return message(a09,MSG_ERROR,"unexpected end of input");
+    buffer->ridx--;
+    if (!expr(pv,a09,buffer,pass))
+      return false;
+    c = skip_space(buffer);
+    if (c != ')')
+      return message(a09,MSG_ERROR,"missing right parenthesis");
+    return true;
+  }
+  else
+  {
+    buffer->ridx--;
+    return value(pv,a09,buffer,pass);
+  }
+}
+
+/**************************************************************************/
+
+static bool term(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
+{
+  assert(pv     != NULL);
+  assert(a09    != NULL);
+  assert(buffer != NULL);
+  assert((pass == 1) || (pass == 2));
+
+  if (!factor(pv,a09,buffer,pass))
+    return false;
+  
+  while(true)
+  {
+    struct value val;
+    
+    char op = skip_space(buffer);
+    if (op == '\0')
+      return true;
+    if ((op != '*') && (op != '/'))
+    {
+      buffer->ridx--;
+      return true;
+    }
+    
+    char c = skip_space(buffer);
+    if (c == '\0')
+      return message(a09,MSG_ERROR,"unexpected end of expression");
+    
+    memset(&val,0,sizeof(val));
+    buffer->ridx--;
+    if (!factor(&val,a09,buffer,pass))
+      return message(a09,MSG_ERROR,"missing factor in expression");
+    if (!eval(a09,pv,op,&val))
+      return false;
+  }
+}
+
+/**************************************************************************/
+
 bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
 {
   assert(pv     != NULL);
@@ -188,11 +286,35 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   assert(buffer != NULL);
   assert((pass == 1) || (pass == 2));
   
-  pv->value        = 0;
-  pv->bits         = 0;
-  pv->unknownpass1 = false;
-  pv->defined      = false;
-  return factor(pv,a09,buffer,pass);
+  memset(pv,0,sizeof(struct value));
+  if (!term(pv,a09,buffer,pass))
+    return false;
+  
+  while(true)
+  {
+    struct value val;
+    char op = skip_space(buffer);
+    if (op == '\0')
+      return true;
+    
+    if ((op != '+') && (op != '-'))
+    {
+      buffer->ridx--;
+      return true;
+    }
+    
+    char c = skip_space(buffer);
+    if (c == '\0')
+      return message(a09,MSG_ERROR,"unexpected end of expression");
+    
+    memset(&val,0,sizeof(val));
+    buffer->ridx--;
+    if (!term(&val,a09,buffer,pass))
+      return message(a09,MSG_ERROR,"missing term in expression");
+    
+    if (!eval(a09,pv,op,&val))
+      return false;
+  }
 }
 
 /**************************************************************************/
