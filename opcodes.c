@@ -522,72 +522,116 @@ static bool op_lea(struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool op_pushx(struct opcdata *opd)
+struct indexregs
 {
-  assert(opd     != NULL);
-  assert(opd->op != NULL);
-  
-  if (opd->op->page)
-    opd->bytes[opd->sz++] = opd->op->page;
-  opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
-  opd->bytes[opd->sz++] = 0;
-  return true; // XXX
+  char reg[3];
+  unsigned char pushpull;
+  unsigned char tehi;
+  unsigned char telo;
+  bool          b16;
+};
+
+static struct indexregs const g_index[] =
+{
+  { "\2pc" , 0x80 , 0x50 , 0x05 , true  } ,
+  { "\1s"  , 0x40 , 0x40 , 0x04 , true  } ,
+  { "\1u"  , 0x40 , 0x30 , 0x03 , true  } ,
+  { "\1y"  , 0x20 , 0x20 , 0x02 , true  } ,
+  { "\1x"  , 0x10 , 0x10 , 0x01 , true  } ,
+  { "\2dp" , 0x08 , 0xB0 , 0x0B , false } ,
+  { "\1b"  , 0x04 , 0x90 , 0x09 , false } ,
+  { "\1a"  , 0x02 , 0x80 , 0x08 , false } ,
+  { "\2cc" , 0x01 , 0xA0 , 0x0A , false } ,
+  { "\1d"  , 0x06 , 0x00 , 0x00 , true  } ,
+};
+
+static bool sop_findreg(struct indexregs const **ir,char const *src,char skip)
+{
+  for (size_t i = 0 ; i < sizeof(g_index) / sizeof(g_index[0]) ; i++)
+  {
+    if (memcmp(src,&g_index[i].reg[1],g_index[i].reg[0]) == 0)
+    {
+      if (g_index[i].reg[1] == skip)
+        return false;
+      *ir = &g_index[i];
+      return true;
+    }
+  }
+  return false;
 }
 
 /**************************************************************************/
 
-static bool op_pullx(struct opcdata *opd)
+static bool op_pshpul(struct opcdata *opd)
 {
-  assert(opd     != NULL);
-  assert(opd->op != NULL);
+  assert(opd           != NULL);
+  assert(opd->op       != NULL);
+  assert(opd->op->page == 0);
   
-  if (opd->op->page)
-    opd->bytes[opd->sz++] = opd->op->page;
-  opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
-  opd->bytes[opd->sz++] = 0;
-  return true; // XXX
-}
-
-/**************************************************************************/
-
-static bool op_pushu(struct opcdata *opd)
-{
-  assert(opd     != NULL);
-  assert(opd->op != NULL);
+  unsigned char operand = 0;
+  char          skip    = tolower(opd->op->name[3]); /* yes, I know! */
+  char          c       = skip_space(opd->buffer);
   
-  if (opd->op->page)
-    opd->bytes[opd->sz++] = opd->op->page;
-  opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
-  opd->bytes[opd->sz++] = 0;
-  return true; // XXX
-}
-
-/**************************************************************************/
-
-static bool op_pullu(struct opcdata *opd)
-{
-  assert(opd     != NULL);
-  assert(opd->op != NULL);
+  if (c == '\0')
+    return false;
+    
+  opd->buffer->ridx--;
   
-  if (opd->op->page)
-    opd->bytes[opd->sz++] = opd->op->page;
+  while(!isspace(c) && (c != ';') && (c != '0'))
+  {
+    struct indexregs const *reg;
+    
+    if (!sop_findreg(&reg,&opd->buffer->buf[opd->buffer->ridx],skip))
+      return false;
+    opd->buffer->ridx += reg->reg[0];
+    operand |= reg->pushpull;
+    if (opd->buffer->buf[opd->buffer->ridx] == '\0')
+      break;
+    if (opd->buffer->buf[opd->buffer->ridx] != ',')
+      return false;
+    opd->buffer->ridx++;
+  }
+  
   opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
-  opd->bytes[opd->sz++] = 0;
-  return true; // XXX
+  opd->bytes[opd->sz++] = operand;
+  return true;
 }
 
 /**************************************************************************/
 
 static bool op_exg(struct opcdata *opd)
 {
-  assert(opd     != NULL);
-  assert(opd->op != NULL);
+  assert(opd           != NULL);
+  assert(opd->op       != NULL);
+  assert(opd->op->page == 0);
   
-  if (opd->op->page)
-    opd->bytes[opd->sz++] = opd->op->page;
+  struct indexregs const *reg1;
+  struct indexregs const *reg2;
+  unsigned char           operand = 0;
+  char                    c       = skip_space(opd->buffer);
+  
+  if (c == '\0')
+    return false;
+    
+  opd->buffer->ridx--;
+  
+  if (!sop_findreg(&reg1,&opd->buffer->buf[opd->buffer->ridx],'\0'))
+    return false;
+  opd->buffer->ridx += reg1->reg[0];
+  operand |= reg1->tehi;
+  if (opd->buffer->buf[opd->buffer->ridx] != ',')
+    return false;
+  opd->buffer->ridx++;
+  
+  if (!sop_findreg(&reg2,&opd->buffer->buf[opd->buffer->ridx],'\0'))
+    return false;
+  if (reg1->b16 != reg2->b16)
+    message(opd->a09,MSG_WARNING,"ext/tfr mixed sized registers");
+  operand |= reg2->telo;
+  
   opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
-  opd->bytes[opd->sz++] = 0;
-  return true; // XXX
+  opd->bytes[opd->sz++] = operand;
+  return true;
 }
 
 /**************************************************************************/
@@ -718,10 +762,10 @@ static struct opcode const opcodes[] =
   { "ORA"   , op_idie    , { 0x8A , 0x9A , 0xAA , 0xBA } , 0x00 , false } ,
   { "ORB"   , op_idie    , { 0xCA , 0xDA , 0xEA , 0xFA } , 0x00 , false } ,
   { "ORCC"  , op_imm     , { 0x1A , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
-  { "PSHS"  , op_pushx   , { 0x34 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
-  { "PSHU"  , op_pullx   , { 0x36 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
-  { "PULS"  , op_pushu   , { 0x35 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
-  { "PULU"  , op_pullu   , { 0x37 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "PSHS"  , op_pshpul  , { 0x34 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "PSHU"  , op_pshpul  , { 0x36 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "PULS"  , op_pshpul  , { 0x35 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "PULU"  , op_pshpul  , { 0x37 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
   { "ROL"   , op_die     , { 0x00 , 0x09 , 0x69 , 0x79 } , 0x00 , false } ,
   { "ROLA"  , op_inh     , { 0x49 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
   { "ROLB"  , op_inh     , { 0x59 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
@@ -747,7 +791,7 @@ static struct opcode const opcodes[] =
   { "SWI2"  , op_inh     , { 0x3F , 0x00 , 0x00 , 0x00 } , 0x10 , false } ,
   { "SWI3"  , op_inh     , { 0x3F , 0x00 , 0x00 , 0x00 } , 0x11 , false } ,
   { "SYNC"  , op_inh     , { 0x13 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
-  { "TFR"   , op_exg     , { 0x17 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+  { "TFR"   , op_exg     , { 0x1F , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
   { "TST"   , op_die     , { 0x00 , 0x0D , 0x6D , 0x7D } , 0x00 , false } ,
   { "TSTA"  , op_inh     , { 0x4D , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
   { "TSTB"  , op_inh     , { 0x5D , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
