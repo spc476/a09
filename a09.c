@@ -207,7 +207,7 @@ char skip_space(struct buffer *buffer)
 
 /**************************************************************************/
 
-static bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
+bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
 {
   assert(a09 != NULL);
   assert(opd != NULL);
@@ -336,7 +336,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
 
 /**************************************************************************/
 
-static bool assemble_pass(struct a09 *a09,int pass)
+bool assemble_pass(struct a09 *a09,int pass)
 {
   assert(a09     != NULL);
   assert(a09->in != NULL);
@@ -345,7 +345,7 @@ static bool assemble_pass(struct a09 *a09,int pass)
   
   rewind(a09->in);
   a09->lnum = 0;
-  a09->pc   = 0;
+//  a09->pc   = 0;
   
   message(a09,MSG_DEBUG,"Pass %d",pass);
   
@@ -516,8 +516,9 @@ int main(int argc,char *argv[])
   
   if (a09.list != NULL)
     fprintf(a09.list,"                         | FILE %s\n",a09.infile);
-    
-  rc = assemble_pass(&a09,2);
+  
+  a09.pc = 0;  
+  rc     = assemble_pass(&a09,2);
   
   if (a09.list != NULL)
   {

@@ -806,8 +806,39 @@ static bool pseudo_asciiz(struct opcdata *opd)
 
 static bool pseudo_include(struct opcdata *opd)
 {
-  assert(opd != NULL);
-  return message(opd->a09,MSG_ERROR,"INCLUDE unsupported");
+  assert(opd      != NULL);
+  assert(opd->a09 != NULL);
+  
+  struct buffer filenamebuf;
+  char          filename[FILENAME_MAX];
+  bool          rc;
+  struct a09    new = *opd->a09;
+  
+  if (!parse_string(opd,&filenamebuf))
+    return false;
+  snprintf(filename,sizeof(filename),"%s",filenamebuf.buf);
+  free(filenamebuf.buf);
+  
+  new.label  = (label){ .s = 0 , .text = { '\0' } };
+  new.inbuf  = (struct buffer){ .buf = NULL , .size = 0 , .widx = 0 , .ridx = 0 };
+  new.infile = filename;
+  new.in     = fopen(filename,"r");
+  
+  if (new.in == NULL)
+    return false;
+    
+  if ((opd->pass == 2) && (new.list != NULL))
+    fprintf(new.list,"                         | FILE %s\n",filename);
+
+  rc = assemble_pass(&new,opd->pass);
+
+  if ((opd->pass == 2) && (new.list != NULL))
+    fprintf(new.list,"                         | ENF-OF-LINE\n");
+
+  fclose(new.in);
+  free(new.inbuf.buf);
+  opd->a09->pc = new.pc;
+  return rc;
 }
 
 /**************************************************************************/

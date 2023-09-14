@@ -136,6 +136,8 @@ extern bool                 append_char   (struct buffer *,char);
 extern bool                 message       (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
 extern bool                 parse_label   (label *,struct buffer *,struct a09 *);
 extern char                 skip_space    (struct buffer *);
+extern bool                 print_list    (struct a09 *,struct opcdata *,bool);
+extern bool                 assemble_pass (struct a09 *,int);
 extern struct opcode const *op_find       (char const *);
 extern bool                 expr          (struct value *,struct a09 *,struct buffer *,int);
 extern struct symbol       *symbol_find   (struct a09 *,label const *);
