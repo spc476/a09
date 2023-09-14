@@ -957,18 +957,16 @@ struct opcode const *op_find(char const *name)
     { "TSTA"    , op_inh         , { 0x4D , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
     { "TSTB"    , op_inh         , { 0x5D , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
   };
-
+  
   assert(name != NULL);
   
-  struct opcode const *op = bsearch(
+  return bsearch(
         name,
         opcodes,
         sizeof(opcodes)/sizeof(opcodes[0]),
         sizeof(opcodes[0]),
         opcode_cmp
   );
-  
-  return op;
 }
 
 /**************************************************************************/
