@@ -72,7 +72,7 @@ static bool read_line(FILE *in,struct buffer *buffer)
   while(!feof(in))
   {
     int c = fgetc(in);
-    if (c == EOF)  break;
+    if (c == EOF)  return false;
     if (c == '\n') break;
     if (c == '\t')
     {
@@ -345,14 +345,13 @@ bool assemble_pass(struct a09 *a09,int pass)
   
   rewind(a09->in);
   a09->lnum = 0;
-//  a09->pc   = 0;
   
   message(a09,MSG_DEBUG,"Pass %d",pass);
   
   while(!feof(a09->in))
   {
     if (!read_line(a09->in,&a09->inbuf))
-      return false;
+      return true;
     a09->lnum++;
     if (!parse_line(a09,&a09->inbuf,pass))
       return false;
