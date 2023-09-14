@@ -840,7 +840,8 @@ static bool pseudo_include(struct opcdata *opd)
 
   fclose(new.in);
   free(new.inbuf.buf);
-  opd->a09->pc = new.pc;
+  opd->a09->pc     = new.pc;
+  opd->a09->symtab = new.symtab;
   return rc;
 }
 
