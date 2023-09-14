@@ -143,6 +143,13 @@ extern struct symbol       *symbol_add    (struct a09 *,label const *,uint16_t);
 
 /**************************************************************************/
 
+static inline size_t min(size_t a,size_t b)
+{
+  return a < b ? a : b;
+}
+
+/**************************************************************************/
+
 static inline struct symbol *tree2sym(tree__s *tree)
 {
   assert(tree != NULL);

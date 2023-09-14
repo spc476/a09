@@ -114,11 +114,6 @@ static void read_label(struct buffer *buffer,label *label,char c)
 
 /**************************************************************************/
 
-static inline size_t min(size_t a,size_t b)
-{
-  return a < b ? a : b;
-}
-
 bool parse_label(label *res,struct buffer *buffer,struct a09 *a09)
 {
   assert(res    != NULL);

@@ -6,11 +6,6 @@
 
 #include "a09.h"
 
-static inline size_t min(size_t a,size_t b)
-{
-  return a < b ? a : b;
-}
-
 /**************************************************************************/
 
 static int symstrcmp(void const *restrict needle,void const *restrict haystack)
