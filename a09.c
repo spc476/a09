@@ -146,6 +146,15 @@ bool parse_label(label *res,struct buffer *buffer,struct a09 *a09)
     {
       a09->label = tmp;
       *res       = tmp;
+      
+      /*-----------------------------------------------------------------
+      ; if the label we've just read has a '.', chop off the label stored
+      ; "globally" to ignore the portion past the '.'
+      ;-------------------------------------------------------------------*/
+      
+      char *p = memchr(a09->label.text,'.',a09->label.s);
+      if (p != NULL)
+        a09->label.s = (unsigned char)(p - a09->label.text);
     }
     
     return true;
