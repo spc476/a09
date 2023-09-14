@@ -106,6 +106,16 @@ struct opcdata
   struct value         value;
   size_t               bits;
   bool                 pcrel;
+  
+  /*--------------------------------------------------------------------------
+  ; This is solely for the use of the INCLUDE pseudo-op.  We want to include
+  ; the line in the listing file before the included file appears in the
+  ; listing file, but that's it.  This is here to prevent the INCLUDE line
+  ; being listed twice.  If it's set, then print_list() won't print the
+  ; line.
+  ;--------------------------------------------------------------------------*/
+  
+  bool                 includehack;
 };
 
 struct opcode

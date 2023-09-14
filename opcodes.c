@@ -828,8 +828,11 @@ static bool pseudo_include(struct opcdata *opd)
     return false;
     
   if ((opd->pass == 2) && (new.list != NULL))
+  {
+    print_list(opd->a09,opd,false);
     fprintf(new.list,"                         | FILE %s\n",filename);
-
+    opd->includehack = true;
+  }
   rc = assemble_pass(&new,opd->pass);
 
   if ((opd->pass == 2) && (new.list != NULL))

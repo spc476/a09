@@ -212,7 +212,7 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
   assert(a09 != NULL);
   assert(opd != NULL);
   
-  if (a09->list != NULL)
+  if ((a09->list != NULL) && (!opd->includehack))
   {
     if (opd->sz == 0)
     {
@@ -261,6 +261,7 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
     
     fprintf(a09->list," %5zu | %s\n",a09->lnum,a09->inbuf.buf);
   }
+  opd->includehack = false;
   return true;
 }
 
@@ -292,8 +293,9 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
       .unknownpass1 = false,
       .defined      = false,
     },
-    .bits   = 16,
-    .pcrel  = false,
+    .bits        = 16,
+    .pcrel       = false,
+    .includehack = false,
   };
   
   if (parse_label(&opd.label,&a09->inbuf,a09))
