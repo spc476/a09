@@ -824,7 +824,7 @@ static bool pseudo_incbin(struct opcdata *opd)
   if (!parse_string(opd,&filenamebuf))
     return false;
   
-  memcpy(filename,filenamebuf.buf,sizeof(filename));
+  snprintf(filename,sizeof(filename),"%s",filenamebuf.buf);
   free(filenamebuf.buf);
   
   if (opd->pass == 1)
