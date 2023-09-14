@@ -42,7 +42,7 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
 
 /**************************************************************************/
 
-static bool append_char(struct buffer *buffer,char c)
+bool append_char(struct buffer *buffer,char c)
 {
   if (buffer->widx == buffer->size)
   {
@@ -228,31 +228,40 @@ static bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
     }
     else
     {
-      size_t i = 0; // index into opd->bytes[]
-      size_t c = 0; // # byte columns printed
-      
-      fprintf(a09->list,"%04X: %02X",a09->pc,opd->bytes[i++]);
-      c++;
-      
-      if ((opd->bytes[0] == 0x10) || (opd->bytes[0] == 0x11))
+      if (opd->data)
       {
-        fprintf(a09->list,"%02X  ",opd->bytes[i++]);
-        c++;
+        fprintf(a09->list,"%04X: ",a09->pc);
+        for (size_t i = 0 ; i < sizeof(opd->bytes) ; i++)
+          fprintf(a09->list,"%02X",opd->bytes[i]);
       }
       else
       {
-        fprintf(a09->list,"    ");
+        size_t i = 0; // index into opd->bytes[]
+        size_t c = 0; // # byte columns printed
+        
+        fprintf(a09->list,"%04X: %02X",a09->pc,opd->bytes[i++]);
         c++;
+        
+        if ((opd->bytes[0] == 0x10) || (opd->bytes[0] == 0x11))
+        {
+          fprintf(a09->list,"%02X  ",opd->bytes[i++]);
+          c++;
+        }
+        else
+        {
+          fprintf(a09->list,"    ");
+          c++;
+        }
+        
+        for ( ; i < opd->sz  ; i++)
+        {
+          fprintf(a09->list,"%02X",opd->bytes[i]);
+          c++;
+        }
+        
+        for ( ; c < 5 ; c++)
+          fprintf(a09->list,"  ");
       }
-      
-      for ( ; i < opd->sz  ; i++)
-      {
-        fprintf(a09->list,"%02X",opd->bytes[i]);
-        c++;
-      }
-      
-      for ( ; c < 5 ; c++)
-        fprintf(a09->list,"  ");
     }
     
     fprintf(a09->list," %5zu | %s\n",a09->lnum,a09->inbuf.buf);
@@ -279,6 +288,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     .pass   = pass,
     .sz     = 0,
     .data   = false,
+    .datasz = 0,
     .mode   = AM_INHERENT,
     .value  =
     {
@@ -313,8 +323,12 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   {
     print_list(a09,&opd,false);
     
-    a09->pc += opd.sz;
-    if ((pass == 2) && (opd.sz > 0))
+    if (opd.datasz > 0)
+      a09->pc += opd.datasz;
+    else
+      a09->pc += opd.sz;
+      
+    if ((pass == 2) && (opd.sz > 0) && opd.datasz == 0)
     {
       size_t x = fwrite(opd.bytes,1,opd.sz,a09->out);
       if (x != opd.sz)

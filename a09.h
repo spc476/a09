@@ -101,6 +101,7 @@ struct opcdata
   uint16_t             sz;
   unsigned char        bytes[6];
   bool                 data;
+  size_t               datasz;
   enum admode          mode;
   struct value         value;
   size_t               bits;
@@ -131,6 +132,7 @@ extern char const MSG_DEBUG[];
 extern char const MSG_WARNING[];
 extern char const MSG_ERROR[];
 
+extern bool                 append_char   (struct buffer *,char);
 extern bool                 message       (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
 extern bool                 parse_label   (label *,struct buffer *,struct a09 *);
 extern char                 skip_space    (struct buffer *);

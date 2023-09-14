@@ -6,9 +6,68 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <ctype.h>
 
 #include "a09.h"
+
+static inline size_t min(size_t a,size_t b)
+{
+  return a < b ? a : b;
+}
+
+/**************************************************************************/
+
+static bool parse_string(struct opcdata *opd,struct buffer *buf)
+{
+  assert(opd         != NULL);
+  assert(opd->buffer != NULL);
+  assert(buf         != NULL);
+  
+  char delim;
+  char c = skip_space(opd->buffer);
+  
+  if ((c == '"') || (c == '\''))
+    delim = c;
+  else
+    return message(opd->a09,MSG_ERROR,"not a string");
+  
+  buf->buf  = NULL;
+  buf->size = 0;
+  buf->widx = 0;
+  buf->ridx = 0;
+  
+  while((c = opd->buffer->buf[opd->buffer->ridx++]) != delim)
+  {
+    if (c == '\0')
+      return message(opd->a09,MSG_ERROR,"unexpected end of string");
+    if (c == '\\')
+    {
+      c = opd->buffer->buf[opd->buffer->ridx++];
+      switch(c)
+      {
+        case 'a':  c = '\a'; break;
+        case 'b':  c = '\b'; break;
+        case 't':  c = '\t'; break;
+        case 'n':  c = '\n'; break;
+        case 'v':  c = '\v'; break;
+        case 'f':  c = '\f'; break;
+        case 'r':  c = '\r'; break;
+        case 'e':  c = '\033'; break;
+        case '"':  c = '"';
+        case '\'': c = '\''; break;
+        case '\\': c = '\\'; break;
+        case '\0': return message(opd->a09,MSG_ERROR,"unexpected end of string");
+        default:   return message(opd->a09,MSG_ERROR,"invalid escape character");
+      }
+    }
+    
+    append_char(buf,c);
+  }
+  
+  append_char(buf,'\0');
+  return true;
+}
 
 /**************************************************************************/
 
@@ -761,7 +820,64 @@ static bool pseudo_include(struct opcdata *opd)
 static bool pseudo_incbin(struct opcdata *opd)
 {
   assert(opd != NULL);
-  return message(opd->a09,MSG_ERROR,"INCBIN unsupported");
+  
+  struct buffer  filenamebuf;
+  char           filename[FILENAME_MAX];
+  FILE          *fp;
+  bool           fill = false;
+  
+  if (!parse_string(opd,&filenamebuf))
+    return false;
+  
+  memcpy(filename,filenamebuf.buf,sizeof(filename));
+  free(filenamebuf.buf);
+  
+  if (opd->pass == 1)
+  {
+    fp = fopen(filename,"rb");
+    if (fp == NULL)
+      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename,strerror(errno));
+    if (fseek(fp,0,SEEK_END) == -1)
+      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename,strerror(errno));
+    long fsize = ftell(fp);
+    if (fsize < 0)
+      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename,strerror(errno));
+    if (fsize > UINT16_MAX - opd->a09->pc)
+      return message(opd->a09,MSG_ERROR,"%s: file too big",filename);
+    opd->datasz = fsize;
+    fclose(fp);
+  }
+  else
+  {
+    char   buffer[BUFSIZ];
+    size_t bsz;
+    
+    fp = fopen(filename,"rb");
+    if (fp == NULL)
+      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename,strerror(errno));
+      
+    do
+    {
+      bsz = fread(buffer,1,sizeof(buffer),fp);
+      if (ferror(fp))
+        return message(opd->a09,MSG_ERROR,"%s: failed reading",filename);
+      if (!fill)
+      {
+        opd->sz   = min(bsz,sizeof(opd->bytes));
+        opd->data = true;
+        fill      = true;
+        memcpy(opd->bytes,buffer,opd->sz);
+      }
+      
+      fwrite(buffer,1,bsz,opd->a09->out);
+      if (ferror(opd->a09->out))
+        return message(opd->a09,MSG_ERROR,"failed writing objectfile");
+      opd->datasz += bsz;
+    } while (bsz > 0);
+    fclose(fp);
+  }
+  
+  return true;
 }
 
 /**************************************************************************/
