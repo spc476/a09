@@ -37,7 +37,11 @@ enum symtype
   SYM_SET,
 };
 
-typedef struct label { unsigned char s; char text[63]; } label;
+typedef struct label
+{
+  unsigned char s;
+  char          text[63];
+} label;
 
 struct buffer
 {
