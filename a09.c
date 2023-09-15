@@ -214,7 +214,7 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
   
   if ((a09->list != NULL) && (!opd->includehack))
   {
-    if (opd->sz == 0)
+    if ((opd->sz == 0) && (opd->datasz == 0))
     {
       if (labelonly && opd->label.s > 0)
         fprintf(a09->list,"%04X:             ",a09->pc);

@@ -720,7 +720,16 @@ static bool pseudo_set(struct opcdata *opd)
 static bool pseudo_rmb(struct opcdata *opd)
 {
   assert(opd != NULL);
-  return message(opd->a09,MSG_ERROR,"RMB unsupported");
+  if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
+    return message(opd->a09,MSG_ERROR,"bad value");
+  opd->data   = true;
+  opd->datasz = opd->value.value;
+  if (opd->pass == 2)
+  {
+    if (fseek(opd->a09->out,opd->value.value,SEEK_CUR) == -1)
+      return message(opd->a09,MSG_ERROR,"%s",strerror(errno));
+  }
+  return true;
 }
 
 /**************************************************************************/
