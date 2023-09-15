@@ -13,19 +13,14 @@
 
 /**************************************************************************/
 
-static bool parse_string(struct opcdata *opd,struct buffer *buf)
+static bool collect_string(struct opcdata *opd,struct buffer *buf,char delim)
 {
+  char c;
+  
   assert(opd         != NULL);
+  assert(opd->a09    != NULL);
   assert(opd->buffer != NULL);
   assert(buf         != NULL);
-  
-  char delim;
-  char c = skip_space(opd->buffer);
-  
-  if ((c == '"') || (c == '\''))
-    delim = c;
-  else
-    return message(opd->a09,MSG_ERROR,"not a string");
   
   buf->buf  = NULL;
   buf->size = 0;
@@ -62,6 +57,22 @@ static bool parse_string(struct opcdata *opd,struct buffer *buf)
   
   append_char(buf,'\0');
   return true;
+}
+
+/**************************************************************************/
+  
+static bool parse_string(struct opcdata *opd,struct buffer *buf)
+{
+  assert(opd         != NULL);
+  assert(opd->buffer != NULL);
+  assert(buf         != NULL);
+  
+  char c = skip_space(opd->buffer);
+  
+  if ((c == '"') || (c == '\''))
+    return collect_string(opd,buf,c);
+  else
+    return message(opd->a09,MSG_ERROR,"not a string");
 }
 
 /**************************************************************************/
@@ -855,8 +866,26 @@ static bool pseudo_fdb(struct opcdata *opd)
 
 static bool pseudo_fcc(struct opcdata *opd)
 {
-  assert(opd != NULL);
-  return message(opd->a09,MSG_ERROR,"FCC unsupported");
+  struct buffer textstring;
+  char c = skip_space(opd->buffer);
+  if (c == '\0')
+    return message(opd->a09,MSG_ERROR,"expected end of input");
+  if (!collect_string(opd,&textstring,c))
+    return false;
+  opd->data   = true;
+  opd->datasz = textstring.widx;
+  if (opd->pass == 2)
+  {
+    opd->sz = min(textstring.widx,sizeof(opd->bytes));
+    memcpy(opd->bytes,textstring.buf,opd->sz);
+    if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
+      return message(opd->a09,MSG_ERROR,"truncated output to object file");
+    if (ferror(opd->a09->out))
+      return message(opd->a09,MSG_ERROR,"error writing object file");
+  }
+  
+  free(textstring.buf);
+  return true;
 }
 
 /**************************************************************************/
