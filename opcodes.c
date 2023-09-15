@@ -780,7 +780,7 @@ static bool pseudo_fcb(struct opcdata *opd)
       opd->datasz++;
       if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
         return message(opd->a09,MSG_ERROR,"bad value");
-      unsigned char byte = opd->value.value & 255;
+      unsigned char byte = value_lsb(opd->a09,opd->value.value,opd->pass);
       if (opd->sz < 6)
         opd->bytes[opd->sz++] = byte;
       fwrite(&byte,1,1,opd->a09->out);
@@ -800,8 +800,46 @@ static bool pseudo_fcb(struct opcdata *opd)
 
 static bool pseudo_fdb(struct opcdata *opd)
 {
-  assert(opd != NULL);
-  return message(opd->a09,MSG_ERROR,"FDB unsupported");
+  if (opd->pass == 1)
+  {
+    opd->data = true;
+    for (char *p = &opd->buffer->buf[opd->buffer->ridx - 1] ; p != NULL ; opd->datasz += 2 , p = strchr(p+1,','))
+      ;
+    return true;
+  }
+  else
+  {
+    opd->data = true;
+    
+    while(true)
+    {
+      char c = skip_space(opd->buffer);
+      opd->buffer->ridx--;
+      opd->datasz += 2;
+      if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
+        return message(opd->a09,MSG_ERROR,"bad value");
+      unsigned char word[2] =
+      {
+        opd->value.value >> 8 ,
+        opd->value.value & 255
+      };
+      
+      if (opd->sz < 6)
+      {
+        opd->bytes[opd->sz++] = word[0];
+        opd->bytes[opd->sz++] = word[1];
+      }
+      fwrite(word,1,2,opd->a09->out);
+      if (ferror(opd->a09->out))
+        return message(opd->a09,MSG_ERROR,"failed writing object file");
+      c = skip_space(opd->buffer);
+      
+      if ((c == ';') || (c == '\0'))
+        return true;
+      if (c != ',')
+        return message(opd->a09,MSG_ERROR,"missing comma");
+    }
+  }
 }
 
 /**************************************************************************/
