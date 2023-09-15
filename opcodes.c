@@ -866,14 +866,20 @@ static bool pseudo_fdb(struct opcdata *opd)
 
 static bool pseudo_fcc(struct opcdata *opd)
 {
+  assert(opd      != NULL);
+  assert(opd->a09 != NULL);
+  
   struct buffer textstring;
-  char c = skip_space(opd->buffer);
+  char          c = skip_space(opd->buffer);
+  
   if (c == '\0')
     return message(opd->a09,MSG_ERROR,"expected end of input");
   if (!collect_string(opd,&textstring,c))
     return false;
+    
   opd->data   = true;
   opd->datasz = textstring.widx;
+  
   if (opd->pass == 2)
   {
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
@@ -893,24 +899,89 @@ static bool pseudo_fcc(struct opcdata *opd)
 
 static bool pseudo_ascii(struct opcdata *opd)
 {
-  assert(opd != NULL);
-  return message(opd->a09,MSG_ERROR,"ASCII unsupported");
+  assert(opd      != NULL);
+  assert(opd->a09 != NULL);
+  
+  struct buffer textstring;
+  
+  if (!parse_string(opd,&textstring))
+    return false;
+  
+  opd->data = true;
+  opd->datasz = textstring.widx;
+  
+  if (opd->pass == 2)
+  {
+    opd->sz = min(textstring.widx,sizeof(opd->bytes));
+    memcpy(opd->bytes,textstring.buf,opd->sz);
+    if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
+      return message(opd->a09,MSG_ERROR,"truncate output to object file");
+    if (ferror(opd->a09->out))
+      return message(opd->a09,MSG_ERROR,"error writing object file");
+  }
+  
+  free(textstring.buf);
+  return true;
 }
 
 /**************************************************************************/
 
 static bool pseudo_asciih(struct opcdata *opd)
 {
-  assert(opd != NULL);
-  return message(opd->a09,MSG_ERROR,"ASCIIH unsupported");
+  assert(opd      != NULL);
+  assert(opd->a09 != NULL);
+  
+  struct buffer textstring;
+  
+  if (!parse_string(opd,&textstring))
+    return false;
+  
+  opd->data = true;
+  opd->datasz = textstring.widx;
+  
+  if (opd->pass == 2)
+  {
+    opd->sz = min(textstring.widx,sizeof(opd->bytes));
+    memcpy(opd->bytes,textstring.buf,opd->sz);
+    textstring.buf[textstring.widx - 1] |= 0x80;
+    if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
+      return message(opd->a09,MSG_ERROR,"truncate output to object file");
+    if (ferror(opd->a09->out))
+      return message(opd->a09,MSG_ERROR,"error writing object file");
+  }
+  
+  free(textstring.buf);
+  return true;
 }
 
 /**************************************************************************/
 
 static bool pseudo_asciiz(struct opcdata *opd)
 {
-  assert(opd != NULL);
-  return message(opd->a09,MSG_ERROR,"ASCIIZ unsupported");
+  assert(opd      != NULL);
+  assert(opd->a09 != NULL);
+  
+  struct buffer textstring;
+  
+  if (!parse_string(opd,&textstring))
+    return false;
+  
+  opd->data = true;
+  opd->datasz = textstring.widx + 1;
+  
+  if (opd->pass == 2)
+  {
+    textstring.widx++;
+    opd->sz = min(textstring.widx,sizeof(opd->bytes));
+    memcpy(opd->bytes,textstring.buf,opd->sz);
+    if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
+      return message(opd->a09,MSG_ERROR,"truncate output to object file");
+    if (ferror(opd->a09->out))
+      return message(opd->a09,MSG_ERROR,"error writing object file");
+  }
+  
+  free(textstring.buf);
+  return true;
 }
 
 /**************************************************************************/
