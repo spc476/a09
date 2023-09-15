@@ -278,10 +278,19 @@ static bool parse_index(struct opcdata *opd)
 static bool parse_operand(struct opcdata *opd)
 {
   assert(opd != NULL);
-  bool indexindirect = false;
+  bool  indexindirect = false;
+  char *pc            = strchr(&opd->buffer->buf[opd->buffer->ridx],',');
   
-  if (strchr(&opd->buffer->buf[opd->buffer->ridx],',') != NULL)
-    return parse_index(opd);
+  if (pc != NULL)
+  {
+    /*-------------------------------------------------------------
+    ; make sure the comma isn't in the comment portion of the line
+    ;--------------------------------------------------------------*/
+    
+    char *ps = strchr(&opd->buffer->buf[opd->buffer->ridx],';');
+    if ((ps == NULL) || (pc < ps))
+      return parse_index(opd);
+  }
     
   char c = skip_space(opd->buffer);
   if ((c == ';') || (c == '\0'))
