@@ -644,11 +644,13 @@ static bool op_pshpul(struct opcdata *opd)
       return message(opd->a09,MSG_ERROR,"bad register name");
     opd->buffer->ridx += reg->reg[0];
     operand |= reg->pushpull;
-    if (opd->buffer->buf[opd->buffer->ridx] == '\0')
+    c = skip_space(opd->buffer);
+    if (c == '\0')
       break;
-    if (opd->buffer->buf[opd->buffer->ridx] != ',')
+    if (c == ';')
+      break;
+    if (c != ',')
       return message(opd->a09,MSG_ERROR,"missing comma in register list");
-    opd->buffer->ridx++;
   }
   
   opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
