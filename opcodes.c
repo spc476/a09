@@ -765,10 +765,8 @@ static bool pseudo_fcb(struct opcdata *opd)
   if (opd->pass == 1)
   {
     opd->data   = true;
-    //opd->datasz = 1;
     for (char *p = &opd->buffer->buf[opd->buffer->ridx - 1] ; p != NULL ; opd->datasz++ , p = strchr(p+1,','))
       ;
-    fprintf(stderr,"datasz = %zu\n",opd->datasz);
     return true;
   }
   else
@@ -779,7 +777,7 @@ static bool pseudo_fcb(struct opcdata *opd)
     {
       char c = skip_space(opd->buffer);
       opd->buffer->ridx--;
-      opd->datasz = 1;
+      opd->datasz++;
       if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
         return message(opd->a09,MSG_ERROR,"bad value");
       unsigned char byte = opd->value.value & 255;
@@ -912,6 +910,7 @@ static bool pseudo_incbin(struct opcdata *opd)
       return message(opd->a09,MSG_ERROR,"%s: '%s'",filename,strerror(errno));
     if (fsize > UINT16_MAX - opd->a09->pc)
       return message(opd->a09,MSG_ERROR,"%s: file too big",filename);
+    opd->data   = true;
     opd->datasz = fsize;
     fclose(fp);
   }

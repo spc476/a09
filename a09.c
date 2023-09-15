@@ -323,7 +323,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   {
     print_list(a09,&opd,false);
     
-    if (opd.datasz > 0)
+    if (opd.data)
       a09->pc += opd.datasz;
     else
       a09->pc += opd.sz;
