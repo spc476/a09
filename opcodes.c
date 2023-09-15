@@ -757,8 +757,45 @@ static bool pseudo_end(struct opcdata *opd)
 
 static bool pseudo_fcb(struct opcdata *opd)
 {
-  assert(opd != NULL);
-  return message(opd->a09,MSG_ERROR,"FCB unsupported");
+  assert(opd         != NULL);
+  assert(opd->a09    != NULL);
+  assert(opd->buffer != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->pass == 1)
+  {
+    opd->data   = true;
+    //opd->datasz = 1;
+    for (char *p = &opd->buffer->buf[opd->buffer->ridx - 1] ; p != NULL ; opd->datasz++ , p = strchr(p+1,','))
+      ;
+    fprintf(stderr,"datasz = %zu\n",opd->datasz);
+    return true;
+  }
+  else
+  {
+    opd->data = true;
+    
+    while(true)
+    {
+      char c = skip_space(opd->buffer);
+      opd->buffer->ridx--;
+      opd->datasz = 1;
+      if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
+        return message(opd->a09,MSG_ERROR,"bad value");
+      unsigned char byte = opd->value.value & 255;
+      if (opd->sz < 6)
+        opd->bytes[opd->sz++] = byte;
+      fwrite(&byte,1,1,opd->a09->out);
+      if (ferror(opd->a09->out))
+        return message(opd->a09,MSG_ERROR,"failed writing object file");
+      c = skip_space(opd->buffer);
+      
+      if ((c == ';') || (c == '\0'))
+        return true;
+      if (c != ',')
+        return message(opd->a09,MSG_ERROR,"missing comma");
+    }
+  }
 }
 
 /**************************************************************************/

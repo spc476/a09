@@ -225,9 +225,12 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
     {
       if (opd->data)
       {
+        size_t c = 0; // # byte columns printed
         fprintf(a09->list,"%04X: ",a09->pc);
-        for (size_t i = 0 ; i < sizeof(opd->bytes) ; i++)
+        for (size_t i = 0 ; i < opd->sz ; i++,c++)
           fprintf(a09->list,"%02X",opd->bytes[i]);
+        for ( ; c < 6 ; c++)
+          fprintf(a09->list,"  ");
       }
       else
       {
