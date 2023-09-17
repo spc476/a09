@@ -67,12 +67,6 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
   
   pv->defined = true; /* optimistic setting */
   
-  if (c == '*')
-  {
-    pv->value = a09->pc;
-    return true;
-  }
-  
   if (c == '>')
   {
     pv->bits = 16;
@@ -88,6 +82,12 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
     else
       pv->bits = 8;
     c = buffer->buf[buffer->ridx++];
+  }
+
+  if (c == '*')
+  {
+    pv->value = a09->pc;
+    return true;
   }
   
   do
