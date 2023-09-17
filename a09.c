@@ -64,7 +64,7 @@ static bool read_line(FILE *in,struct buffer *buffer)
         buffer->buf[buffer->widx++] = ' ';
       }
     }
-    else if (isgraph(c))
+    else if (isprint(c))
     {
       if (buffer->widx == sizeof(buffer->buf)-1)
         return false;
