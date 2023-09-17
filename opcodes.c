@@ -22,8 +22,7 @@ static bool collect_string(struct opcdata *opd,struct buffer *buf,char delim)
   assert(opd->buffer != NULL);
   assert(buf         != NULL);
   
-  buf->buf  = NULL;
-  buf->size = 0;
+  memset(buf->buf,0,sizeof(buf->buf));
   buf->widx = 0;
   buf->ridx = 0;
   
@@ -52,10 +51,13 @@ static bool collect_string(struct opcdata *opd,struct buffer *buf,char delim)
       }
     }
     
-    append_char(buf,c);
+    if (buf->widx == sizeof(buf->buf)-1)
+      return false;
+    buf->buf[buf->widx++] = c;
   }
   
-  append_char(buf,'\0');
+  assert(buf->widx < sizeof(buf->buf));
+  buf->buf[buf->widx] = '\0';
   return true;
 }
 
@@ -901,7 +903,6 @@ static bool pseudo_fcc(struct opcdata *opd)
       return message(opd->a09,MSG_ERROR,"error writing object file");
   }
   
-  free(textstring.buf);
   return true;
 }
 
@@ -931,7 +932,6 @@ static bool pseudo_ascii(struct opcdata *opd)
       return message(opd->a09,MSG_ERROR,"error writing object file");
   }
   
-  free(textstring.buf);
   return true;
 }
 
@@ -961,7 +961,6 @@ static bool pseudo_asciih(struct opcdata *opd)
       return message(opd->a09,MSG_ERROR,"error writing object file");
   }
   
-  free(textstring.buf);
   return true;
 }
 
@@ -991,7 +990,6 @@ static bool pseudo_asciiz(struct opcdata *opd)
       return message(opd->a09,MSG_ERROR,"error writing object file");
   }
   
-  free(textstring.buf);
   return true;
 }
 
@@ -1010,10 +1008,9 @@ static bool pseudo_include(struct opcdata *opd)
   if (!parse_string(opd,&filenamebuf))
     return false;
   snprintf(filename,sizeof(filename),"%s",filenamebuf.buf);
-  free(filenamebuf.buf);
   
   new.label  = (label){ .s = 0 , .text = { '\0' } };
-  new.inbuf  = (struct buffer){ .buf = NULL , .size = 0 , .widx = 0 , .ridx = 0 };
+  new.inbuf  = (struct buffer){ .buf = {0}, .widx = 0 , .ridx = 0 };
   new.infile = filename;
   new.in     = fopen(filename,"r");
   
@@ -1032,7 +1029,6 @@ static bool pseudo_include(struct opcdata *opd)
     fprintf(new.list,"                         | ENF-OF-LINE\n");
 
   fclose(new.in);
-  free(new.inbuf.buf);
   opd->a09->pc     = new.pc;
   opd->a09->symtab = new.symtab;
   opd->a09->list   = new.list;
@@ -1054,7 +1050,6 @@ static bool pseudo_incbin(struct opcdata *opd)
     return false;
   
   snprintf(filename,sizeof(filename),"%s",filenamebuf.buf);
-  free(filenamebuf.buf);
   
   if (opd->pass == 1)
   {

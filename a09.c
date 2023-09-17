@@ -42,25 +42,6 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
 
 /**************************************************************************/
 
-bool append_char(struct buffer *buffer,char c)
-{
-  if (buffer->widx == buffer->size)
-  {
-    buffer->size += 1024;
-    char *n       = realloc(buffer->buf,buffer->size);
-    if (n == NULL)
-      return false;
-    buffer->buf = n;
-  }
-  
-  buffer->buf[buffer->widx] = c;
-  if (c)
-    buffer->widx++;
-  return true;
-}
-
-/**************************************************************************/
-
 static bool read_line(FILE *in,struct buffer *buffer)
 {
   assert(in     != NULL);
@@ -77,17 +58,25 @@ static bool read_line(FILE *in,struct buffer *buffer)
     if (c == '\t')
     {
       for (size_t num = 8 - (buffer->widx & 7) , j = 0 ; j < num ; j++)
-        if (!append_char(buffer,' '))
+      {
+        if (buffer->widx == sizeof(buffer->buf)-1)
           return false;
+        buffer->buf[buffer->widx++] = ' ';
+      }
+    }
+    else if (isgraph(c))
+    {
+      if (buffer->widx == sizeof(buffer->buf)-1)
+        return false;
+      buffer->buf[buffer->widx++] = c;
     }
     else
-    {
-      if (!append_char(buffer,c))
-        return false;
-    }
+      return false;
   }
   
-  return append_char(buffer,'\0');
+  assert(buffer->widx < sizeof(buffer->buf));
+  buffer->buf[buffer->widx] = '\0';
+  return true;
 }
 
 /**************************************************************************/
@@ -473,8 +462,7 @@ int main(int argc,char *argv[])
     .debug     = false,
     .inbuf     =
     {
-      .buf   = NULL,
-      .size  = 0,
+      .buf   = {0},
       .widx  = 0,
       .ridx  = 0,
     },
@@ -516,11 +504,10 @@ int main(int argc,char *argv[])
       perror(a09.listfile);
       exit(1);
     }
-  }
-  
-  if (a09.list != NULL)
+    
     fprintf(a09.list,"                         | FILE %s\n",a09.infile);
-  
+  }
+    
   a09.pc = 0;  
   rc     = assemble_pass(&a09,2);
   
@@ -550,6 +537,5 @@ int main(int argc,char *argv[])
     free(sym);
   }
   
-  free(a09.inbuf.buf);
   return rc ? 0 : 1;
 }

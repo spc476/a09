@@ -45,8 +45,7 @@ typedef struct label
 
 struct buffer
 {
-  char   *buf;
-  size_t  size;
+  char    buf[256];
   size_t  widx;
   size_t  ridx;
 };
@@ -142,7 +141,6 @@ extern char const MSG_DEBUG[];
 extern char const MSG_WARNING[];
 extern char const MSG_ERROR[];
 
-extern bool                 append_char   (struct buffer *,char);
 extern bool                 message       (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
 extern bool                 parse_label   (label *,struct buffer *,struct a09 *);
 extern char                 skip_space    (struct buffer *);
