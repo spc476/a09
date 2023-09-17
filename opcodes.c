@@ -814,7 +814,7 @@ static bool pseudo_fcb(struct opcdata *opd)
       if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
         return message(opd->a09,MSG_ERROR,"bad value");
       unsigned char byte = value_lsb(opd->a09,opd->value.value,opd->pass);
-      if (opd->sz < 6)
+      if (opd->sz < sizeof(opd->bytes))
         opd->bytes[opd->sz++] = byte;
       fwrite(&byte,1,1,opd->a09->out);
       if (ferror(opd->a09->out))
@@ -857,7 +857,7 @@ static bool pseudo_fdb(struct opcdata *opd)
         opd->value.value & 255
       };
       
-      if (opd->sz < 6)
+      if (opd->sz < sizeof(opd->bytes))
       {
         opd->bytes[opd->sz++] = word[0];
         opd->bytes[opd->sz++] = word[1];
