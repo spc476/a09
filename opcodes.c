@@ -287,6 +287,7 @@ static bool parse_operand(struct opcdata *opd)
   {
     /*-------------------------------------------------------------
     ; make sure the comma isn't in the comment portion of the line
+    ; XXX - below doesn't work.  Sigh.
     ;--------------------------------------------------------------*/
     
     char *ps = strchr(&opd->buffer->buf[opd->buffer->ridx],';');
