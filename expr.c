@@ -61,7 +61,6 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
   
   bool neg  = false;
   bool not  = false;
-  bool plus = false;
   char c    = skip_space(buffer);
   bool rc   = true;
   
@@ -90,30 +89,18 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
     return true;
   }
   
-  do
+  if (c == '-')
   {
-    if (c == '-')
-    {
-      if (not || plus || neg) return false;
-      neg = true;
-      c   = buffer->buf[buffer->ridx++];
-      continue;
-    }
-    else if (c == '~')
-    {
-      if (neg || plus || not) return false;
-      not = true;
-      c   = buffer->buf[buffer->ridx++];
-      continue;
-    }
-    else if (c == '+')
-    {
-      if (neg || plus || not) return false;
-      plus = true;
-      c    = buffer->buf[buffer->ridx++];
-      continue;
-    }
-  } while(false);
+    neg = true;
+    c = buffer->buf[buffer->ridx++];
+  }
+  else if (c == '~')
+  {
+    not = true;
+    c = buffer->buf[buffer->ridx++];
+  }
+  else if (c == '+')
+    c = buffer->buf[buffer->ridx++];
   
   if (c == '$')
     rc = s2num(&pv->value,buffer,16);
