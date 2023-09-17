@@ -953,9 +953,9 @@ static bool pseudo_asciih(struct opcdata *opd)
   
   if (opd->pass == 2)
   {
+    textstring.buf[textstring.widx - 1] |= 0x80;
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
-    textstring.buf[textstring.widx - 1] |= 0x80;
     if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
       return message(opd->a09,MSG_ERROR,"truncate output to object file");
     if (ferror(opd->a09->out))
