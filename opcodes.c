@@ -43,7 +43,7 @@ static bool collect_string(struct opcdata *opd,struct buffer *buf,char delim)
         case 'f':  c = '\f'; break;
         case 'r':  c = '\r'; break;
         case 'e':  c = '\033'; break;
-        case '"':  c = '"';
+        case '"':  c = '"';  break;
         case '\'': c = '\''; break;
         case '\\': c = '\\'; break;
         case '\0': return message(opd->a09,MSG_ERROR,"unexpected end of string");
