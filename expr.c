@@ -162,17 +162,13 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
       return true;
     }
     else
-      return false;
+      return message(a09,MSG_ERROR,"illegal escaped character in value");
   }
   else
-    return false;
+    return message(a09,MSG_ERROR,"not a value");
     
   if (neg)
-  {
-    if (pv->value > INT16_MAX)
-      return false;
     pv->value = -pv->value;
-  }
   else if (not)
     pv->value = ~pv->value;
     
@@ -289,14 +285,14 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   memset(pv,0,sizeof(struct value));
   if (!term(pv,a09,buffer,pass))
     return false;
-  
+    
   while(true)
   {
     struct value val;
     char op = skip_space(buffer);
     if (op == '\0')
       return true;
-    
+      
     if ((op != '+') && (op != '-'))
     {
       buffer->ridx--;
@@ -306,12 +302,12 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
     char c = skip_space(buffer);
     if (c == '\0')
       return message(a09,MSG_ERROR,"unexpected end of expression");
-    
+      
     memset(&val,0,sizeof(val));
     buffer->ridx--;
     if (!term(&val,a09,buffer,pass))
-      return message(a09,MSG_ERROR,"missing term in expression");
-    
+      return false;
+      
     if (!eval(a09,pv,op,&val))
       return false;
   }
