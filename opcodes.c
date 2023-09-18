@@ -1001,19 +1001,17 @@ static bool pseudo_include(struct opcdata *opd)
   assert(opd      != NULL);
   assert(opd->a09 != NULL);
   
-  struct buffer filenamebuf;
-  char          filename[FILENAME_MAX];
+  struct buffer filename;
   bool          rc;
   struct a09    new = *opd->a09;
   
-  if (!parse_string(opd,&filenamebuf))
+  if (!parse_string(opd,&filename))
     return false;
-  snprintf(filename,sizeof(filename),"%s",filenamebuf.buf);
-  
+    
   new.label  = (label){ .s = 0 , .text = { '\0' } };
   new.inbuf  = (struct buffer){ .buf = {0}, .widx = 0 , .ridx = 0 };
-  new.infile = filename;
-  new.in     = fopen(filename,"r");
+  new.infile = filename.buf;
+  new.in     = fopen(filename.buf,"r");
   
   if (new.in == NULL)
     return false;
@@ -1021,7 +1019,7 @@ static bool pseudo_include(struct opcdata *opd)
   if ((opd->pass == 2) && (new.list != NULL))
   {
     print_list(opd->a09,opd,false);
-    fprintf(new.list,"                         | FILE %s\n",filename);
+    fprintf(new.list,"                         | FILE %s\n",filename.buf);
     opd->includehack = true;
   }
   rc = assemble_pass(&new,opd->pass);
@@ -1042,28 +1040,25 @@ static bool pseudo_incbin(struct opcdata *opd)
 {
   assert(opd != NULL);
   
-  struct buffer  filenamebuf;
-  char           filename[FILENAME_MAX];
+  struct buffer  filename;
   FILE          *fp;
   bool           fill = false;
   
-  if (!parse_string(opd,&filenamebuf))
+  if (!parse_string(opd,&filename))
     return false;
-  
-  snprintf(filename,sizeof(filename),"%s",filenamebuf.buf);
   
   if (opd->pass == 1)
   {
-    fp = fopen(filename,"rb");
+    fp = fopen(filename.buf,"rb");
     if (fp == NULL)
-      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename,strerror(errno));
+      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename.buf,strerror(errno));
     if (fseek(fp,0,SEEK_END) == -1)
-      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename,strerror(errno));
+      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename.buf,strerror(errno));
     long fsize = ftell(fp);
     if (fsize < 0)
-      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename,strerror(errno));
+      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename.buf,strerror(errno));
     if (fsize > UINT16_MAX - opd->a09->pc)
-      return message(opd->a09,MSG_ERROR,"%s: file too big",filename);
+      return message(opd->a09,MSG_ERROR,"%s: file too big",filename.buf);
     opd->data   = true;
     opd->datasz = fsize;
     fclose(fp);
@@ -1073,15 +1068,15 @@ static bool pseudo_incbin(struct opcdata *opd)
     char   buffer[BUFSIZ];
     size_t bsz;
     
-    fp = fopen(filename,"rb");
+    fp = fopen(filename.buf,"rb");
     if (fp == NULL)
-      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename,strerror(errno));
+      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename.buf,strerror(errno));
       
     do
     {
       bsz = fread(buffer,1,sizeof(buffer),fp);
       if (ferror(fp))
-        return message(opd->a09,MSG_ERROR,"%s: failed reading",filename);
+        return message(opd->a09,MSG_ERROR,"%s: failed reading",filename.buf);
       if (!fill)
       {
         opd->sz   = min(bsz,sizeof(opd->bytes));
