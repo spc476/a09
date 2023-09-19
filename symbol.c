@@ -12,7 +12,8 @@ static int symstrcmp(void const *restrict needle,void const *restrict haystack)
 {
   label         const *key   = needle;
   struct symbol const *value = haystack;
-  int rc = memcmp(key->text,value->name.text,min(key->s,value->name.s));
+  int                  rc    = memcmp(key->text,value->name.text,min(key->s,value->name.s));
+  
   if (rc == 0)
   {
     if (key->s < value->name.s)
@@ -29,7 +30,8 @@ static int symtreecmp(void const *restrict needle,void const *restrict haystack)
 {
   struct symbol const *key   = needle;
   struct symbol const *value = haystack;
-  int rc = memcmp(key->name.text,value->name.text,min(key->name.s,value->name.s));
+  int                  rc    = memcmp(key->name.text,value->name.text,min(key->name.s,value->name.s));
+  
   if (rc == 0)
   {
     if (key->name.s < value->name.s)
