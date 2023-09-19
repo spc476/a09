@@ -45,7 +45,7 @@ typedef struct label
 
 struct buffer
 {
-  char    buf[256];
+  char    buf[133];
   size_t  widx;
   size_t  ridx;
 };
@@ -83,11 +83,11 @@ struct symbol
 
 struct value
 {
-  uint16_t       value;
-  size_t         bits;
-  unsigned char  postbyte;
-  bool           unknownpass1;
-  bool           defined;
+  uint16_t      value;
+  size_t        bits;
+  unsigned char postbyte;
+  bool          unknownpass1;
+  bool          defined;
 };
 
 struct opcdata
