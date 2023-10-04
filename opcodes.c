@@ -19,7 +19,7 @@ static unsigned char value_5bit(struct a09 *a09,uint16_t value,int pass)
   assert((pass == 1) || (pass == 2));
   
   if ((pass == 2) && (value >= 16) && (value <= 65519))
-    message(a09,MSG_WARNING,"16-bit value trncated to 5 bits");
+    message(a09,MSG_WARNING,"16-bit value truncated to 5 bits");
   return value & 31;
 }
 
