@@ -6,8 +6,6 @@ CFLAGS  = -g
 LDFLAGS = -g
 LDLIBS  = -lcgi6
 
-override CFLAGS += -D_GNU_SOURCE
-
 .PHONY: clean
 
 a09 : a09.o opcodes.o symbol.o expr.o
