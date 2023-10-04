@@ -13,6 +13,31 @@
 
 /**************************************************************************/
 
+static unsigned char value_5bit(struct a09 *a09,uint16_t value,int pass)
+{
+  assert(a09 != NULL);
+  assert((pass == 1) || (pass == 2));
+  
+  if ((pass == 2) && (value >= 16) && (value <= 65519))
+    message(a09,MSG_WARNING,"16-bit value trncated to 5 bits");
+  return value & 31;
+}
+
+/**************************************************************************/
+
+static unsigned char value_lsb(struct a09 *a09,uint16_t value,int pass)
+{
+  assert(a09 != NULL);
+  assert((pass == 1) || (pass == 2));
+  
+  if ((pass == 2) && (value >= 256) && (value <= 65407))
+    message(a09,MSG_WARNING,"16-bit value truncated to 8 bits");
+    
+  return value & 255;
+}
+
+/**************************************************************************/
+
 static bool collect_string(struct opcdata *opd,struct buffer *buf,char delim)
 {
   char c;
@@ -96,183 +121,28 @@ static bool parse_dirext(struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool parse_index(struct opcdata *opd)
+static unsigned char index_register(char c)
 {
-  assert(opd != NULL);
-  
-  bool indexindirect = false;
-  bool single        = false;
-  char c             = skip_space(opd->buffer);
-  
-  opd->mode = AM_INDEX;
-  opd->bits = 0;
-  
-  if (c == '[')
-    indexindirect = true;
-  else
-    opd->buffer->ridx--;
-    
-  opd->value.postbyte = 0x84;
-  
-  if (opd->buffer->buf[opd->buffer->ridx] != ',')
+  switch(toupper(c))
   {
-    if (memcmp(&opd->buffer->buf[opd->buffer->ridx],"a,",2) == 0)
-    {
-      opd->buffer->ridx++;
-      opd->value.postbyte = 0x86;
-    }
-    else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],"b,",2) == 0)
-    {
-      opd->buffer->ridx++;
-      opd->value.postbyte = 0x85;
-    }
-    else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],"d,",2) == 0)
-    {
-      opd->buffer->ridx++;
-      opd->value.postbyte = 0x8B;
-    }
-    else
-    {
-      if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
-        return message(opd->a09,MSG_ERROR,"bad expression");
-      if (opd->value.bits == 5)
-      {
-        opd->value.postbyte = opd->value.value & 0x1F;
-        opd->bits           = 5;
-      }
-      else if (opd->value.bits == 8)
-      {
-        opd->value.postbyte = 0x88;
-        opd->bits           = 8;
-      }
-      else if (((opd->value.value < 16) || (opd->value.value > 65519)) && !indexindirect)
-      {
-        opd->value.postbyte = opd->value.value & 0x1F;
-        opd->bits           = 5;
-      }
-      else if ((opd->value.value < 0x80) || (opd->value.value > 0xFF7F))
-      {
-        opd->value.postbyte = 0x88;
-        opd->bits           = 8;
-      }
-      else
-      {
-        opd->value.postbyte = 0x89;
-        opd->bits           = 16;
-      }
-    }
-    
-    if (opd->buffer->buf[opd->buffer->ridx++] != ',')
-      return message(opd->a09,MSG_ERROR,"syntax error 1");
-      
-    switch(opd->buffer->buf[opd->buffer->ridx++])
-    {
-      case 'x': break;
-      case 'y': opd->value.postbyte |= 0x20; break;
-      case 'u': opd->value.postbyte |= 0x40; break;
-      case 's': opd->value.postbyte |= 0x60; break;
-      case 'p':
-           if (
-                  (opd->value.postbyte == 0x86)
-               || (opd->value.postbyte == 0x85)
-               || (opd->value.postbyte == 0x8B)
-              )
-             return message(opd->a09,MSG_ERROR,"syntax error 2");
-           if (opd->buffer->buf[opd->buffer->ridx++] != 'c')
-             return message(opd->a09,MSG_ERROR,"syntax error 3");
-             
-           opd->pcrel = true;
-           
-           if (opd->value.bits == 0)
-           {
-             if (opd->value.unknownpass1)
-             {
-               opd->value.postbyte = 0x8D;
-               opd->bits           = 16;
-             }
-             else
-             {
-               uint16_t pc = opd->a09->pc + 2 + (opd->op->page != 0);
-               uint16_t delta = opd->value.value - pc;
-               if ((delta < 0x80) || (delta > 0xFF7F))
-               {
-                 opd->value.postbyte = 0x8C;
-                 opd->bits           = 8;
-               }
-               else
-               {
-                 opd->value.postbyte = 0x8D;
-                 opd->bits           = 16;
-               }
-             }
-           }
-           else if (opd->value.bits == 8)
-             opd->value.postbyte = 0x8C;
-           else
-             opd->value.postbyte = 0x8D;
-           break;
-           
-      default:
-           return message(opd->a09,MSG_ERROR,"syntax error 4");
-    }
-    
-    if (indexindirect && (opd->buffer->buf[opd->buffer->ridx] == ']'))
-    {
-      opd->value.postbyte |= 0x10;
-      if (opd->bits == 5)
-        opd->bits = 8;
-    }
-    
-    return true;
+    case 'X': return 0x00;
+    case 'Y': return 0x20;
+    case 'U': return 0x40;
+    case 'S': return 0x60;
+    default: abort();
   }
-  
-  if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",x++",4) == 0)
-    { opd->value.postbyte = 0x81; opd->buffer->ridx += 4; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",y++",4) == 0)
-    { opd->value.postbyte = 0xA1; opd->buffer->ridx += 4; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",u++",4) == 0)
-    { opd->value.postbyte = 0xC1; opd->buffer->ridx += 4; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",s++",4) == 0)
-    { opd->value.postbyte = 0xE1; opd->buffer->ridx += 4; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",x+",3) == 0)
-    { opd->value.postbyte = 0x80; opd->buffer->ridx += 3; single = true; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",y+",3) == 0)
-    { opd->value.postbyte = 0xA0; opd->buffer->ridx += 3; single = true; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",u+",3) == 0)
-    { opd->value.postbyte = 0xC0; opd->buffer->ridx += 3; single = true; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",s+",3) == 0)
-    { opd->value.postbyte = 0xE0; opd->buffer->ridx += 3; single = true; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",--x",4) == 0)
-    { opd->value.postbyte = 0x83; opd->buffer->ridx += 4; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",--y",4) == 0)
-    { opd->value.postbyte = 0xA3; opd->buffer->ridx += 4; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",--u",4) == 0)
-    { opd->value.postbyte = 0xC3; opd->buffer->ridx += 4; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",--s",4) == 0)
-    { opd->value.postbyte = 0xE3; opd->buffer->ridx += 4; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",-x",3) == 0)
-    { opd->value.postbyte = 0x82; opd->buffer->ridx += 3; single = true; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",-y",3) == 0)
-    { opd->value.postbyte = 0xA2; opd->buffer->ridx += 3; single = true; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",-u",3) == 0)
-    { opd->value.postbyte = 0xC2; opd->buffer->ridx += 3; single = true; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",-s",3) == 0)
-    { opd->value.postbyte = 0xE2; opd->buffer->ridx += 3; single = true; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",x",2) == 0)
-    { opd->value.postbyte = 0x84; opd->buffer->ridx += 2; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",y",2) == 0)
-    { opd->value.postbyte = 0xA4; opd->buffer->ridx += 2; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",u",2) == 0)
-    { opd->value.postbyte = 0xC4; opd->buffer->ridx += 2; }
-  else if (memcmp(&opd->buffer->buf[opd->buffer->ridx],",s",2) == 0)
-    { opd->value.postbyte = 0xE4; opd->buffer->ridx += 2; }
-  else
-    return message(opd->a09,MSG_ERROR,"syntax error 6");
-    
-  if (indexindirect && !single && (opd->buffer->buf[opd->buffer->ridx] == ']'))
-    opd->value.postbyte |= 0x10;
-    
-  return true;
+}
+/**************************************************************************/
+
+static unsigned char acc_register(char c)
+{
+  switch(toupper(c))
+  {
+    case 'A': return 0x86;
+    case 'B': return 0x85;
+    case 'D': return 0x8B;
+    default: abort();
+  }
 }
 
 /**************************************************************************/
@@ -280,22 +150,10 @@ static bool parse_index(struct opcdata *opd)
 static bool parse_operand(struct opcdata *opd)
 {
   assert(opd != NULL);
-  bool  indexindirect = false;
-  char *pc            = strchr(&opd->buffer->buf[opd->buffer->ridx],',');
   
-  if (pc != NULL)
-  {
-    /*-------------------------------------------------------------
-    ; make sure the comma isn't in the comment portion of the line
-    ; XXX - below doesn't work.  Sigh.
-    ;--------------------------------------------------------------*/
-    
-    char *ps = strchr(&opd->buffer->buf[opd->buffer->ridx],';');
-    if ((ps == NULL) || (pc < ps))
-      return parse_index(opd);
-  }
-    
-  char c = skip_space(opd->buffer);
+  bool  indexindirect = false;
+  char  c             = skip_space(opd->buffer);
+  
   if ((c == ';') || (c == '\0'))
   {
     opd->mode = AM_INHERENT;
@@ -316,7 +174,140 @@ static bool parse_operand(struct opcdata *opd)
     c = skip_space(opd->buffer);
   }
   
+  if (c == ',')
+  {
+    opd->mode           = AM_INDEX;
+    opd->bits           = 0;
+    opd->value.postbyte = 0x80;
+    c                   = toupper(skip_space(opd->buffer));
+    
+    switch(c)
+    {
+      case 'X':
+      case 'Y':
+      case 'U':
+      case 'S': opd->value.postbyte |= index_register(c); break;
+      
+      case '-':
+           c = opd->buffer->buf[opd->buffer->ridx];
+           if (c == '-')
+           {
+             opd->value.postbyte |= 0x03;
+             c                    = opd->buffer->buf[++opd->buffer->ridx];
+           }
+           else
+             opd->value.postbyte |= 0x02;
+             
+           switch(toupper(c))
+           {
+             case 'X':
+             case 'Y':
+             case 'U':
+             case 'S': opd->value.postbyte |= index_register(c); break;
+             default: return message(opd->a09,MSG_ERROR,"syntax error 60");
+           }
+           
+           if (opd->buffer->buf[++opd->buffer->ridx] == ']')
+           {
+             if (!indexindirect)
+               return message(opd->a09,MSG_ERROR,"syntax error 22");
+             opd->value.postbyte |= 0x10;
+           }
+           return true;
+           
+      default:
+           return message(opd->a09,MSG_ERROR,"syntax error 20");
+    }
+    
+    c = skip_space(opd->buffer);
+    
+    if ((c == ';') || (c == '\0') || isspace(c))
+    {
+      if (indexindirect)
+        return message(opd->a09,MSG_ERROR,"syntax error 27");
+      opd->value.postbyte |= 0x04;
+      return true;
+    }
+    else if (c == ']')
+    {
+      if (!indexindirect)
+        return message(opd->a09,MSG_ERROR,"syntax error 28");
+      opd->value.postbyte |= 0x14;
+      return true;
+    }
+    else if (c != '+')
+      return message(opd->a09,MSG_ERROR,"syntax error 24");
+      
+    c = opd->buffer->buf[opd->buffer->ridx++];
+    if (c == '+')
+    {
+      opd->value.postbyte |= 0x01;
+      if (opd->buffer->buf[opd->buffer->ridx++] == ']')
+      {
+        if (!indexindirect)
+          return message(opd->a09,MSG_ERROR,"syntax error 26");
+        opd->value.postbyte |= 0x10;
+      }
+      return true;
+    }
+    else if ((c == ';') || (c == '\0') || isspace(c))
+    {
+      if (indexindirect)
+        return message(opd->a09,MSG_ERROR,"syntax error 29");
+      return true;
+    }
+    else
+      return message(opd->a09,MSG_ERROR,"syntax error 25");
+  }
+  
   opd->buffer->ridx--; // ungetc()
+  
+  /*------------------------------------------------------------------------
+  ; Special case here, A,r B,r or D,r needs to be checked, if the 2nd next
+  ; character is ',', then we have one-character to check, which could be a
+  ; register.  Handle that case here.
+  ;------------------------------------------------------------------------*/
+  
+  if (opd->buffer->buf[opd->buffer->ridx+1] == ',')
+  {
+    opd->mode = AM_INDEX;
+    opd->bits = 0;
+    c         = toupper(opd->buffer->buf[opd->buffer->ridx]);
+    
+    switch(c)
+    {
+      case 'A':
+      case 'B':
+      case 'D':
+           opd->value.postbyte  = acc_register(c);
+           opd->buffer->ridx   += 2; // skip comma
+           c = toupper(opd->buffer->buf[opd->buffer->ridx]);
+           switch(c)
+           {
+             case 'X':
+             case 'Y':
+             case 'U':
+             case 'S': opd->value.postbyte |= index_register(c); break;
+             default: return message(opd->a09,MSG_ERROR,"syntax error 31");
+           }
+           c = opd->buffer->buf[++opd->buffer->ridx];
+           if (c == ']')
+           {
+             if (!indexindirect)
+               return message(opd->a09,MSG_ERROR,"syntax error 32");
+             opd->value.postbyte |= 0x10;
+             c = opd->buffer->buf[++opd->buffer->ridx];
+           }
+           
+           if ((c == ';') || (c == '\0') || isspace(c))
+             return true;
+             
+           return message(opd->a09,MSG_ERROR,"syntax error 33");
+           
+      default:
+           break;
+    }
+  }
   
   if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
     return message(opd->a09,MSG_ERROR,"syntax error 8");
@@ -346,7 +337,111 @@ static bool parse_operand(struct opcdata *opd)
     return true;
   }
   
-  return message(opd->a09,MSG_ERROR,"what else is there to parse?");
+  if (c != ',')
+    return message(opd->a09,MSG_ERROR,"syntax error 40");
+    
+  opd->value.postbyte = 0;
+  opd->mode           = AM_INDEX;
+  c                   = skip_space(opd->buffer);
+  
+  switch(toupper(c))
+  {
+    case 'X':
+    case 'Y':
+    case 'U':
+    case 'S':
+         opd->value.postbyte |= index_register(c);
+         if (opd->value.bits == 5)
+         {
+           opd->value.postbyte |= value_5bit(opd->a09,opd->value.value,opd->pass);
+           opd->bits            = 5;
+         }
+         else if (opd->value.bits == 8)
+         {
+           opd->value.postbyte |= 0x88;
+           opd->bits            = 8;
+         }
+         else if ((opd->value.value < 16) || (opd->value.value > 65519))
+         {
+           if (indexindirect)
+           {
+             opd->value.postbyte |= 0x88;
+             opd->bits            = 8;
+           }
+           else
+           {
+             opd->value.postbyte |= opd->value.value & 0x1F;
+             opd->bits            = 5;
+           }
+         }
+         else if ((opd->value.value < 0x80) || (opd->value.value > 0xFF7F))
+         {
+           opd->value.postbyte |= 0x88;
+           opd->bits            = 8;
+         }
+         else
+         {
+           opd->value.postbyte |= 0x89;
+           opd->bits            = 16;
+         }
+         break;
+         
+    case 'P':
+         if (toupper(opd->buffer->buf[opd->buffer->ridx]) != 'C')
+           return message(opd->a09,MSG_ERROR,"invalid index register");
+         opd->pcrel = true;
+         opd->buffer->ridx++;
+         
+         if (opd->value.bits == 0)
+         {
+           if (opd->value.unknownpass1)
+           {
+             opd->value.postbyte = 0x8D;
+             opd->bits           = 16;
+           }
+           else
+           {
+             uint16_t pc = opd->a09->pc + 2 + (opd->op->page != 0);
+             uint16_t delta = opd->value.value - pc;
+             if ((delta < 0x80) || (delta > 0xFF7F))
+             {
+               opd->value.postbyte = 0x8C;
+               opd->bits           = 8;
+             }
+             else
+             {
+               opd->value.postbyte = 0x8D;
+               opd->bits           = 16;
+             }
+           }
+         }
+         else if (opd->value.bits == 8)
+         {
+           opd->value.postbyte = 0x8C;
+           opd->bits           = 8;
+         }
+         else
+         {
+           opd->value.postbyte = 0x8D;
+           opd->bits           = 16;
+         }
+         break;
+         
+    default:
+         return message(opd->a09,MSG_ERROR,"syntax error 50");
+  }
+  
+  c = skip_space(opd->buffer);
+  if (c == ']')
+  {
+    if (!indexindirect)
+      return message(opd->a09,MSG_ERROR,"syntax error 51");
+    opd->value.postbyte |= 0x10;
+    if (opd->bits == 5)
+      opd->bits = 8;
+  }
+  
+  return true;
 }
 
 /**************************************************************************/
@@ -366,19 +461,6 @@ static bool op_inh(struct opcdata *opd)
     
   opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
   return true;
-}
-
-/**************************************************************************/
-
-static unsigned char value_lsb(struct a09 *a09,uint16_t value,int pass)
-{
-  assert(a09 != NULL);
-  assert((pass == 1) || (pass == 2));
-  
-  if ((pass == 2) && (value >= 256) && (value <= 65407))
-    message(a09,MSG_WARNING,"16-bit value truncated");
-    
-  return value & 255;
 }
 
 /**************************************************************************/
