@@ -82,7 +82,7 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
       pv->bits = 8;
     c = buffer->buf[buffer->ridx++];
   }
-
+  
   if (c == '*')
   {
     pv->value = a09->pc;
@@ -101,7 +101,7 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
   }
   else if (c == '+')
     c = buffer->buf[buffer->ridx++];
-  
+    
   if (c == '$')
     rc = s2num(&pv->value,buffer,16);
   else if (c == '&')
@@ -230,10 +230,10 @@ static bool term(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass
   assert(a09    != NULL);
   assert(buffer != NULL);
   assert((pass == 1) || (pass == 2));
-
+  
   if (!factor(pv,a09,buffer,pass))
     return false;
-  
+    
   while(true)
   {
     struct value val;
@@ -250,7 +250,7 @@ static bool term(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass
     char c = skip_space(buffer);
     if (c == '\0')
       return message(a09,MSG_ERROR,"unexpected end of expression");
-    
+      
     memset(&val,0,sizeof(val));
     buffer->ridx--;
     if (!factor(&val,a09,buffer,pass))

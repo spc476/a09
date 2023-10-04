@@ -62,7 +62,7 @@ static bool collect_string(struct opcdata *opd,struct buffer *buf,char delim)
 }
 
 /**************************************************************************/
-  
+
 static bool parse_string(struct opcdata *opd,struct buffer *buf)
 {
   assert(opd         != NULL);
@@ -608,7 +608,7 @@ static bool sop_findreg(struct indexregs const **ir,char const *src,char skip)
     { "\2cc" , 0x01 , 0xA0 , 0x0A , false } ,
     { "\1d"  , 0x06 , 0x00 , 0x00 , true  } ,
   };
-
+  
   for (size_t i = 0 ; i < sizeof(index) / sizeof(index[0]) ; i++)
   {
     if (memcmp(src,&index[i].reg[1],index[i].reg[0]) == 0)
@@ -766,7 +766,7 @@ static bool pseudo_org(struct opcdata *opd)
   
   if (!parse_dirext(opd))
     return message(opd->a09,MSG_ERROR,"missing value for ORG");
-  
+    
   opd->a09->pc = opd->value.value;
   return true;
 }
@@ -909,7 +909,6 @@ static bool pseudo_fcc(struct opcdata *opd)
 
 /**************************************************************************/
 
-
 static bool pseudo_ascii(struct opcdata *opd)
 {
   assert(opd      != NULL);
@@ -919,7 +918,7 @@ static bool pseudo_ascii(struct opcdata *opd)
   
   if (!parse_string(opd,&textstring))
     return false;
-  
+    
   opd->data = true;
   opd->datasz = textstring.widx;
   
@@ -947,7 +946,7 @@ static bool pseudo_asciih(struct opcdata *opd)
   
   if (!parse_string(opd,&textstring))
     return false;
-  
+    
   opd->data = true;
   opd->datasz = textstring.widx;
   
@@ -976,7 +975,7 @@ static bool pseudo_asciiz(struct opcdata *opd)
   
   if (!parse_string(opd,&textstring))
     return false;
-  
+    
   opd->data = true;
   opd->datasz = textstring.widx + 1;
   
@@ -1023,10 +1022,10 @@ static bool pseudo_include(struct opcdata *opd)
     opd->includehack = true;
   }
   rc = assemble_pass(&new,opd->pass);
-
+  
   if ((opd->pass == 2) && (new.list != NULL))
     fprintf(new.list,"                         | ENF-OF-LINE\n");
-
+    
   fclose(new.in);
   opd->a09->pc     = new.pc;
   opd->a09->symtab = new.symtab;
@@ -1046,7 +1045,7 @@ static bool pseudo_incbin(struct opcdata *opd)
   
   if (!parse_string(opd,&filename))
     return false;
-  
+    
   if (opd->pass == 1)
   {
     fp = fopen(filename.buf,"rb");

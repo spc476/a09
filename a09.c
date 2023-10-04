@@ -507,8 +507,8 @@ int main(int argc,char *argv[])
     
     fprintf(a09.list,"                         | FILE %s\n",a09.infile);
   }
-    
-  a09.pc = 0;  
+  
+  a09.pc = 0;
   rc     = assemble_pass(&a09,2);
   
   if (a09.list != NULL)
