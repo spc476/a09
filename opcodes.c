@@ -111,7 +111,7 @@ static bool parse_dirext(struct opcdata *opd)
   assert(opd->buffer != NULL);
   
   if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
-    return message(opd->a09,MSG_ERROR,"bad value");
+    return false;
   if (opd->value.defined && (opd->value.value < 256))
     opd->mode = AM_DIRECT;
   else
@@ -163,7 +163,7 @@ static bool parse_operand(struct opcdata *opd)
   if (c == '#')
   {
     if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
-      return message(opd->a09,MSG_ERROR,"bad immediate value");
+      return false;
     opd->mode = AM_IMMED;
     return true;
   }
@@ -204,19 +204,19 @@ static bool parse_operand(struct opcdata *opd)
              case 'Y':
              case 'U':
              case 'S': opd->value.postbyte |= index_register(c); break;
-             default: return message(opd->a09,MSG_ERROR,"syntax error 60");
+             default: return message(opd->a09,MSG_ERROR,"invalid index register");
            }
            
            if (opd->buffer->buf[++opd->buffer->ridx] == ']')
            {
              if (!indexindirect)
-               return message(opd->a09,MSG_ERROR,"syntax error 22");
+               return message(opd->a09,MSG_ERROR,"end of indirection without start of indirection error");
              opd->value.postbyte |= 0x10;
            }
            return true;
            
       default:
-           return message(opd->a09,MSG_ERROR,"syntax error 20");
+           return message(opd->a09,MSG_ERROR,"invalid index register");
     }
     
     c = skip_space(opd->buffer);
@@ -224,19 +224,19 @@ static bool parse_operand(struct opcdata *opd)
     if ((c == ';') || (c == '\0') || isspace(c))
     {
       if (indexindirect)
-        return message(opd->a09,MSG_ERROR,"syntax error 27");
+        return message(opd->a09,MSG_ERROR,"missing end of index indirect mode");
       opd->value.postbyte |= 0x04;
       return true;
     }
     else if (c == ']')
     {
       if (!indexindirect)
-        return message(opd->a09,MSG_ERROR,"syntax error 28");
+        return message(opd->a09,MSG_ERROR,"end of indirection without start of indirection error");
       opd->value.postbyte |= 0x14;
       return true;
     }
     else if (c != '+')
-      return message(opd->a09,MSG_ERROR,"syntax error 24");
+      return message(opd->a09,MSG_ERROR,"syntax error in post-increment index mode");
       
     c = opd->buffer->buf[opd->buffer->ridx++];
     if (c == '+')
@@ -245,7 +245,7 @@ static bool parse_operand(struct opcdata *opd)
       if (opd->buffer->buf[opd->buffer->ridx++] == ']')
       {
         if (!indexindirect)
-          return message(opd->a09,MSG_ERROR,"syntax error 26");
+          return message(opd->a09,MSG_ERROR,"end of indirection without start of indirection error");
         opd->value.postbyte |= 0x10;
       }
       return true;
@@ -253,11 +253,11 @@ static bool parse_operand(struct opcdata *opd)
     else if ((c == ';') || (c == '\0') || isspace(c))
     {
       if (indexindirect)
-        return message(opd->a09,MSG_ERROR,"syntax error 29");
+        return message(opd->a09,MSG_ERROR,"missing end of indirection error");
       return true;
     }
     else
-      return message(opd->a09,MSG_ERROR,"syntax error 25");
+      return message(opd->a09,MSG_ERROR,"syntax error in index mode");
   }
   
   opd->buffer->ridx--; // ungetc()
@@ -288,13 +288,13 @@ static bool parse_operand(struct opcdata *opd)
              case 'Y':
              case 'U':
              case 'S': opd->value.postbyte |= index_register(c); break;
-             default: return message(opd->a09,MSG_ERROR,"syntax error 31");
+             default: return message(opd->a09,MSG_ERROR,"invalid index register");
            }
            c = opd->buffer->buf[++opd->buffer->ridx];
            if (c == ']')
            {
              if (!indexindirect)
-               return message(opd->a09,MSG_ERROR,"syntax error 32");
+               return message(opd->a09,MSG_ERROR,"end of indirection without start of indirection error");
              opd->value.postbyte |= 0x10;
              c = opd->buffer->buf[++opd->buffer->ridx];
            }
@@ -302,7 +302,7 @@ static bool parse_operand(struct opcdata *opd)
            if ((c == ';') || (c == '\0') || isspace(c))
              return true;
              
-           return message(opd->a09,MSG_ERROR,"syntax error 33");
+           return message(opd->a09,MSG_ERROR,"invalid accumulator register in index mode");
            
       default:
            break;
@@ -310,14 +310,14 @@ static bool parse_operand(struct opcdata *opd)
   }
   
   if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
-    return message(opd->a09,MSG_ERROR,"syntax error 8");
+    return false;
     
   c = skip_space(opd->buffer);
   
   if ((c == ';') || (c == '\0'))
   {
     if (indexindirect)
-      return message(opd->a09,MSG_ERROR,"syntax error 9");
+      return message(opd->a09,MSG_ERROR,"missing end of indirection error");
     if ((opd->value.bits == 5) || (opd->value.bits == 8))
       return AM_DIRECT;
     if (opd->value.defined && (opd->value.value < 256))
@@ -330,7 +330,7 @@ static bool parse_operand(struct opcdata *opd)
   if (c == ']')
   {
     if (!indexindirect)
-      return message(opd->a09,MSG_ERROR,"syntax error 10");
+      return message(opd->a09,MSG_ERROR,"end of indirection without start of indirection error");
     opd->value.postbyte = 0x9F;
     opd->value.bits     = 16;
     opd->mode           = AM_INDEX;
@@ -338,7 +338,7 @@ static bool parse_operand(struct opcdata *opd)
   }
   
   if (c != ',')
-    return message(opd->a09,MSG_ERROR,"syntax error 40");
+    return message(opd->a09,MSG_ERROR,"missing expected comma");
     
   opd->value.postbyte = 0;
   opd->mode           = AM_INDEX;
@@ -428,14 +428,14 @@ static bool parse_operand(struct opcdata *opd)
          break;
          
     default:
-         return message(opd->a09,MSG_ERROR,"syntax error 50");
+         return message(opd->a09,MSG_ERROR,"invalid index regster");
   }
   
   c = skip_space(opd->buffer);
   if (c == ']')
   {
     if (!indexindirect)
-      return message(opd->a09,MSG_ERROR,"syntax error 51");
+      return message(opd->a09,MSG_ERROR,"end of indirection without start indirection error");
     opd->value.postbyte |= 0x10;
     if (opd->bits == 5)
       opd->bits = 8;
@@ -452,7 +452,7 @@ static bool op_inh(struct opcdata *opd)
   assert(opd->sz == 0);
   
   if (!parse_operand(opd))
-    return message(opd->a09,MSG_ERROR,"parsing error");
+    return false;
   if (opd->mode != AM_INHERENT)
     return message(opd->a09,MSG_ERROR,"operands found for op with no operands");
     
@@ -828,7 +828,7 @@ static bool pseudo_rmb(struct opcdata *opd)
 {
   assert(opd != NULL);
   if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
-    return message(opd->a09,MSG_ERROR,"bad value");
+    return false;
   opd->data   = true;
   opd->datasz = opd->value.value;
   if (opd->pass == 2)
@@ -895,7 +895,7 @@ static bool pseudo_fcb(struct opcdata *opd)
       opd->buffer->ridx--;
       opd->datasz++;
       if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
-        return message(opd->a09,MSG_ERROR,"bad value");
+        return false;
       unsigned char byte = value_lsb(opd->a09,opd->value.value,opd->pass);
       if (opd->sz < sizeof(opd->bytes))
         opd->bytes[opd->sz++] = byte;
@@ -933,7 +933,7 @@ static bool pseudo_fdb(struct opcdata *opd)
       opd->buffer->ridx--;
       opd->datasz += 2;
       if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
-        return message(opd->a09,MSG_ERROR,"bad value");
+        return false;
       unsigned char word[2] =
       {
         opd->value.value >> 8 ,

@@ -254,7 +254,7 @@ static bool term(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass
     memset(&val,0,sizeof(val));
     buffer->ridx--;
     if (!factor(&val,a09,buffer,pass))
-      return message(a09,MSG_ERROR,"missing factor in expression");
+      return false;
     if (!eval(a09,pv,op,&val))
       return false;
   }
