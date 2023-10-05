@@ -4,6 +4,10 @@
 #ifndef I_CBED9C6E_E5CA_55A4_A099_890E6F362B3C
 #define I_CBED9C6E_E5CA_55A4_A099_890E6F362B3C
 
+#if !defined(__GNUC__) && !defined(__clang__)
+#  define __attribute__(x)
+#endif
+
 #if defined(__clang__)
 #  pragma clang diagnostic ignored "-Wpadded"
 #  pragma clang diagnostic ignored "-Wconversion"
