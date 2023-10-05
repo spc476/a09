@@ -1095,7 +1095,7 @@ static bool pseudo_include(struct opcdata *opd)
   new.in     = fopen(filename.buf,"r");
   
   if (new.in == NULL)
-    return false;
+    return message(opd->a09,MSG_ERROR,"%s: %s",filename.buf,strerror(errno));
     
   if ((opd->pass == 2) && (new.list != NULL))
   {
