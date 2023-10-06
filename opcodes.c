@@ -319,7 +319,16 @@ static bool parse_operand(struct opcdata *opd)
     if (indexindirect)
       return message(opd->a09,MSG_ERROR,"missing end of indirection error");
     if ((opd->value.bits == 5) || (opd->value.bits == 8))
-      return AM_DIRECT;
+    {
+      opd->mode = AM_DIRECT;
+      return true;
+    }
+    if (opd->value.bits == 16)
+    {
+      opd->mode = AM_EXTENDED;
+      return true;
+    }
+    assert(opd->value.bits == 0);
     if (opd->value.defined && (opd->value.value < 256))
       opd->mode = AM_DIRECT;
     else
