@@ -576,7 +576,7 @@ static bool op_die(struct opcdata *opd)
          return true;
          
     case AM_INHERENT:
-         return message(opd->a09,MSG_ERROR,"How did this happen?");
+         return message(opd->a09,MSG_ERROR,"How did this happen again?");
   }
   
   return false;
