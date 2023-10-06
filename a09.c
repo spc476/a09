@@ -421,6 +421,7 @@ static void dump_symbols(FILE *out,tree__s *tree)
       [SYM_ADDRESS] = "address",
       [SYM_EQU]     = "equate",
       [SYM_SET]     = "set",
+      [SYM_PUBLIC]  = "public",
     };
     
     dump_symbols(out,tree->left);

@@ -1207,7 +1207,22 @@ static bool pseudo_extern(struct opcdata *opd)
 static bool pseudo_public(struct opcdata *opd)
 {
   assert(opd != NULL);
-  return message(opd->a09,MSG_ERROR,"PUBLIC unsupported");
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (!parse_dirext(opd))
+  {
+    if (opd->pass == 1)
+    {
+      struct symbol *sym = symbol_find(opd->a09,&opd->label);
+      if (sym == NULL)
+        return message(opd->a09,MSG_ERROR,"missing label or expression for PUBLIC");
+      sym->type = SYM_PUBLIC;
+    }
+  }
+  else
+    return message(opd->a09,MSG_ERROR,"not supported yet");
+
+  return true;
 }
 
 /**************************************************************************/

@@ -39,6 +39,7 @@ enum symtype
   SYM_ADDRESS,
   SYM_EQU,
   SYM_SET,
+  SYM_PUBLIC,
 };
 
 typedef struct label
