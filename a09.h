@@ -40,6 +40,7 @@ enum symtype
   SYM_EQU,
   SYM_SET,
   SYM_PUBLIC,
+  SYM_EXTERN,
 };
 
 typedef struct label
@@ -82,8 +83,6 @@ struct symbol
   char const   *filename;
   size_t        ldef;
   size_t        bits;
-  bool          external;
-  bool          public;
 };
 
 struct value
@@ -93,6 +92,7 @@ struct value
   unsigned char postbyte;
   bool          unknownpass1;
   bool          defined;
+  bool          external;
 };
 
 struct opcdata

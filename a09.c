@@ -166,7 +166,7 @@ static bool parse_op(struct buffer *buffer,struct opcode const **pop)
       *pop   = op_find(top);
       return *pop != NULL;
     }
-    else if (!isalpha(c) && !isdigit(c))
+    else if (!isalpha(c) && !isdigit(c) && (c != '.'))
       break;
       
     top[i] = toupper(c);
@@ -284,6 +284,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
       .bits         = 0,
       .unknownpass1 = false,
       .defined      = false,
+      .external     = false,
     },
     .bits        = 16,
     .pcrel       = false,
@@ -422,6 +423,7 @@ static void dump_symbols(FILE *out,tree__s *tree)
       [SYM_EQU]     = "equate",
       [SYM_SET]     = "set",
       [SYM_PUBLIC]  = "public",
+      [SYM_EXTERN]  = "extern",
     };
     
     dump_symbols(out,tree->left);

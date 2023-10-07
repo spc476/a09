@@ -131,6 +131,7 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
         return false;
       }
       pv->defined      = false;
+      pv->external     = false;
       pv->unknownpass1 = true;
       pv->value        = 0;
     }
@@ -138,6 +139,7 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
     {
       pv->unknownpass1 = sym->ldef > a09->lnum;
       pv->value        = sym->value;
+      pv->external     = sym->type == SYM_EXTERN;
     }
   }
   else if (c == '\'')
@@ -169,6 +171,9 @@ static bool eval(struct a09 *a09,struct value *v1,char op,struct value *v2)
   assert(v1 != NULL);
   assert(v2 != NULL);
   
+  if (v1->external || v2->external)
+    return message(a09,MSG_ERROR,"EXTERN in expression not allowd");
+    
   switch(op)
   {
     case '+': v1->value += v2->value; break;

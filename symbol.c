@@ -78,8 +78,6 @@ struct symbol *symbol_add(struct a09 *a09,label const *name,uint16_t value)
       sym->value        = value;
       sym->filename     = a09->infile;
       sym->ldef         = a09->lnum;
-      sym->external     = false;
-      sym->public       = false;
       ListAddTail(&a09->symbols,&sym->node);
       a09->symtab = tree_insert(a09->symtab,&sym->tree,symtreecmp);
     }

@@ -623,13 +623,21 @@ static bool op_br(struct opcdata *opd)
   if ((opd->mode != AM_DIRECT) && (opd->mode != AM_EXTENDED))
     return false;
     
-  uint16_t delta = opd->value.value - (opd->a09->pc + 2);
-  
-  if ((opd->pass == 2) && (delta > 0x007F) && (delta < 0xFF80))
-    return message(opd->a09,MSG_ERROR,"target exceeds 8-bit range");
+  if (opd->value.external)
+  {
+    opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
+    opd->bytes[opd->sz++] = 0;
+  }
+  else
+  {
+    uint16_t delta = opd->value.value - (opd->a09->pc + 2);
     
-  opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
-  opd->bytes[opd->sz++] = delta & 255;
+    if ((opd->pass == 2) && (delta > 0x007F) && (delta < 0xFF80))
+      return message(opd->a09,MSG_ERROR,"target exceeds 8-bit range");
+      
+    opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
+    opd->bytes[opd->sz++] = delta & 255;
+  }
   return true;
 }
 
@@ -648,7 +656,10 @@ static bool op_lbr(struct opcdata *opd)
     
   if (opd->op->page)
   {
-    uint16_t delta        = opd->value.value - (opd->a09->pc + 4);
+    uint16_t delta = opd->value.external
+                   ? 0
+                   : opd->value.value - (opd->a09->pc + 4);
+                   
     opd->bytes[opd->sz++] = opd->op->page;
     opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
     opd->bytes[opd->sz++] = delta >> 8;
@@ -656,7 +667,9 @@ static bool op_lbr(struct opcdata *opd)
   }
   else
   {
-    uint16_t delta        = opd->value.value - (opd->a09->pc + 3);
+    uint16_t delta = opd->value.external
+                   ? 0
+                   : opd->value.value - (opd->a09->pc + 3);
     opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
     opd->bytes[opd->sz++] = delta >> 8;
     opd->bytes[opd->sz++] = delta & 255;
@@ -1190,16 +1203,58 @@ static bool pseudo_incbin(struct opcdata *opd)
 
 static bool pseudo_extdp(struct opcdata *opd)
 {
+  struct symbol *sym;
+  label          label;
+  char           c;
+  
   assert(opd != NULL);
-  return message(opd->a09,MSG_ERROR,"EXTDP unsupported");
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->pass == 1)
+  {
+    c = skip_space(opd->buffer);
+    if ((c == ';') || (c == '\0'))
+      return message(opd->a09,MSG_ERROR,"EXTDP missing label");
+    opd->buffer->ridx--;
+    if (!parse_label(&label,opd->buffer,opd->a09))
+      return false;
+    sym = symbol_add(opd->a09,&label,0x80);
+    if (sym == NULL)
+      return message(opd->a09,MSG_ERROR,"out of memory");
+    sym->type = SYM_EXTERN;
+    sym->bits = 8;
+  }
+  
+  return true;
 }
 
 /**************************************************************************/
 
 static bool pseudo_extern(struct opcdata *opd)
 {
+  struct symbol *sym;
+  label          label;
+  char           c;
+  
   assert(opd != NULL);
-  return message(opd->a09,MSG_ERROR,"EXTERN unsupported");
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->pass == 1)
+  {
+    c = skip_space(opd->buffer);
+    if ((c == ';') || (c == '\0'))
+      return message(opd->a09,MSG_ERROR,"EXTERN missing label");
+    opd->buffer->ridx--;
+    if (!parse_label(&label,opd->buffer,opd->a09))
+      return false;
+    sym = symbol_add(opd->a09,&label,0x8000);
+    if (sym == NULL)
+      return message(opd->a09,MSG_ERROR,"out of memory");
+    sym->type = SYM_EXTERN;
+    sym->bits = 16;
+  }
+  
+  return true;
 }
 
 /**************************************************************************/
@@ -1209,19 +1264,32 @@ static bool pseudo_public(struct opcdata *opd)
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  if (!parse_dirext(opd))
+  if (opd->pass == 1)
   {
-    if (opd->pass == 1)
-    {
-      struct symbol *sym = symbol_find(opd->a09,&opd->label);
-      if (sym == NULL)
-        return message(opd->a09,MSG_ERROR,"missing label or expression for PUBLIC");
-      sym->type = SYM_PUBLIC;
-    }
+    struct symbol *sym = symbol_find(opd->a09,&opd->label);
+    if (sym == NULL)
+      return message(opd->a09,MSG_ERROR,"missing label or expression for PUBLIC");
+    sym->type = SYM_PUBLIC;
   }
-  else
-    return message(opd->a09,MSG_ERROR,"not supported yet");
+  
+  return true;
+}
 
+/**************************************************************************/
+
+static bool pseudo__code(struct opcdata *opd)
+{
+  (void)opd;
+  message(opd->a09,MSG_WARNING,".CODE not finished");
+  return true;
+}
+
+/**************************************************************************/
+
+static bool pseudo__dp(struct opcdata *opd)
+{
+  (void)opd;
+  message(opd->a09,MSG_WARNING,".DP not finished");
   return true;
 }
 
@@ -1241,6 +1309,8 @@ struct opcode const *op_find(char const *name)
 {
   static struct opcode const opcodes[] =
   {
+    { ".CODE"   , pseudo__code   , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
+    { ".DP"     , pseudo__dp     , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
     { "ABX"     , op_inh         , { 0x3A , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
     { "ADCA"    , op_idie        , { 0x89 , 0x99 , 0xA9 , 0xB9 } , 0x00 , false } ,
     { "ADCB"    , op_idie        , { 0xC9 , 0xD9 , 0xE9 , 0xF9 } , 0x00 , false } ,
