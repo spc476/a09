@@ -462,6 +462,7 @@ int main(int argc,char *argv[])
       .text = { '\0' },
     },
     .pc        = 0,
+    .dp        = 0,
     .debug     = false,
     .inbuf     =
     {

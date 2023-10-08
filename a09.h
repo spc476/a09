@@ -70,6 +70,7 @@ struct a09
   List           symbols;
   label          label;
   uint16_t       pc;
+  unsigned char  dp;
   bool           debug;
 };
 

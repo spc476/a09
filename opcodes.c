@@ -112,7 +112,8 @@ static bool parse_dirext(struct opcdata *opd)
   
   if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
     return false;
-  if (opd->value.defined && (opd->value.value < 256))
+  //if (opd->value.defined && (opd->value.value < 256))
+  if (opd->value.defined && ((opd->value.value >> 8) == opd->a09->dp))
     opd->mode = AM_DIRECT;
   else
     opd->mode = AM_EXTENDED;
@@ -329,7 +330,8 @@ static bool parse_operand(struct opcdata *opd)
       return true;
     }
     assert(opd->value.bits == 0);
-    if (opd->value.defined && (opd->value.value < 256))
+    if (opd->value.defined && ((opd->value.value >> 8) == opd->a09->dp))
+    //if (opd->value.defined && (opd->value.value < 256))
       opd->mode = AM_DIRECT;
     else
       opd->mode = AM_EXTENDED;
@@ -880,7 +882,10 @@ static bool pseudo_org(struct opcdata *opd)
 static bool pseudo_setdp(struct opcdata *opd)
 {
   assert(opd != NULL);
-  return message(opd->a09,MSG_ERROR,"SETDP unsupported");
+  if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
+    return false;
+  opd->a09->dp = value_lsb(opd->a09,opd->value.value,opd->pass);
+  return true;
 }
 
 /**************************************************************************/
