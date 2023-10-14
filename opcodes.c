@@ -820,6 +820,7 @@ static bool pseudo_equ(struct opcdata *opd)
     assert(sym != NULL); /* this should always be the case */
     sym->value         = opd->value.value;
     sym->type          = SYM_EQU;
+    sym->bits          = opd->value.value < 256 ? 8 : 16;
   }
   
   return true;
@@ -841,6 +842,7 @@ static bool pseudo_set(struct opcdata *opd)
     assert(sym != NULL);
     sym->value          = opd->value.value;
     sym->type           = SYM_SET;
+    sym->bits           = opd->value.value < 256 ? 8 : 16;
   }
   
   return true;
