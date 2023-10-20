@@ -112,7 +112,6 @@ static bool parse_dirext(struct opcdata *opd)
   
   if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
     return false;
-  //if (opd->value.defined && (opd->value.value < 256))
   if (opd->value.defined && ((opd->value.value >> 8) == opd->a09->dp))
     opd->mode = AM_DIRECT;
   else
@@ -331,7 +330,6 @@ static bool parse_operand(struct opcdata *opd)
     }
     assert(opd->value.bits == 0);
     if (opd->value.defined && ((opd->value.value >> 8) == opd->a09->dp))
-    //if (opd->value.defined && (opd->value.value < 256))
       opd->mode = AM_DIRECT;
     else
       opd->mode = AM_EXTENDED;
