@@ -79,8 +79,8 @@ struct symbol *symbol_add(struct a09 *a09,label const *name,uint16_t value)
       sym->filename     = a09->infile;
       sym->ldef         = a09->lnum;
       sym->bits         = a09->dp == value >> 8 ? 8 : 16;
+      a09->symtab       = tree_insert(a09->symtab,&sym->tree,symtreecmp);
       ListAddTail(&a09->symbols,&sym->node);
-      a09->symtab = tree_insert(a09->symtab,&sym->tree,symtreecmp);
     }
   }
   else if (sym->type == SYM_SET)
