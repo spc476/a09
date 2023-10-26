@@ -711,6 +711,16 @@ static bool sop_findreg(struct indexregs const **ir,char const *src,char skip)
     { "\1a"  , 0x02 , 0x80 , 0x08 , false } ,
     { "\2cc" , 0x01 , 0xA0 , 0x0A , false } ,
     { "\1d"  , 0x06 , 0x00 , 0x00 , true  } ,
+    { "\2PC" , 0x80 , 0x50 , 0x05 , true  } ,
+    { "\1S"  , 0x40 , 0x40 , 0x04 , true  } ,
+    { "\1U"  , 0x40 , 0x30 , 0x03 , true  } ,
+    { "\1Y"  , 0x20 , 0x20 , 0x02 , true  } ,
+    { "\1X"  , 0x10 , 0x10 , 0x01 , true  } ,
+    { "\2DP" , 0x08 , 0xB0 , 0x0B , false } ,
+    { "\1B"  , 0x04 , 0x90 , 0x09 , false } ,
+    { "\1A"  , 0x02 , 0x80 , 0x08 , false } ,
+    { "\2CC" , 0x01 , 0xA0 , 0x0A , false } ,
+    { "\1D"  , 0x06 , 0x00 , 0x00 , true  } ,
   };
   
   for (size_t i = 0 ; i < sizeof(index) / sizeof(index[0]) ; i++)
