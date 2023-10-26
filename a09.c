@@ -411,6 +411,25 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
 
 /**************************************************************************/
 
+static void warning_unused_symbols(struct a09 *a09,tree__s *tree)
+{
+  assert(a09 != NULL);
+  
+  if (tree != NULL)
+  {
+    warning_unused_symbols(a09,tree->left);
+    struct symbol *sym = tree2sym(tree);
+    if (sym->refs == 0)
+    {
+      a09->lnum = sym->ldef;
+      message(a09,MSG_WARNING,"symbol '%.*s' defined but not used",sym->name.s,sym->name.text);
+    }
+    warning_unused_symbols(a09,tree->right);
+  }
+}
+
+/**************************************************************************/
+
 static void dump_symbols(FILE *out,tree__s *tree)
 {
   assert(out != NULL);
@@ -515,6 +534,8 @@ int main(int argc,char *argv[])
   
   a09.pc = 0;
   rc     = assemble_pass(&a09,2);
+  
+  warning_unused_symbols(&a09,a09.symtab);
   
   if (a09.list != NULL)
   {
