@@ -84,6 +84,7 @@ struct symbol
   char const   *filename;
   size_t        ldef;
   size_t        bits;
+  size_t        refs;
 };
 
 struct value
