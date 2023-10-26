@@ -140,7 +140,8 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
       pv->unknownpass1 = sym->ldef > a09->lnum;
       pv->value        = sym->value;
       pv->external     = sym->type == SYM_EXTERN;
-      sym->refs++;
+      if (pass == 2)
+        sym->refs++;
     }
   }
   else if (c == '\'')
