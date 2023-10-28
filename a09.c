@@ -419,7 +419,7 @@ static void warning_unused_symbols(struct a09 *a09,tree__s *tree)
   {
     warning_unused_symbols(a09,tree->left);
     struct symbol *sym = tree2sym(tree);
-    if (sym->refs == 0)
+    if ((sym->refs == 0) && (sym->type == SYM_ADDRESS))
     {
       a09->lnum = sym->ldef;
       message(a09,MSG_WARNING,"symbol '%.*s' defined but not used",sym->name.s,sym->name.text);
