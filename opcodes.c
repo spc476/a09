@@ -914,10 +914,20 @@ static bool pseudo_fcb(struct opcdata *opd)
   
   if (opd->pass == 1)
   {
-    opd->data   = true;
-    for (char *p = &opd->buffer->buf[opd->buffer->ridx - 1] ; p != NULL ; opd->datasz++ , p = strchr(p+1,','))
-      ;
-    return true;
+    opd->data = true;
+    while(true)
+    {
+      char c = skip_space(opd->buffer);
+      opd->buffer->ridx--;
+      opd->datasz++;
+      if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
+        return false;
+      c = skip_space(opd->buffer);
+      if ((c == ';') || (c == '\0'))
+        return true;
+      if (c != ',')
+        return message(opd->a09,MSG_ERROR,"missing comma");
+    }
   }
   else
   {
@@ -953,9 +963,19 @@ static bool pseudo_fdb(struct opcdata *opd)
   if (opd->pass == 1)
   {
     opd->data = true;
-    for (char *p = &opd->buffer->buf[opd->buffer->ridx - 1] ; p != NULL ; opd->datasz += 2 , p = strchr(p+1,','))
-      ;
-    return true;
+    while(true)
+    {
+      char c = skip_space(opd->buffer);
+      opd->buffer->ridx--;
+      opd->datasz += 2;
+      if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
+        return false;
+      c = skip_space(opd->buffer);
+      if ((c == ';') || (c == '\0'))
+        return true;
+      if (c != ',')
+        return message(opd->a09,MSG_ERROR,"missing comma");
+    }
   }
   else
   {
