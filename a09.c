@@ -293,8 +293,24 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   
   if (parse_label(&opd.label,&a09->inbuf,a09))
   {
-    if ((pass == 1) && (symbol_add(a09,&opd.label,a09->pc) == NULL))
-      return false;
+    if (pass == 1)
+    {
+      if (symbol_add(a09,&opd.label,a09->pc) == NULL)
+        return false;
+    }
+    else if (pass == 2)
+    {
+      /*--------------------------------------------------------------
+      ; On pass 2, all ADDRESS labels should be the same.  If they're not,
+      ; there's an internal error somewhere, so abort the assembly to avoid
+      ; troubleshooting an assembler error in the program we're writing.
+      ;---------------------------------------------------------------*/
+      struct symbol *sym = symbol_find(a09,&opd.label);
+      if (sym == NULL)
+        return message(a09,MSG_ERROR,"Internal error---'%.*s' should exist, but doesn't",a09->label.s,a09->label.text);
+      if ((sym->type == SYM_ADDRESS) && (sym->value != a09->pc))
+        return message(a09,MSG_ERROR,"Internal error---out of phase;\n\t'%.*s' = %04X pass 1, %04X pass 2",a09->label.s,a09->label.text,sym->value,a09->pc);
+    }
   }
   
   c = skip_space(&a09->inbuf);
