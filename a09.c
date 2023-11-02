@@ -535,7 +535,8 @@ int main(int argc,char *argv[])
   a09.pc = 0;
   rc     = assemble_pass(&a09,2);
   
-  warning_unused_symbols(&a09,a09.symtab);
+  if (rc)
+    warning_unused_symbols(&a09,a09.symtab);
   
   if (a09.list != NULL)
   {
