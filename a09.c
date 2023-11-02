@@ -447,7 +447,9 @@ static void dump_symbols(FILE *out,tree__s *tree)
     
     dump_symbols(out,tree->left);
     struct symbol *sym = tree2sym(tree);
-    fprintf(
+    if (sym->type != SYM_SET)
+    {
+      fprintf(
              out,
              "%5zu | %-11.11s %04X %5d %.*s\n",
              sym->ldef,
@@ -456,6 +458,7 @@ static void dump_symbols(FILE *out,tree__s *tree)
              sym->refs,
              sym->name.s,sym->name.text
           );
+    }
     dump_symbols(out,tree->right);
   }
 }
