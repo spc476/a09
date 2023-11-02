@@ -844,14 +844,11 @@ static bool pseudo_set(struct opcdata *opd)
   if (!parse_dirext(opd))
     return message(opd->a09,MSG_ERROR,"missing label for SET");
     
-  if (opd->pass == 1)
-  {
-    struct symbol  *sym = symbol_find(opd->a09,&opd->label);
-    assert(sym != NULL);
-    sym->value          = opd->value.value;
-    sym->type           = SYM_SET;
-    sym->bits           = opd->value.value < 256 ? 8 : 16;
-  }
+  struct symbol  *sym = symbol_find(opd->a09,&opd->label);
+  assert(sym != NULL);
+  sym->value          = opd->value.value;
+  sym->type           = SYM_SET;
+  sym->bits           = opd->value.value < 256 ? 8 : 16;
   
   return true;
 }
