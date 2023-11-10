@@ -826,9 +826,12 @@ static bool pseudo_equ(struct opcdata *opd)
   {
     struct symbol *sym = symbol_find(opd->a09,&opd->label);
     assert(sym != NULL); /* this should always be the case */
-    sym->value         = opd->value.value;
-    sym->type          = SYM_EQU;
-    sym->bits          = opd->value.value < 256 ? 8 : 16;
+    if (sym->type != SYM_ADDRESS)
+      return message(opd->a09,MSG_ERROR,"redefining SET value");
+      
+    sym->value = opd->value.value;
+    sym->type  = SYM_EQU;
+    sym->bits  = opd->value.value < 256 ? 8 : 16;
   }
   
   return true;
