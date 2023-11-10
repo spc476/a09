@@ -309,7 +309,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
       if (sym == NULL)
         return message(a09,MSG_ERROR,"Internal error---'%.*s' should exist, but doesn't",a09->label.s,a09->label.text);
       if ((sym->type == SYM_ADDRESS) && (sym->value != a09->pc))
-        return message(a09,MSG_ERROR,"Internal error---out of phase;\n\t'%.*s' = %04X pass 1, %04X pass 2",a09->label.s,a09->label.text,sym->value,a09->pc);
+        return message(a09,MSG_ERROR,"Internal error---out of phase;\n\t'%.*s' = %04X pass 1, %04X pass 2\n\tPerhaps an underspecified PC-relative addressing mode before this point?",a09->label.s,a09->label.text,sym->value,a09->pc);
     }
   }
   
