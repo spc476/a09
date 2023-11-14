@@ -497,7 +497,7 @@ int main(int argc,char *argv[])
     .symtab    = NULL,
     .label     =
     {
-      .s = 0,
+      .s    = 0,
       .text = { '\0' },
     },
     .pc        = 0,
