@@ -61,3 +61,4 @@ E0047: EXTERN missing label
 E0048: missing label or expression for PUBLIC
 E0049: '%.*s' already defined on line %zu
 E0050: not a label
+E0051: value for ALIGN must be known in pass 1

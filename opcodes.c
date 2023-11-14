@@ -1384,6 +1384,38 @@ static bool pseudo__dp(struct opcdata *opd)
 
 /**************************************************************************/
 
+static bool pseudo_align(struct opcdata *opd)
+{
+  uint16_t rem;
+  
+  assert(opd != NULL);
+  if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
+    return false;
+    
+  if (opd->value.unknownpass1)
+    return message(opd->a09,MSG_ERROR,"E0051: value for ALIGN must be known in pass 1");
+  
+  if (opd->value.value == 0)
+    return message(opd->a09,MSG_ERROR,"E0008: divide by 0 error");
+  
+  rem = opd->a09->pc % opd->value.value;
+  if (rem == 0)
+    return true;
+      
+  opd->data   = true;
+  opd->datasz = opd->value.value - rem;
+  
+  if (opd->pass == 2)
+  {
+
+    if (fseek(opd->a09->out,opd->datasz,SEEK_CUR) == -1)
+      return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
+  }
+  return true;
+}
+
+/**************************************************************************/
+
 static int opcode_cmp(void const *needle,void const *haystack)
 {
   char          const *key    = needle;
@@ -1406,6 +1438,7 @@ struct opcode const *op_find(char const *name)
     { "ADDA"    , op_idie        , { 0x8B , 0x9B , 0xAB , 0xBB } , 0x00 , false } ,
     { "ADDB"    , op_idie        , { 0xCB , 0xDB , 0xEB , 0xFB } , 0x00 , false } ,
     { "ADDD"    , op_idie        , { 0xC3 , 0xD3 , 0xE3 , 0xF3 } , 0x00 , true  } ,
+    { "ALIGN"	, pseudo_align	 , { 0x00 , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
     { "ANDA"    , op_idie        , { 0x84 , 0x94 , 0xA4 , 0xB4 } , 0x00 , false } ,
     { "ANDB"    , op_idie        , { 0xC4 , 0xD4 , 0xE4 , 0xF4 } , 0x00 , false } ,
     { "ANDCC"   , op_imm         , { 0x1C , 0x00 , 0x00 , 0x00 } , 0x00 , false } ,
