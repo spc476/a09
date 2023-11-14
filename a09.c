@@ -355,7 +355,9 @@ bool assemble_pass(struct a09 *a09,int pass)
   assert(pass    <= 2);
   
   rewind(a09->in);
-  a09->lnum = 0;
+  a09->lnum          = 0;
+  a09->label.text[0] = '\0';
+  a09->label.s       = 0;
   
   message(a09,MSG_DEBUG,"Pass %d",pass);
   
