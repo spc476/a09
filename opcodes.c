@@ -927,7 +927,7 @@ static bool pseudo_org(struct opcdata *opd)
     return message(opd->a09,MSG_ERROR,"E0039: missing value for ORG");
     
   opd->a09->pc = opd->value.value;
-  return true;
+  return opd->a09->format.def.org(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
@@ -938,7 +938,7 @@ static bool pseudo_setdp(struct opcdata *opd)
   if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
     return false;
   opd->a09->dp = value_lsb(opd->a09,opd->value.value,opd->pass);
-  return true;
+  return opd->a09->format.def.setdp(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
@@ -965,7 +965,7 @@ static bool pseudo_end(struct opcdata *opd)
     return message(opd->a09,MSG_ERROR,"E0052: missing label for END");
   if (opd->pass == 2)
     sym->refs++;
-  return true;
+  return opd->a09->format.def.end(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
@@ -1376,18 +1376,22 @@ static bool pseudo_public(struct opcdata *opd)
 
 static bool pseudo__code(struct opcdata *opd)
 {
-  (void)opd;
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
   message(opd->a09,MSG_WARNING,"W0010: .CODE not finished");
-  return true;
+  return opd->a09->format.def.code(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
 
 static bool pseudo__dp(struct opcdata *opd)
 {
-  (void)opd;
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
   message(opd->a09,MSG_WARNING,"W0011: .DP not finished");
-  return true;
+  return opd->a09->format.def.dp(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
@@ -1419,7 +1423,8 @@ static bool pseudo_align(struct opcdata *opd)
     if (fseek(opd->a09->out,opd->datasz,SEEK_CUR) == -1)
       return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
   }
-  return true;
+  
+  return opd->a09->format.def.align(&opd->a09->format,opd);
 }
 
 /**************************************************************************/

@@ -56,6 +56,47 @@ struct buffer
   size_t  ridx;
 };
 
+struct a09;
+struct opcdata;
+union format;
+
+struct format_default
+{
+  bool (*dp)   (union format *,struct opcdata *);
+  bool (*code) (union format *,struct opcdata *);
+  bool (*align)(union format *,struct opcdata *);
+  bool (*end)  (union format *,struct opcdata *);
+  bool (*org)  (union format *,struct opcdata *);
+  bool (*setdp)(union format *,struct opcdata *);
+};
+
+struct format_bin
+{
+  bool (*dp)   (union format *,struct opcdata *);
+  bool (*code) (union format *,struct opcdata *);
+  bool (*align)(union format *,struct opcdata *);
+  bool (*end)  (union format *,struct opcdata *);
+  bool (*org)  (union format *,struct opcdata *);
+  bool (*setdp)(union format *,struct opcdata *);
+};
+
+struct format_rsdos
+{
+  bool (*dp)   (union format *,struct opcdata *);
+  bool (*code) (union format *,struct opcdata *);
+  bool (*align)(union format *,struct opcdata *);
+  bool (*end)  (union format *,struct opcdata *);
+  bool (*org)  (union format *,struct opcdata *);
+  bool (*setdp)(union format *,struct opcdata *);
+};
+
+union format
+{
+  struct format_default def;
+  struct format_bin     bin;
+  struct format_rsdos   rsdos;
+};
+
 struct a09
 {
   char const    *infile;
@@ -64,6 +105,7 @@ struct a09
   FILE          *in;
   FILE          *out;
   FILE          *list;
+  union format   format;
   struct buffer  inbuf;
   size_t         lnum;
   tree__s       *symtab;
@@ -148,15 +190,17 @@ extern char const MSG_DEBUG[];
 extern char const MSG_WARNING[];
 extern char const MSG_ERROR[];
 
-extern bool                 message       (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
-extern bool                 parse_label   (label *,struct buffer *,struct a09 *);
-extern char                 skip_space    (struct buffer *);
-extern bool                 print_list    (struct a09 *,struct opcdata *,bool);
-extern bool                 assemble_pass (struct a09 *,int);
-extern struct opcode const *op_find       (char const *);
-extern bool                 expr          (struct value *,struct a09 *,struct buffer *,int);
-extern struct symbol       *symbol_find   (struct a09 *,label const *);
-extern struct symbol       *symbol_add    (struct a09 *,label const *,uint16_t);
+extern bool                 message           (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
+extern bool                 parse_label       (label *,struct buffer *,struct a09 *);
+extern char                 skip_space        (struct buffer *);
+extern bool                 print_list        (struct a09 *,struct opcdata *,bool);
+extern bool                 assemble_pass     (struct a09 *,int);
+extern struct opcode const *op_find           (char const *);
+extern bool                 expr              (struct value *,struct a09 *,struct buffer *,int);
+extern struct symbol       *symbol_find       (struct a09 *,label const *);
+extern struct symbol       *symbol_add        (struct a09 *,label const *,uint16_t);
+extern bool                 format_bin_init   (struct format_bin   *,struct a09 *);
+extern bool                 format_rsdos_init (struct format_rsdos *,struct a09 *);
 
 /**************************************************************************/
 

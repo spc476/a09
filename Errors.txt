@@ -62,3 +62,5 @@ E0048: missing label or expression for PUBLIC
 E0049: '%.*s' already defined on line %zu
 E0050: not a label
 E0051: value for ALIGN must be known in pass 1
+E0052: missing label for END
+E0053: format '%s' not supported

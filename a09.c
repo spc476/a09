@@ -391,6 +391,8 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
   {
     if (argv[i][0] == '-')
     {
+      char const *format;
+      
       switch(argv[i][1])
       {
         case 'o':
@@ -411,6 +413,29 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              a09->debug = true;
              break;
              
+        case 'f':
+             if (argv[i][2] == '\0')
+               format = argv[++i];
+             else
+               format = &argv[i][2];
+             
+             if (strcmp(format,"bin") == 0)
+             {
+               if (!format_bin_init(&a09->format.bin,a09))
+                 exit(1);
+             }
+             else if (strcmp(format,"rsdos") == 0)
+             {
+               if (!format_rsdos_init(&a09->format.rsdos,a09))
+                 exit(1);
+             }
+             else
+             {
+               fprintf(stderr,"%s: E0053: format '%s' not supported\n",MSG_ERROR,format);
+               exit(1);
+             }
+             break;
+             
         case 'h':
         default:
              fprintf(
@@ -418,8 +443,11 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
                       "usage: [options] [files...]\n"
                       "\t-o filename\toutput filename\n"
                       "\t-l listfile\tlist filename\n"
+                      "\t-f format\toutput format (bin)\n"
                       "\t-d\t\tdebug output\n"
                       "\t-h\t\thelp (this text)\n"
+                      "\n"
+                      "\tformats: bin rsdos\n"
                     );
              exit(1);
       }
@@ -518,6 +546,7 @@ int main(int argc,char *argv[])
   };
   
   ListInit(&a09.symbols);
+  format_bin_init(&a09.format.bin,&a09);
   fi = parse_command(argc,argv,&a09);
   
   if (fi == argc)
