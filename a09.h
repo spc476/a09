@@ -58,6 +58,7 @@ struct buffer
 
 struct a09;
 struct opcdata;
+struct symbol;
 union format;
 
 struct format_default
@@ -65,8 +66,8 @@ struct format_default
   bool (*dp)   (union format *,struct opcdata *);
   bool (*code) (union format *,struct opcdata *);
   bool (*align)(union format *,struct opcdata *);
-  bool (*end)  (union format *,struct opcdata *);
-  bool (*org)  (union format *,struct opcdata *);
+  bool (*end)  (union format *,struct opcdata *,struct symbol const *);
+  bool (*org)  (union format *,struct opcdata *,uint16_t);
   bool (*setdp)(union format *,struct opcdata *);
 };
 
@@ -75,19 +76,23 @@ struct format_bin
   bool (*dp)   (union format *,struct opcdata *);
   bool (*code) (union format *,struct opcdata *);
   bool (*align)(union format *,struct opcdata *);
-  bool (*end)  (union format *,struct opcdata *);
-  bool (*org)  (union format *,struct opcdata *);
+  bool (*end)  (union format *,struct opcdata *,struct symbol const *);
+  bool (*org)  (union format *,struct opcdata *,uint16_t);
   bool (*setdp)(union format *,struct opcdata *);
 };
 
 struct format_rsdos
 {
-  bool (*dp)   (union format *,struct opcdata *);
-  bool (*code) (union format *,struct opcdata *);
-  bool (*align)(union format *,struct opcdata *);
-  bool (*end)  (union format *,struct opcdata *);
-  bool (*org)  (union format *,struct opcdata *);
-  bool (*setdp)(union format *,struct opcdata *);
+  bool     (*dp)   (union format *,struct opcdata *);
+  bool     (*code) (union format *,struct opcdata *);
+  bool     (*align)(union format *,struct opcdata *);
+  bool     (*end)  (union format *,struct opcdata *,struct symbol const *);
+  bool     (*org)  (union format *,struct opcdata *,uint16_t);
+  bool     (*setdp)(union format *,struct opcdata *);
+  long       section_hdr;
+  long       section_start;
+  bool       endf;
+  uint16_t   entry;
 };
 
 union format

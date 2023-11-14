@@ -35,19 +35,21 @@ static bool fbin_align(union format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool fbin_end(union format *fmt,struct opcdata *opd)
+static bool fbin_end(union format *fmt,struct opcdata *opd,struct symbol const *sym)
 {
   (void)fmt;
   (void)opd;
+  (void)sym;
   return true;
 }
 
 /**************************************************************************/
 
-static bool fbin_org(union format *fmt,struct opcdata *opd)
+static bool fbin_org(union format *fmt,struct opcdata *opd,uint16_t start)
 {
   (void)fmt;
   (void)opd;
+  (void)start;
   return true;
 }
 

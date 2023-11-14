@@ -927,7 +927,7 @@ static bool pseudo_org(struct opcdata *opd)
     return message(opd->a09,MSG_ERROR,"E0039: missing value for ORG");
     
   opd->a09->pc = opd->value.value;
-  return opd->a09->format.def.org(&opd->a09->format,opd);
+  return opd->a09->format.def.org(&opd->a09->format,opd,opd->value.value);
 }
 
 /**************************************************************************/
@@ -965,7 +965,7 @@ static bool pseudo_end(struct opcdata *opd)
     return message(opd->a09,MSG_ERROR,"E0052: missing label for END");
   if (opd->pass == 2)
     sym->refs++;
-  return opd->a09->format.def.end(&opd->a09->format,opd);
+  return opd->a09->format.def.end(&opd->a09->format,opd,sym);
 }
 
 /**************************************************************************/
@@ -1419,7 +1419,6 @@ static bool pseudo_align(struct opcdata *opd)
   
   if (opd->pass == 2)
   {
-
     if (fseek(opd->a09->out,opd->datasz,SEEK_CUR) == -1)
       return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
   }

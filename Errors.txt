@@ -64,3 +64,6 @@ E0050: not a label
 E0051: value for ALIGN must be known in pass 1
 E0052: missing label for END
 E0053: format '%s' not supported
+E0054: Internal error---no header written?
+E0055: object size too large
+E0056: END section already written
