@@ -60,3 +60,4 @@ E0046: out of memory
 E0047: EXTERN missing label
 E0048: missing label or expression for PUBLIC
 E0049: '%.*s' already defined on line %zu
+E0050: not a label

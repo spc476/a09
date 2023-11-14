@@ -945,8 +945,19 @@ static bool pseudo_setdp(struct opcdata *opd)
 
 static bool pseudo_end(struct opcdata *opd)
 {
+  label label;
+  char  c;
+  
   assert(opd != NULL);
-  return message(opd->a09,MSG_WARNING,"W0009: END unsupported");
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  c = skip_space(opd->buffer);
+  if ((c == ';') || (c == '\0'))
+    return true;
+    
+  if (!parse_label(&label,opd->buffer,opd->a09))
+    return message(opd->a09,MSG_ERROR,"E0050: not a label");
+  return true;
 }
 
 /**************************************************************************/
