@@ -318,17 +318,32 @@ static bool parse_operand(struct opcdata *opd)
   {
     if (indexindirect)
       return message(opd->a09,MSG_ERROR,"missing end of indirection error");
+      
     if ((opd->value.bits == 5) || (opd->value.bits == 8))
     {
       opd->mode = AM_DIRECT;
       return true;
     }
+    
     if (opd->value.bits == 16)
     {
       opd->mode = AM_EXTENDED;
       return true;
     }
+    
     assert(opd->value.bits == 0);
+    
+    if (opd->value.unknownpass1)
+    {
+      opd->mode = AM_EXTENDED;
+      if (opd->pass == 2)
+      {
+        if ((opd->value.value >> 8) == opd->a09->dp)
+          message(opd->a09,MSG_WARNING,"address could be 8-bits, maybe use '<'?");
+      }
+      return true;
+    }
+    
     if (opd->value.defined && ((opd->value.value >> 8) == opd->a09->dp))
       opd->mode = AM_DIRECT;
     else
@@ -340,6 +355,7 @@ static bool parse_operand(struct opcdata *opd)
   {
     if (!indexindirect)
       return message(opd->a09,MSG_ERROR,"end of indirection without start of indirection error");
+      
     opd->value.postbyte = 0x9F;
     opd->value.bits     = 16;
     opd->mode           = AM_INDEX;
@@ -370,28 +386,49 @@ static bool parse_operand(struct opcdata *opd)
            opd->value.postbyte |= 0x88;
            opd->bits            = 8;
          }
-         else if ((opd->value.value < 16) || (opd->value.value > 65519))
+         else if (opd->value.bits == 16)
          {
-           if (indexindirect)
+           opd->value.postbyte |= 0x89;
+           opd->bits            = 16;
+         }
+         else
+         {
+           assert(opd->value.bits == 0);
+           if (opd->value.unknownpass1)
+           {
+             opd->value.postbyte |= 0x89;
+             opd->bits            = 16;
+             if (opd->pass == 2)
+             {
+               if ((opd->value.value < 16) || (opd->value.value > 65519))
+                 message(opd->a09,MSG_WARNING,"offset could be 5-bits, maybe use '<<'?");
+               else if ((opd->value.value < 0x80) || (opd->value.value > 0xFF7F))
+                 message(opd->a09,MSG_WARNING,"offset could be 8-bits, maybe use '<'?");
+             }
+           }
+           else if ((opd->value.value < 16) || (opd->value.value > 65519))
+           {
+             if (indexindirect)
+             {
+               opd->value.postbyte |= 0x88;
+               opd->bits            = 8;
+             }
+             else
+             {
+               opd->value.postbyte |= opd->value.value & 0x1F;
+               opd->bits            = 5;
+             }
+           }
+           else if ((opd->value.value < 0x80) || (opd->value.value > 0xFF7F))
            {
              opd->value.postbyte |= 0x88;
              opd->bits            = 8;
            }
            else
            {
-             opd->value.postbyte |= opd->value.value & 0x1F;
-             opd->bits            = 5;
+             opd->value.postbyte |= 0x89;
+             opd->bits            = 16;
            }
-         }
-         else if ((opd->value.value < 0x80) || (opd->value.value > 0xFF7F))
-         {
-           opd->value.postbyte |= 0x88;
-           opd->bits            = 8;
-         }
-         else
-         {
-           opd->value.postbyte |= 0x89;
-           opd->bits            = 16;
          }
          break;
          
@@ -403,15 +440,21 @@ static bool parse_operand(struct opcdata *opd)
          
          if (opd->value.bits == 0)
          {
+           uint16_t pc    = opd->a09->pc + 2 + (opd->op->page != 0);
+           uint16_t delta = opd->value.value - pc;
+           
            if (opd->value.unknownpass1)
            {
              opd->value.postbyte = 0x8D;
              opd->bits           = 16;
+             if (opd->pass == 2)
+             {
+               if ((delta < 0x80) || (delta > 0xFF7F))
+                 message(opd->a09,MSG_WARNING,"offset could be 8-bits, maybe use '<'?");
+             }
            }
            else
            {
-             uint16_t pc = opd->a09->pc + 2 + (opd->op->page != 0);
-             uint16_t delta = opd->value.value - pc;
              if ((delta < 0x80) || (delta > 0xFF7F))
              {
                opd->value.postbyte = 0x8C;
