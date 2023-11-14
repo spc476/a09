@@ -9,6 +9,7 @@ W0008: ext/tfr mixed sized registers
 W0009: END unsupported
 W0010: .CODE not finished
 W0011: .DP not finished
+W0012: missing initial label
 
 E0001: Internal error---'%.*s' should exist, but doesn't
 E0002: Internal error---out of phase;\n\t'%.*s' = %04X pass 1, %04X pass 2

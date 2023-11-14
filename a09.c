@@ -127,20 +127,8 @@ bool parse_label(label *res,struct buffer *buffer,struct a09 *a09)
       res->s = a09->label.s + s;
     }
     else
-    {
-      a09->label = tmp;
-      *res       = tmp;
+      *res = tmp;
       
-      /*-----------------------------------------------------------------
-      ; if the label we've just read has a '.', chop off the label stored
-      ; "globally" to ignore the portion past the '.'
-      ;-------------------------------------------------------------------*/
-      
-      char *p = memchr(a09->label.text,'.',a09->label.s);
-      if (p != NULL)
-        a09->label.s = (unsigned char)(p - a09->label.text);
-    }
-    
     return true;
   }
   else
@@ -311,6 +299,22 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
       if ((sym->type == SYM_ADDRESS) && (sym->value != a09->pc))
         return message(a09,MSG_ERROR,"E0002: Internal error---out of phase;\n\t'%.*s' = %04X pass 1, %04X pass 2",a09->label.s,a09->label.text,sym->value,a09->pc);
     }
+    
+    /*-------------------------------------------------------------------
+    ; Check to see if we have a proper label in case we have a local label
+    ;--------------------------------------------------------------------*/
+    
+    if ((pass == 1) && (opd.label.text[0] == '.') && (a09->label.s == 0))
+      message(a09,MSG_WARNING,"W0012: missing initial label");
+    
+    /*-----------------------------------
+    ; store the current global label
+    ;------------------------------------*/
+    
+    a09->label = opd.label;
+    char *p    = memchr(a09->label.text,'.',a09->label.s);
+    if (p != NULL)
+      a09->label.s = (unsigned char)(p - a09->label.text);
   }
   
   c = skip_space(&a09->inbuf);
