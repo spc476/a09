@@ -661,9 +661,7 @@ static bool op_br(struct opcdata *opd)
   assert(opd->sz       == 0);
   assert(opd->op->page == 0);
   
-  if (!parse_operand(opd))
-    return false;
-  if ((opd->mode != AM_DIRECT) && (opd->mode != AM_EXTENDED))
+  if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
     return false;
     
   if (opd->value.external)
@@ -692,9 +690,7 @@ static bool op_lbr(struct opcdata *opd)
   assert(opd->a09        != NULL);
   assert(opd->sz         == 0);
   
-  if (!parse_operand(opd))
-    return false;
-  if ((opd->mode != AM_DIRECT) && (opd->mode != AM_EXTENDED))
+  if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
     return false;
     
   if (opd->op->page)
