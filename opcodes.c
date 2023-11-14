@@ -945,8 +945,9 @@ static bool pseudo_setdp(struct opcdata *opd)
 
 static bool pseudo_end(struct opcdata *opd)
 {
-  label label;
-  char  c;
+  struct symbol *sym;
+  label          label;
+  char           c;
   
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
@@ -955,8 +956,15 @@ static bool pseudo_end(struct opcdata *opd)
   if ((c == ';') || (c == '\0'))
     return true;
     
+  opd->buffer->ridx--;
+  
   if (!parse_label(&label,opd->buffer,opd->a09))
     return message(opd->a09,MSG_ERROR,"E0050: not a label");
+  sym = symbol_find(opd->a09,&label);
+  if (sym == NULL)
+    return message(opd->a09,MSG_ERROR,"E0052: missing label for END");
+  if (opd->pass == 2)
+    sym->refs++;
   return true;
 }
 
