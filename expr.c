@@ -127,7 +127,7 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
     {
       if (pass == 2)
       {
-        message(a09,MSG_ERROR,"unknown symbol '%.*s'",label.s,label.text);
+        message(a09,MSG_ERROR,"E0004: unknown symbol '%.*s'",label.s,label.text);
         return false;
       }
       pv->defined      = false;
@@ -153,10 +153,10 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
       return true;
     }
     else
-      return message(a09,MSG_ERROR,"illegal escaped character in value");
+      return message(a09,MSG_ERROR,"E0005: illegal escaped character in value");
   }
   else
-    return message(a09,MSG_ERROR,"not a value");
+    return message(a09,MSG_ERROR,"E0006: not a value");
     
   if (neg)
     pv->value = -pv->value;
@@ -174,7 +174,7 @@ static bool eval(struct a09 *a09,struct value *v1,char op,struct value *v2)
   assert(v2 != NULL);
   
   if (v1->external || v2->external)
-    return message(a09,MSG_ERROR,"EXTERN in expression not allowd");
+    return message(a09,MSG_ERROR,"E0007: EXTERN in expression not allowd");
     
   switch(op)
   {
@@ -183,12 +183,12 @@ static bool eval(struct a09 *a09,struct value *v1,char op,struct value *v2)
     case '*': v1->value *= v2->value; break;
     case '/':
          if (v2->value == 0)
-           return message(a09,MSG_ERROR,"divide by 0 error");
+           return message(a09,MSG_ERROR,"E0008: divide by 0 error");
          v1->value /= v2->value;
          break;
          
     default:
-         return message(a09,MSG_ERROR,"internal error");
+         return message(a09,MSG_ERROR,"E0009: internal error");
   }
   
   v1->unknownpass1 = v1->unknownpass1 || v2->unknownpass1;
@@ -207,19 +207,19 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
   
   char c = skip_space(buffer);
   if (c == '\0')
-    return message(a09,MSG_ERROR,"unexpected end of input");
+    return message(a09,MSG_ERROR,"E0010: unexpected end of input");
     
   if (c == '(')
   {
     c = skip_space(buffer);
     if (c == '\0')
-      return message(a09,MSG_ERROR,"unexpected end of input");
+      return message(a09,MSG_ERROR,"E0010: unexpected end of input");
     buffer->ridx--;
     if (!expr(pv,a09,buffer,pass))
       return false;
     c = skip_space(buffer);
     if (c != ')')
-      return message(a09,MSG_ERROR,"missing right parenthesis");
+      return message(a09,MSG_ERROR,"E0011: missing right parenthesis");
     return true;
   }
   else
@@ -256,7 +256,7 @@ static bool term(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass
     
     char c = skip_space(buffer);
     if (c == '\0')
-      return message(a09,MSG_ERROR,"unexpected end of expression");
+      return message(a09,MSG_ERROR,"E0012: unexpected end of expression");
       
     memset(&val,0,sizeof(val));
     buffer->ridx--;
@@ -295,7 +295,7 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
     
     char c = skip_space(buffer);
     if (c == '\0')
-      return message(a09,MSG_ERROR,"unexpected end of expression");
+      return message(a09,MSG_ERROR,"E0012: unexpected end of expression");
       
     memset(&val,0,sizeof(val));
     buffer->ridx--;

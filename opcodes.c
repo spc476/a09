@@ -19,7 +19,7 @@ static unsigned char value_5bit(struct a09 *a09,uint16_t value,int pass)
   assert((pass == 1) || (pass == 2));
   
   if ((pass == 2) && (value >= 16) && (value <= 65519))
-    message(a09,MSG_WARNING,"16-bit value truncated to 5 bits");
+    message(a09,MSG_WARNING,"W0003: 16-bit value truncated to 5 bits");
   return value & 31;
 }
 
@@ -31,7 +31,7 @@ static unsigned char value_lsb(struct a09 *a09,uint16_t value,int pass)
   assert((pass == 1) || (pass == 2));
   
   if ((pass == 2) && (value >= 256) && (value <= 65407))
-    message(a09,MSG_WARNING,"16-bit value truncated to 8 bits");
+    message(a09,MSG_WARNING,"W0004: 16-bit value truncated to 8 bits");
     
   return value & 255;
 }
@@ -54,7 +54,7 @@ static bool collect_string(struct opcdata *opd,struct buffer *buf,char delim)
   while((c = opd->buffer->buf[opd->buffer->ridx++]) != delim)
   {
     if (c == '\0')
-      return message(opd->a09,MSG_ERROR,"unexpected end of string");
+      return message(opd->a09,MSG_ERROR,"E0013: unexpected end of string");
     if (c == '\\')
     {
       c = opd->buffer->buf[opd->buffer->ridx++];
@@ -71,8 +71,8 @@ static bool collect_string(struct opcdata *opd,struct buffer *buf,char delim)
         case '"':  c = '"';  break;
         case '\'': c = '\''; break;
         case '\\': c = '\\'; break;
-        case '\0': return message(opd->a09,MSG_ERROR,"unexpected end of string");
-        default:   return message(opd->a09,MSG_ERROR,"invalid escape character");
+        case '\0': return message(opd->a09,MSG_ERROR,"E0013: unexpected end of string");
+        default:   return message(opd->a09,MSG_ERROR,"E0014: invalid escape character");
       }
     }
     
@@ -99,7 +99,7 @@ static bool parse_string(struct opcdata *opd,struct buffer *buf)
   if ((c == '"') || (c == '\''))
     return collect_string(opd,buf,c);
   else
-    return message(opd->a09,MSG_ERROR,"not a string");
+    return message(opd->a09,MSG_ERROR,"E0015: not a string");
 }
 
 /**************************************************************************/
@@ -204,19 +204,19 @@ static bool parse_operand(struct opcdata *opd)
              case 'Y':
              case 'U':
              case 'S': opd->value.postbyte |= index_register(c); break;
-             default: return message(opd->a09,MSG_ERROR,"invalid index register");
+             default: return message(opd->a09,MSG_ERROR,"E0016: invalid index register");
            }
            
            if (opd->buffer->buf[++opd->buffer->ridx] == ']')
            {
              if (!indexindirect)
-               return message(opd->a09,MSG_ERROR,"end of indirection without start of indirection error");
+               return message(opd->a09,MSG_ERROR,"E0017: end of indirection without start of indirection error");
              opd->value.postbyte |= 0x10;
            }
            return true;
            
       default:
-           return message(opd->a09,MSG_ERROR,"invalid index register");
+           return message(opd->a09,MSG_ERROR,"E0018: invalid index register");
     }
     
     c = skip_space(opd->buffer);
@@ -224,19 +224,19 @@ static bool parse_operand(struct opcdata *opd)
     if ((c == ';') || (c == '\0') || isspace(c))
     {
       if (indexindirect)
-        return message(opd->a09,MSG_ERROR,"missing end of index indirect mode");
+        return message(opd->a09,MSG_ERROR,"E0019: missing end of index indirect mode");
       opd->value.postbyte |= 0x04;
       return true;
     }
     else if (c == ']')
     {
       if (!indexindirect)
-        return message(opd->a09,MSG_ERROR,"end of indirection without start of indirection error");
+        return message(opd->a09,MSG_ERROR,"E0017: end of indirection without start of indirection error");
       opd->value.postbyte |= 0x14;
       return true;
     }
     else if (c != '+')
-      return message(opd->a09,MSG_ERROR,"syntax error in post-increment index mode");
+      return message(opd->a09,MSG_ERROR,"E0020: syntax error in post-increment index mode");
       
     c = opd->buffer->buf[opd->buffer->ridx++];
     if (c == '+')
@@ -245,7 +245,7 @@ static bool parse_operand(struct opcdata *opd)
       if (opd->buffer->buf[opd->buffer->ridx++] == ']')
       {
         if (!indexindirect)
-          return message(opd->a09,MSG_ERROR,"end of indirection without start of indirection error");
+          return message(opd->a09,MSG_ERROR,"E0017: end of indirection without start of indirection error");
         opd->value.postbyte |= 0x10;
       }
       return true;
@@ -253,11 +253,11 @@ static bool parse_operand(struct opcdata *opd)
     else if ((c == ';') || (c == '\0') || isspace(c))
     {
       if (indexindirect)
-        return message(opd->a09,MSG_ERROR,"missing end of indirection error");
+        return message(opd->a09,MSG_ERROR,"E0019: missing end of indirection error");
       return true;
     }
     else
-      return message(opd->a09,MSG_ERROR,"syntax error in index mode");
+      return message(opd->a09,MSG_ERROR,"E0021: syntax error in index mode");
   }
   
   opd->buffer->ridx--; // ungetc()
@@ -288,13 +288,13 @@ static bool parse_operand(struct opcdata *opd)
              case 'Y':
              case 'U':
              case 'S': opd->value.postbyte |= index_register(c); break;
-             default: return message(opd->a09,MSG_ERROR,"invalid index register");
+             default: return message(opd->a09,MSG_ERROR,"E0018: invalid index register");
            }
            c = opd->buffer->buf[++opd->buffer->ridx];
            if (c == ']')
            {
              if (!indexindirect)
-               return message(opd->a09,MSG_ERROR,"end of indirection without start of indirection error");
+               return message(opd->a09,MSG_ERROR,"E0017: end of indirection without start of indirection error");
              opd->value.postbyte |= 0x10;
              c = opd->buffer->buf[++opd->buffer->ridx];
            }
@@ -302,7 +302,7 @@ static bool parse_operand(struct opcdata *opd)
            if ((c == ';') || (c == '\0') || isspace(c))
              return true;
              
-           return message(opd->a09,MSG_ERROR,"invalid accumulator register in index mode");
+           return message(opd->a09,MSG_ERROR,"E0022: invalid accumulator register in index mode");
            
       default:
            break;
@@ -317,7 +317,7 @@ static bool parse_operand(struct opcdata *opd)
   if ((c == ';') || (c == '\0'))
   {
     if (indexindirect)
-      return message(opd->a09,MSG_ERROR,"missing end of indirection error");
+      return message(opd->a09,MSG_ERROR,"E019: missing end of indirection error");
       
     if ((opd->value.bits == 5) || (opd->value.bits == 8))
     {
@@ -339,7 +339,7 @@ static bool parse_operand(struct opcdata *opd)
       if (opd->pass == 2)
       {
         if ((opd->value.value >> 8) == opd->a09->dp)
-          message(opd->a09,MSG_WARNING,"address could be 8-bits, maybe use '<'?");
+          message(opd->a09,MSG_WARNING,"W0005: address could be 8-bits, maybe use '<'?");
       }
       return true;
     }
@@ -354,7 +354,7 @@ static bool parse_operand(struct opcdata *opd)
   if (c == ']')
   {
     if (!indexindirect)
-      return message(opd->a09,MSG_ERROR,"end of indirection without start of indirection error");
+      return message(opd->a09,MSG_ERROR,"E0017: end of indirection without start of indirection error");
       
     opd->value.postbyte = 0x9F;
     opd->value.bits     = 16;
@@ -363,7 +363,7 @@ static bool parse_operand(struct opcdata *opd)
   }
   
   if (c != ',')
-    return message(opd->a09,MSG_ERROR,"missing expected comma");
+    return message(opd->a09,MSG_ERROR,"E0023: missing expected comma");
     
   opd->value.postbyte = 0;
   opd->mode           = AM_INDEX;
@@ -401,9 +401,9 @@ static bool parse_operand(struct opcdata *opd)
              if (opd->pass == 2)
              {
                if ((opd->value.value < 16) || (opd->value.value > 65519))
-                 message(opd->a09,MSG_WARNING,"offset could be 5-bits, maybe use '<<'?");
+                 message(opd->a09,MSG_WARNING,"W0006: offset could be 5-bits, maybe use '<<'?");
                else if ((opd->value.value < 0x80) || (opd->value.value > 0xFF7F))
-                 message(opd->a09,MSG_WARNING,"offset could be 8-bits, maybe use '<'?");
+                 message(opd->a09,MSG_WARNING,"W0007: offset could be 8-bits, maybe use '<'?");
              }
            }
            else if ((opd->value.value < 16) || (opd->value.value > 65519))
@@ -434,7 +434,7 @@ static bool parse_operand(struct opcdata *opd)
          
     case 'P':
          if (toupper(opd->buffer->buf[opd->buffer->ridx]) != 'C')
-           return message(opd->a09,MSG_ERROR,"invalid index register");
+           return message(opd->a09,MSG_ERROR,"E0016: invalid index register");
          opd->pcrel = true;
          opd->buffer->ridx++;
          
@@ -450,7 +450,7 @@ static bool parse_operand(struct opcdata *opd)
              if (opd->pass == 2)
              {
                if ((delta < 0x80) || (delta > 0xFF7F))
-                 message(opd->a09,MSG_WARNING,"offset could be 8-bits, maybe use '<'?");
+                 message(opd->a09,MSG_WARNING,"W0007: offset could be 8-bits, maybe use '<'?");
              }
            }
            else
@@ -480,14 +480,14 @@ static bool parse_operand(struct opcdata *opd)
          break;
          
     default:
-         return message(opd->a09,MSG_ERROR,"invalid index regster");
+         return message(opd->a09,MSG_ERROR,"E0016: invalid index regster");
   }
   
   c = skip_space(opd->buffer);
   if (c == ']')
   {
     if (!indexindirect)
-      return message(opd->a09,MSG_ERROR,"end of indirection without start indirection error");
+      return message(opd->a09,MSG_ERROR,"E0017: end of indirection without start indirection error");
     opd->value.postbyte |= 0x10;
     if (opd->bits == 5)
       opd->bits = 8;
@@ -506,7 +506,7 @@ static bool op_inh(struct opcdata *opd)
   if (!parse_operand(opd))
     return false;
   if (opd->mode != AM_INHERENT)
-    return message(opd->a09,MSG_ERROR,"operands found for op with no operands");
+    return message(opd->a09,MSG_ERROR,"E0024: operands found for op with no operands");
     
   if (opd->op->page)
     opd->bytes[opd->sz++] = opd->op->page;
@@ -587,7 +587,7 @@ static bool op_idie(struct opcdata *opd)
          return true;
          
     case AM_INHERENT:
-         return message(opd->a09,MSG_ERROR,"How did this happen?");
+         return message(opd->a09,MSG_ERROR,"E0025: How did this happen?");
   }
   
   return false;
@@ -611,7 +611,7 @@ static bool op_die(struct opcdata *opd)
   switch(opd->mode)
   {
     case AM_IMMED:
-         return message(opd->a09,MSG_ERROR,"immediate mode not supported for opcode");
+         return message(opd->a09,MSG_ERROR,"E0026: immediate mode not supported for opcode");
          
     case AM_DIRECT:
          opd->bytes[opd->sz++] = opd->op->opcode[AM_DIRECT];
@@ -628,7 +628,7 @@ static bool op_die(struct opcdata *opd)
          return true;
          
     case AM_INHERENT:
-         return message(opd->a09,MSG_ERROR,"How did this happen again?");
+         return message(opd->a09,MSG_ERROR,"E0027: How did this happen again?");
   }
   
   return false;
@@ -644,7 +644,7 @@ static bool op_imm(struct opcdata *opd)
     return false;
     
   if (opd->mode != AM_IMMED)
-    return message(opd->a09,MSG_ERROR,"instruction only supports immediate mode");
+    return message(opd->a09,MSG_ERROR,"E0028: instruction only supports immediate mode");
     
   assert(opd->op->page == 0);
   opd->bytes[opd->sz++] = opd->op->opcode[AM_IMMED];
@@ -676,7 +676,7 @@ static bool op_br(struct opcdata *opd)
     uint16_t delta = opd->value.value - (opd->a09->pc + 2);
     
     if ((opd->pass == 2) && (delta > 0x007F) && (delta < 0xFF80))
-      return message(opd->a09,MSG_ERROR,"target exceeds 8-bit range");
+      return message(opd->a09,MSG_ERROR,"E0029: target exceeds 8-bit range");
       
     opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
     opd->bytes[opd->sz++] = delta & 255;
@@ -731,7 +731,7 @@ static bool op_lea(struct opcdata *opd)
     return false;
     
   if (opd->mode != AM_INDEX)
-    return message(opd->a09,MSG_ERROR,"bad operand");
+    return message(opd->a09,MSG_ERROR,"E0030: bad operand");
     
   if (opd->op->page)
     opd->bytes[opd->sz++] = opd->op->page;
@@ -801,7 +801,7 @@ static bool op_pshpul(struct opcdata *opd)
     struct indexregs const *reg;
     
     if (!sop_findreg(&reg,&opd->buffer->buf[opd->buffer->ridx],skip))
-      return message(opd->a09,MSG_ERROR,"bad register name");
+      return message(opd->a09,MSG_ERROR,"E0031: bad register name");
     opd->buffer->ridx += reg->reg[0];
     operand |= reg->pushpull;
     c = skip_space(opd->buffer);
@@ -810,7 +810,7 @@ static bool op_pshpul(struct opcdata *opd)
     if (c == ';')
       break;
     if (c != ',')
-      return message(opd->a09,MSG_ERROR,"missing comma in register list");
+      return message(opd->a09,MSG_ERROR,"E0032: missing comma in register list");
   }
   
   opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
@@ -837,17 +837,17 @@ static bool op_exg(struct opcdata *opd)
   opd->buffer->ridx--;
   
   if (!sop_findreg(&reg1,&opd->buffer->buf[opd->buffer->ridx],'\0'))
-    return message(opd->a09,MSG_ERROR,"bad register name");
+    return message(opd->a09,MSG_ERROR,"E0033: bad register name");
   opd->buffer->ridx += reg1->reg[0];
   operand |= reg1->tehi;
   if (opd->buffer->buf[opd->buffer->ridx] != ',')
-    return message(opd->a09,MSG_ERROR,"missing comma");
+    return message(opd->a09,MSG_ERROR,"E0034: missing comma");
   opd->buffer->ridx++;
   
   if (!sop_findreg(&reg2,&opd->buffer->buf[opd->buffer->ridx],'\0'))
-    return message(opd->a09,MSG_ERROR,"bad register name");
+    return message(opd->a09,MSG_ERROR,"E0031: bad register name");
   if (reg1->b16 != reg2->b16)
-    message(opd->a09,MSG_WARNING,"ext/tfr mixed sized registers");
+    message(opd->a09,MSG_WARNING,"W0008: ext/tfr mixed sized registers");
   operand |= reg2->telo;
   
   opd->bytes[opd->sz++] = opd->op->opcode[AM_OPERAND];
@@ -863,14 +863,14 @@ static bool pseudo_equ(struct opcdata *opd)
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (!parse_dirext(opd))
-    return message(opd->a09,MSG_ERROR,"missing label for EQU");
+    return message(opd->a09,MSG_ERROR,"E0035: missing label for EQU");
     
   if (opd->pass == 1)
   {
     struct symbol *sym = symbol_find(opd->a09,&opd->label);
     assert(sym != NULL); /* this should always be the case */
     if (sym->type != SYM_ADDRESS)
-      return message(opd->a09,MSG_ERROR,"redefining SET value");
+      return message(opd->a09,MSG_ERROR,"E0036: redefining EQU value");
       
     sym->value = opd->value.value;
     sym->type  = SYM_EQU;
@@ -888,7 +888,7 @@ static bool pseudo_set(struct opcdata *opd)
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (!parse_dirext(opd))
-    return message(opd->a09,MSG_ERROR,"missing label for SET");
+    return message(opd->a09,MSG_ERROR,"E0037: missing label for SET");
     
   struct symbol  *sym = symbol_find(opd->a09,&opd->label);
   assert(sym != NULL);
@@ -911,7 +911,7 @@ static bool pseudo_rmb(struct opcdata *opd)
   if (opd->pass == 2)
   {
     if (fseek(opd->a09->out,opd->value.value,SEEK_CUR) == -1)
-      return message(opd->a09,MSG_ERROR,"%s",strerror(errno));
+      return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
   }
   return true;
 }
@@ -924,7 +924,7 @@ static bool pseudo_org(struct opcdata *opd)
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (!parse_dirext(opd))
-    return message(opd->a09,MSG_ERROR,"missing value for ORG");
+    return message(opd->a09,MSG_ERROR,"E0039: missing value for ORG");
     
   opd->a09->pc = opd->value.value;
   return true;
@@ -946,7 +946,7 @@ static bool pseudo_setdp(struct opcdata *opd)
 static bool pseudo_end(struct opcdata *opd)
 {
   assert(opd != NULL);
-  return message(opd->a09,MSG_WARNING,"END unsupported");
+  return message(opd->a09,MSG_WARNING,"W0009: END unsupported");
 }
 
 /**************************************************************************/
@@ -972,7 +972,7 @@ static bool pseudo_fcb(struct opcdata *opd)
       if ((c == ';') || (c == '\0'))
         return true;
       if (c != ',')
-        return message(opd->a09,MSG_ERROR,"missing comma");
+        return message(opd->a09,MSG_ERROR,"E0034: missing comma");
     }
   }
   else
@@ -991,13 +991,13 @@ static bool pseudo_fcb(struct opcdata *opd)
         opd->bytes[opd->sz++] = byte;
       fwrite(&byte,1,1,opd->a09->out);
       if (ferror(opd->a09->out))
-        return message(opd->a09,MSG_ERROR,"failed writing object file");
+        return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
       c = skip_space(opd->buffer);
       
       if ((c == ';') || (c == '\0'))
         return true;
       if (c != ',')
-        return message(opd->a09,MSG_ERROR,"missing comma");
+        return message(opd->a09,MSG_ERROR,"E0034: missing comma");
     }
   }
 }
@@ -1020,7 +1020,7 @@ static bool pseudo_fdb(struct opcdata *opd)
       if ((c == ';') || (c == '\0'))
         return true;
       if (c != ',')
-        return message(opd->a09,MSG_ERROR,"missing comma");
+        return message(opd->a09,MSG_ERROR,"E0034: missing comma");
     }
   }
   else
@@ -1047,13 +1047,13 @@ static bool pseudo_fdb(struct opcdata *opd)
       }
       fwrite(word,1,2,opd->a09->out);
       if (ferror(opd->a09->out))
-        return message(opd->a09,MSG_ERROR,"failed writing object file");
+        return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
       c = skip_space(opd->buffer);
       
       if ((c == ';') || (c == '\0'))
         return true;
       if (c != ',')
-        return message(opd->a09,MSG_ERROR,"missing comma");
+        return message(opd->a09,MSG_ERROR,"E0034: missing comma");
     }
   }
 }
@@ -1069,7 +1069,7 @@ static bool pseudo_fcc(struct opcdata *opd)
   char          c = skip_space(opd->buffer);
   
   if (c == '\0')
-    return message(opd->a09,MSG_ERROR,"expected end of input");
+    return message(opd->a09,MSG_ERROR,"E0010: unexpected end of input");
   if (!collect_string(opd,&textstring,c))
     return false;
     
@@ -1081,9 +1081,9 @@ static bool pseudo_fcc(struct opcdata *opd)
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
-      return message(opd->a09,MSG_ERROR,"truncated output to object file");
+      return message(opd->a09,MSG_ERROR,"E0041: truncated output to object file");
     if (ferror(opd->a09->out))
-      return message(opd->a09,MSG_ERROR,"error writing object file");
+      return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
   }
   
   return true;
@@ -1109,9 +1109,9 @@ static bool pseudo_ascii(struct opcdata *opd)
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
-      return message(opd->a09,MSG_ERROR,"truncate output to object file");
+      return message(opd->a09,MSG_ERROR,"E0041: truncate output to object file");
     if (ferror(opd->a09->out))
-      return message(opd->a09,MSG_ERROR,"error writing object file");
+      return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
   }
   
   return true;
@@ -1138,9 +1138,9 @@ static bool pseudo_asciih(struct opcdata *opd)
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
-      return message(opd->a09,MSG_ERROR,"truncate output to object file");
+      return message(opd->a09,MSG_ERROR,"E0041: truncate output to object file");
     if (ferror(opd->a09->out))
-      return message(opd->a09,MSG_ERROR,"error writing object file");
+      return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
   }
   
   return true;
@@ -1167,9 +1167,9 @@ static bool pseudo_asciiz(struct opcdata *opd)
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
-      return message(opd->a09,MSG_ERROR,"truncate output to object file");
+      return message(opd->a09,MSG_ERROR,"E0041: truncate output to object file");
     if (ferror(opd->a09->out))
-      return message(opd->a09,MSG_ERROR,"error writing object file");
+      return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
   }
   
   return true;
@@ -1195,7 +1195,7 @@ static bool pseudo_include(struct opcdata *opd)
   new.in     = fopen(filename.buf,"r");
   
   if (new.in == NULL)
-    return message(opd->a09,MSG_ERROR,"%s: %s",filename.buf,strerror(errno));
+    return message(opd->a09,MSG_ERROR,"E0042: %s: %s",filename.buf,strerror(errno));
     
   if ((opd->pass == 2) && (new.list != NULL))
   {
@@ -1232,14 +1232,14 @@ static bool pseudo_incbin(struct opcdata *opd)
   {
     fp = fopen(filename.buf,"rb");
     if (fp == NULL)
-      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename.buf,strerror(errno));
+      return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
     if (fseek(fp,0,SEEK_END) == -1)
-      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename.buf,strerror(errno));
+      return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
     long fsize = ftell(fp);
     if (fsize < 0)
-      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename.buf,strerror(errno));
+      return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
     if (fsize > UINT16_MAX - opd->a09->pc)
-      return message(opd->a09,MSG_ERROR,"%s: file too big",filename.buf);
+      return message(opd->a09,MSG_ERROR,"E0043: %s: file too big",filename.buf);
     opd->data   = true;
     opd->datasz = fsize;
     fclose(fp);
@@ -1251,13 +1251,13 @@ static bool pseudo_incbin(struct opcdata *opd)
     
     fp = fopen(filename.buf,"rb");
     if (fp == NULL)
-      return message(opd->a09,MSG_ERROR,"%s: '%s'",filename.buf,strerror(errno));
+      return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
       
     do
     {
       bsz = fread(buffer,1,sizeof(buffer),fp);
       if (ferror(fp))
-        return message(opd->a09,MSG_ERROR,"%s: failed reading",filename.buf);
+        return message(opd->a09,MSG_ERROR,"E0044: %s: failed reading",filename.buf);
       if (!fill)
       {
         opd->sz   = min(bsz,sizeof(opd->bytes));
@@ -1268,7 +1268,7 @@ static bool pseudo_incbin(struct opcdata *opd)
       
       fwrite(buffer,1,bsz,opd->a09->out);
       if (ferror(opd->a09->out))
-        return message(opd->a09,MSG_ERROR,"failed writing objectfile");
+        return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
       opd->datasz += bsz;
     } while (bsz > 0);
     fclose(fp);
@@ -1292,13 +1292,13 @@ static bool pseudo_extdp(struct opcdata *opd)
   {
     c = skip_space(opd->buffer);
     if ((c == ';') || (c == '\0'))
-      return message(opd->a09,MSG_ERROR,"EXTDP missing label");
+      return message(opd->a09,MSG_ERROR,"E0045: EXTDP missing label");
     opd->buffer->ridx--;
     if (!parse_label(&label,opd->buffer,opd->a09))
       return false;
     sym = symbol_add(opd->a09,&label,0x80);
     if (sym == NULL)
-      return message(opd->a09,MSG_ERROR,"out of memory");
+      return message(opd->a09,MSG_ERROR,"E0046: out of memory");
     sym->type = SYM_EXTERN;
     sym->bits = 8;
   }
@@ -1321,13 +1321,13 @@ static bool pseudo_extern(struct opcdata *opd)
   {
     c = skip_space(opd->buffer);
     if ((c == ';') || (c == '\0'))
-      return message(opd->a09,MSG_ERROR,"EXTERN missing label");
+      return message(opd->a09,MSG_ERROR,"E0047: EXTERN missing label");
     opd->buffer->ridx--;
     if (!parse_label(&label,opd->buffer,opd->a09))
       return false;
     sym = symbol_add(opd->a09,&label,0x8000);
     if (sym == NULL)
-      return message(opd->a09,MSG_ERROR,"out of memory");
+      return message(opd->a09,MSG_ERROR,"E0046: out of memory");
     sym->type = SYM_EXTERN;
     sym->bits = 16;
   }
@@ -1346,7 +1346,7 @@ static bool pseudo_public(struct opcdata *opd)
   {
     struct symbol *sym = symbol_find(opd->a09,&opd->label);
     if (sym == NULL)
-      return message(opd->a09,MSG_ERROR,"missing label or expression for PUBLIC");
+      return message(opd->a09,MSG_ERROR,"E0048: missing label or expression for PUBLIC");
     sym->type = SYM_PUBLIC;
   }
   
@@ -1358,7 +1358,7 @@ static bool pseudo_public(struct opcdata *opd)
 static bool pseudo__code(struct opcdata *opd)
 {
   (void)opd;
-  message(opd->a09,MSG_WARNING,".CODE not finished");
+  message(opd->a09,MSG_WARNING,"W0010: .CODE not finished");
   return true;
 }
 
@@ -1367,7 +1367,7 @@ static bool pseudo__code(struct opcdata *opd)
 static bool pseudo__dp(struct opcdata *opd)
 {
   (void)opd;
-  message(opd->a09,MSG_WARNING,".DP not finished");
+  message(opd->a09,MSG_WARNING,"W0011: .DP not finished");
   return true;
 }
 

@@ -93,7 +93,7 @@ struct symbol *symbol_add(struct a09 *a09,label const *name,uint16_t value)
   }
   else
   {
-    message(a09,MSG_ERROR,"'%.*s' already defined on line %zu",name->s,name->text,sym->ldef);
+    message(a09,MSG_ERROR,"E0049: '%.*s' already defined on line %zu",name->s,name->text,sym->ldef);
     return NULL;
   }
   

@@ -123,7 +123,7 @@ bool parse_label(label *res,struct buffer *buffer,struct a09 *a09)
       assert(s <= sizeof(res->text));
       memcpy(&res->text[a09->label.s],tmp.text,s);
       if (a09->label.s + tmp.s > sizeof(res->text))
-        message(a09,MSG_WARNING,"label '%.*s%.*s' exceeds %zu characters",a09->label.s,a09->label.text,tmp.s,tmp.text,sizeof(res->text));
+        message(a09,MSG_WARNING,"W0001: label '%.*s%.*s' exceeds %zu characters",a09->label.s,a09->label.text,tmp.s,tmp.text,sizeof(res->text));
       res->s = a09->label.s + s;
     }
     else
@@ -307,9 +307,9 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
       ;---------------------------------------------------------------*/
       struct symbol *sym = symbol_find(a09,&opd.label);
       if (sym == NULL)
-        return message(a09,MSG_ERROR,"Internal error---'%.*s' should exist, but doesn't",a09->label.s,a09->label.text);
+        return message(a09,MSG_ERROR,"E0001: Internal error---'%.*s' should exist, but doesn't",a09->label.s,a09->label.text);
       if ((sym->type == SYM_ADDRESS) && (sym->value != a09->pc))
-        return message(a09,MSG_ERROR,"Internal error---out of phase;\n\t'%.*s' = %04X pass 1, %04X pass 2",a09->label.s,a09->label.text,sym->value,a09->pc);
+        return message(a09,MSG_ERROR,"E0002: Internal error---out of phase;\n\t'%.*s' = %04X pass 1, %04X pass 2",a09->label.s,a09->label.text,sym->value,a09->pc);
     }
   }
   
@@ -321,7 +321,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   a09->inbuf.ridx--; // ungetc()
   
   if (!parse_op(&a09->inbuf,&opd.op))
-    return message(a09,MSG_ERROR,"unknown opcode");
+    return message(a09,MSG_ERROR,"E0003: unknown opcode");
     
   rc = opd.op->func(&opd);
   
@@ -438,7 +438,7 @@ static void warning_unused_symbols(struct a09 *a09,tree__s *tree)
     if ((sym->refs == 0) && (sym->type == SYM_ADDRESS))
     {
       a09->lnum = sym->ldef;
-      message(a09,MSG_WARNING,"symbol '%.*s' defined but not used",sym->name.s,sym->name.text);
+      message(a09,MSG_WARNING,"W0002: symbol '%.*s' defined but not used",sym->name.s,sym->name.text);
     }
     warning_unused_symbols(a09,tree->right);
   }
