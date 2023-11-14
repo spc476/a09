@@ -23,6 +23,8 @@ static bool update_section_size(struct format_rsdos *format,struct opcdata *opd)
   if (pos < format->section_start)
     return message(opd->a09,MSG_ERROR,"E0054: Internal error---no header written?");
   size = pos - format->section_start;
+  if (size == 0)
+    return message(opd->a09,MSG_ERROR,"E0057: segment has no data");
   if (size > UINT16_MAX)
     return message(opd->a09,MSG_ERROR,"E0055: object size too large");
   if (fseek(opd->a09->out,format->section_hdr + 1,SEEK_SET) == -1)
@@ -58,8 +60,49 @@ static bool frsdos_code(union format *fmt,struct opcdata *opd)
 
 static bool frsdos_align(union format *fmt,struct opcdata *opd)
 {
-  (void)fmt;
-  (void)opd;
+  assert(fmt != NULL);
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->pass == 2)
+  {
+    struct format_rsdos *format = &fmt->rsdos;
+    
+    /*----------------------------------------------------------------------
+    ; If the alignment is less than the RSDOS program header size, then just
+    ; pad out the current code segment with 0.  Otherwise, end the current
+    ; code segment and start a new one, to save space in the executable.
+    ;-----------------------------------------------------------------------*/
+    
+    if (opd->datasz < 6)
+    {
+      if (fseek(opd->a09->out,opd->datasz,SEEK_CUR) == -1)
+        return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
+    }
+    else
+    {
+      unsigned char hdr[5];
+      long          pos;
+      uint16_t      addr;
+      
+      if (!update_section_size(format,opd))
+        return false;
+      
+      pos    = ftell(opd->a09->out);
+      addr   = opd->a09->pc + opd->datasz;
+      hdr[0] = 0;
+      hdr[1] = 0;
+      hdr[2] = 0;
+      hdr[3] = addr >> 8;
+      hdr[4] = addr & 255;
+      
+      if (fwrite(hdr,1,sizeof(hdr),opd->a09->out) != sizeof(hdr))
+        return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
+      format->section_hdr   = pos;
+      format->section_start = ftell(opd->a09->out);
+    }
+  }
+  
   return true;
 }
 
@@ -107,11 +150,12 @@ static bool frsdos_end(union format *fmt,struct opcdata *opd,struct symbol const
 
 /**************************************************************************/
 
-static bool frsdos_org(union format *fmt,struct opcdata *opd,uint16_t start)
+static bool frsdos_org(union format *fmt,struct opcdata *opd,uint16_t start,uint16_t last)
 {
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  (void)last;
   
   if (opd->pass == 2)
   {

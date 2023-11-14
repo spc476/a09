@@ -67,3 +67,4 @@ E0053: format '%s' not supported
 E0054: Internal error---no header written?
 E0055: object size too large
 E0056: END section already written
+E0057: segment has no data

@@ -920,14 +920,17 @@ static bool pseudo_rmb(struct opcdata *opd)
 
 static bool pseudo_org(struct opcdata *opd)
 {
+  uint16_t last;
+  
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (!parse_dirext(opd))
     return message(opd->a09,MSG_ERROR,"E0039: missing value for ORG");
-    
+  
+  last         = opd->a09->pc;
   opd->a09->pc = opd->value.value;
-  return opd->a09->format.def.org(&opd->a09->format,opd,opd->value.value);
+  return opd->a09->format.def.org(&opd->a09->format,opd,opd->value.value,last);
 }
 
 /**************************************************************************/
@@ -1416,12 +1419,6 @@ static bool pseudo_align(struct opcdata *opd)
       
   opd->data   = true;
   opd->datasz = opd->value.value - rem;
-  
-  if (opd->pass == 2)
-  {
-    if (fseek(opd->a09->out,opd->datasz,SEEK_CUR) == -1)
-      return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
-  }
   
   return opd->a09->format.def.align(&opd->a09->format,opd);
 }
