@@ -946,7 +946,7 @@ static bool pseudo_setdp(struct opcdata *opd)
 static bool pseudo_end(struct opcdata *opd)
 {
   assert(opd != NULL);
-  return message(opd->a09,MSG_ERROR,"END unsupported");
+  return message(opd->a09,MSG_WARNING,"END unsupported");
 }
 
 /**************************************************************************/
