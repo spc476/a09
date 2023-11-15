@@ -583,7 +583,7 @@ static void dump_symbols(FILE *out,tree__s *tree)
     {
       fprintf(
              out,
-             "%5zu | %-11.11s %04X %5d %.*s\n",
+             "%5zu | %-11.11s %04X %5zu %.*s\n",
              sym->ldef,
              symtypes[sym->type],
              sym->value,
