@@ -411,7 +411,12 @@ static bool parse_operand(struct opcdata *opd)
              if (opd->pass == 2)
              {
                if ((opd->value.value < 16) || (opd->value.value > 65519))
-                 message(opd->a09,MSG_WARNING,"W0006: offset could be 5-bits, maybe use '<<'?");
+               {
+                 if (indexindirect)
+                   message(opd->a09,MSG_WARNING,"W0007: offset could be 8-bits, maybe use '<'?");
+                 else
+                   message(opd->a09,MSG_WARNING,"W0006: offset could be 5-bits, maybe use '<<'?");
+               }
                else if ((opd->value.value < 0x80) || (opd->value.value > 0xFF7F))
                  message(opd->a09,MSG_WARNING,"W0007: offset could be 8-bits, maybe use '<'?");
              }
