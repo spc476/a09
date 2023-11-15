@@ -10,6 +10,7 @@ W0009: offset could be 8-bits, maybe use short version of branch?
 W0010: .CODE not finished
 W0011: .DP not finished
 W0012: missing initial label
+W0013: 5-bit offset upped to 8-bit offset for indirect mode
 
 E0001: Internal error---'%.*s' should exist, but doesn't
 E0002: Internal error---out of phase;\n\t'%.*s' = %04X pass 1, %04X pass 2

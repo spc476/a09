@@ -378,8 +378,18 @@ static bool parse_operand(struct opcdata *opd)
          opd->value.postbyte |= index_register(c);
          if (opd->value.bits == 5)
          {
-           opd->value.postbyte |= value_5bit(opd->a09,opd->value.value,opd->pass);
-           opd->bits            = 5;
+           if (indexindirect)
+           {
+             opd->value.postbyte |= 0x88;
+             opd->bits            = 8;
+             if (opd->pass == 2)
+               message(opd->a09,MSG_WARNING,"W0013: 5-bit offset upped to 8 bits for indirect mode");
+           }
+           else
+           {
+             opd->value.postbyte |= value_5bit(opd->a09,opd->value.value,opd->pass);
+             opd->bits            = 5;
+           }
          }
          else if (opd->value.bits == 8)
          {
