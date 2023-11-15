@@ -103,6 +103,11 @@ union format
   struct format_rsdos   rsdos;
 };
 
+struct nowarn
+{
+  char tag[5];
+};
+
 struct a09
 {
   char const    *infile;
@@ -116,6 +121,8 @@ struct a09
   size_t         lnum;
   tree__s       *symtab;
   List           symbols;
+  struct nowarn *nowarn;
+  size_t         nowsize;
   label          label;
   uint16_t       pc;
   unsigned char  dp;

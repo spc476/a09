@@ -25,6 +25,12 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
   if ((tag == MSG_DEBUG) && !a09->debug)
     return true;
     
+  for (size_t i = 0 ; i < a09->nowsize ; i++)
+  {
+    if (memcmp(fmt,a09->nowarn[i].tag,sizeof(a09->nowarn[i].tag)) == 0)
+      return true;
+  }
+  
   fprintf(stderr,"%s:%zu: %s: ",a09->infile,a09->lnum,tag);
   va_start(ap,fmt);
 #if defined(__clang__)
@@ -379,6 +385,46 @@ bool assemble_pass(struct a09 *a09,int pass)
 
 /**************************************************************************/
 
+static bool nowarnlist(struct a09 *a09,char const *warnings)
+{
+  assert(a09      != NULL);
+  assert(warnings != NULL);
+  
+  while(true)
+  {
+    if ((warnings[0] == 'W') && isdigit(warnings[1]) && isdigit(warnings[2]) && isdigit(warnings[3]) && isdigit(warnings[4]))
+    {
+      struct nowarn *new = realloc(a09->nowarn,(a09->nowsize + 1) * sizeof(struct nowarn));
+      if (new == NULL)
+      {
+        fprintf(stderr,"%s: E0046: out of memory\n",MSG_ERROR);
+        return false;
+      }
+      a09->nowarn = new;
+      memcpy(a09->nowarn[a09->nowsize].tag,warnings,5);
+      warnings += 5;
+      a09->nowsize++;
+      
+      if (*warnings == '\0')
+        break;
+      if (*warnings++ != ',')
+      {
+        fprintf(stderr,"%s: E0023: missing expected comma\n",MSG_ERROR);
+        return false;
+      }
+    }
+    else
+    {
+      fprintf(stderr,"%s: E0058: improper warning tag '%.4s\n",MSG_ERROR,warnings);
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+/**************************************************************************/
+
 static int parse_command(int argc,char *argv[],struct a09 *a09)
 {
   int i;
@@ -395,6 +441,19 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       
       switch(argv[i][1])
       {
+        case 'n':
+             if (argv[i][2] == '\0')
+             {
+               if (!nowarnlist(a09,argv[++i]))
+                 exit(1);
+             }
+             else
+             {
+               if (!nowarnlist(a09,&argv[i][2]))
+                 exit(1);
+             }
+             break;
+             
         case 'o':
              if (argv[i][2] == '\0')
                a09->outfile = argv[++i];
@@ -441,6 +500,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              fprintf(
                       stderr,
                       "usage: [options] [files...]\n"
+                      "\t-n Wxxxx\tsupress the given warnings\n"
                       "\t-o filename\toutput filename\n"
                       "\t-l listfile\tlist filename\n"
                       "\t-f format\toutput format (bin)\n"
@@ -529,6 +589,8 @@ int main(int argc,char *argv[])
     .list      = NULL,
     .lnum      = 0,
     .symtab    = NULL,
+    .nowarn    = NULL,
+    .nowsize   = 0,
     .label     =
     {
       .s    = 0,
