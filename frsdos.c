@@ -200,6 +200,7 @@ bool format_rsdos_init(struct format_rsdos *fmt,struct a09 *a09)
 {
   assert(fmt != NULL);
   assert(a09 != NULL);
+  (void)a09;
   
   fmt->dp            = frsdos_dp;
   fmt->code          = frsdos_code;

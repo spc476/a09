@@ -33,6 +33,7 @@ static bool fbin_align(union format *fmt,struct opcdata *opd)
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  (void)fmt;
   
   if (opd->pass == 2)
   {
@@ -93,6 +94,7 @@ bool format_bin_init(struct format_bin *fmt,struct a09 *a09)
 {
   assert(fmt != NULL);
   assert(a09 != NULL);
+  (void)a09;
   
   fmt->dp    = fbin_dp;
   fmt->code  = fbin_code;
