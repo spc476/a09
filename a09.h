@@ -127,6 +127,8 @@ struct a09
   uint16_t       pc;
   unsigned char  dp;
   bool           debug;
+  bool           mkdeps;
+  int            mkdlen;
 };
 
 struct symbol
@@ -204,6 +206,7 @@ extern char const MSG_WARNING[];
 extern char const MSG_ERROR[];
 
 extern bool                 message           (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
+extern void                 add_file_dep      (struct a09 *,char const *);
 extern bool                 parse_label       (label *,struct buffer *,struct a09 *);
 extern char                 skip_space        (struct buffer *);
 extern bool                 print_list        (struct a09 *,struct opcdata *,bool);

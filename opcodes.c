@@ -1215,6 +1215,9 @@ static bool pseudo_include(struct opcdata *opd)
   if (new.in == NULL)
     return message(opd->a09,MSG_ERROR,"E0042: %s: %s",filename.buf,strerror(errno));
     
+  if ((opd->pass == 1) && opd->a09->mkdeps)
+    add_file_dep(opd->a09,filename.buf);
+    
   if ((opd->pass == 2) && (new.list != NULL))
   {
     print_list(opd->a09,opd,false);
@@ -1261,6 +1264,8 @@ static bool pseudo_incbin(struct opcdata *opd)
     opd->data   = true;
     opd->datasz = fsize;
     fclose(fp);
+    if (opd->a09->mkdeps)
+      add_file_dep(opd->a09,filename.buf);
   }
   else
   {

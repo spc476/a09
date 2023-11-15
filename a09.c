@@ -48,6 +48,23 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
 
 /**************************************************************************/
 
+void add_file_dep(struct a09 *a09,char const *filename)
+{
+  assert(a09      != NULL);
+  assert(filename != NULL);
+  
+  size_t len = strlen(filename);
+  if (len + (unsigned)a09->mkdlen > 77)
+  {
+    printf(" \\\n ");
+    a09->mkdlen = 1;
+  }
+  
+  a09->mkdlen += printf(" %s",filename);
+}
+
+/**************************************************************************/
+
 static bool read_line(FILE *in,struct buffer *buffer)
 {
   assert(in     != NULL);
@@ -307,7 +324,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     }
     
     /*-------------------------------------------------------------------
-    ; Check to see if we have a proper label in case we have a local label
+    ; Check to see if we have a global label in case we have a local label
     ;--------------------------------------------------------------------*/
     
     if ((pass == 1) && (opd.label.text[0] == '.') && (a09->label.s == 0))
@@ -441,6 +458,10 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       
       switch(argv[i][1])
       {
+        case 'M':
+             a09->mkdeps = true;
+             break;
+             
         case 'n':
              if (argv[i][2] == '\0')
              {
@@ -505,6 +526,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
                       "\t-l listfile\tlist filename\n"
                       "\t-f format\toutput format (bin)\n"
                       "\t-d\t\tdebug output\n"
+                      "\t-M\t\tgenerate Makefile dependencies on stdout\n"
                       "\t-h\t\thelp (this text)\n"
                       "\n"
                       "\tformats: bin rsdos\n"
@@ -596,10 +618,12 @@ int main(int argc,char *argv[])
       .s    = 0,
       .text = { '\0' },
     },
-    .pc        = 0,
-    .dp        = 0,
-    .debug     = false,
-    .inbuf     =
+    .pc     = 0,
+    .dp     = 0,
+    .debug  = false,
+    .mkdeps = false,
+    .mkdlen = 0,
+    .inbuf  =
     {
       .buf   = {0},
       .widx  = 0,
@@ -625,9 +649,31 @@ int main(int argc,char *argv[])
     exit(1);
   }
   
+  if (a09.mkdeps)
+    a09.mkdlen = printf("%s: %s",a09.outfile,a09.infile);
+  
   if (!assemble_pass(&a09,1))
     exit(1);
+  
+  if (a09.mkdeps)
+  {
+    fclose(a09.in);
     
+    for (
+          Node *node = ListRemTail(&a09.symbols);
+          NodeValid(node);
+          node = ListRemTail(&a09.symbols)
+        )
+    {
+      struct symbol *sym = node2sym(node);
+      free(sym);
+    }
+    
+    free(a09.nowarn);
+    putchar('\n');
+    exit(0);
+  }
+  
   a09.out  = fopen(a09.outfile,"wb");
   
   if (a09.out == NULL)
@@ -680,5 +726,6 @@ int main(int argc,char *argv[])
     free(sym);
   }
   
+  free(a09.nowarn);
   return rc ? 0 : 1;
 }
