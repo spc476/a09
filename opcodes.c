@@ -423,6 +423,13 @@ static bool parse_operand(struct opcdata *opd)
            }
            else if ((opd->value.value < 16) || (opd->value.value > 65519))
            {
+             /*------------------------------------------------------------
+             ; if the bit size is unspecified, and we have a 0 offset, use
+             ; the ',reg' mode instead of '0,reg'---it's the same size, but
+             ; executes one cycle faster.  If you want '0,reg', then use a
+             ; size override on the index.
+             ;-------------------------------------------------------------*/
+             
              if (opd->value.value == 0)
                opd->value.postbyte = 0x84;
              else
