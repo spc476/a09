@@ -408,15 +408,20 @@ static bool parse_operand(struct opcdata *opd)
            }
            else if ((opd->value.value < 16) || (opd->value.value > 65519))
            {
-             if (indexindirect)
-             {
-               opd->value.postbyte |= 0x88;
-               opd->bits            = 8;
-             }
+             if (opd->value.value == 0)
+               opd->value.postbyte = 0x84;
              else
              {
-               opd->value.postbyte |= opd->value.value & 0x1F;
-               opd->bits            = 5;
+               if (indexindirect)
+               {
+                 opd->value.postbyte |= 0x88;
+                 opd->bits            = 8;
+               }
+               else
+               {
+                 opd->value.postbyte |= opd->value.value & 0x1F;
+                 opd->bits            = 5;
+               }
              }
            }
            else if ((opd->value.value < 0x80) || (opd->value.value > 0xFF7F))
