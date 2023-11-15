@@ -25,8 +25,7 @@
 
 enum admode
 {
-  AM_OPERAND  = 0,
-  AM_IMMED    = 0,
+  AM_IMMED,
   AM_DIRECT,
   AM_INDEX,
   AM_EXTENDED,
@@ -185,7 +184,7 @@ struct opcode
 {
   char            name[8];
   bool          (*func)(struct opcdata *);
-  unsigned char   opcode[4];
+  unsigned char   opcode;
   unsigned char   page;
   bool            bit16;
 };
