@@ -383,7 +383,7 @@ static bool parse_operand(struct opcdata *opd)
              opd->value.postbyte |= 0x88;
              opd->bits            = 8;
              if (opd->pass == 2)
-               message(opd->a09,MSG_WARNING,"W0013: 5-bit offset upped to 8 bits for indirect mode");
+               message(opd->a09,MSG_WARNING,"W0011: 5-bit offset upped to 8 bits for indirect mode");
            }
            else
            {
@@ -1421,7 +1421,8 @@ static bool pseudo__code(struct opcdata *opd)
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  message(opd->a09,MSG_WARNING,"W0010: .CODE not finished");
+  if (opd->pass == 1)
+    message(opd->a09,MSG_WARNING,"W9999: FEATURE NOT FINISHED");
   return opd->a09->format.def.code(&opd->a09->format,opd);
 }
 
@@ -1432,7 +1433,8 @@ static bool pseudo__dp(struct opcdata *opd)
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  message(opd->a09,MSG_WARNING,"W0011: .DP not finished");
+  if (opd->pass == 1)
+    message(opd->a09,MSG_WARNING,"W9999: FEATURE NOT FINISHED");
   return opd->a09->format.def.dp(&opd->a09->format,opd);
 }
 

@@ -339,7 +339,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     ;--------------------------------------------------------------------*/
     
     if ((pass == 1) && (opd.label.text[0] == '.') && (a09->label.s == 0))
-      message(a09,MSG_WARNING,"W0012: missing initial label");
+      message(a09,MSG_WARNING,"W0010: missing initial label");
     
     /*-----------------------------------
     ; store the current global label
