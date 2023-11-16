@@ -104,8 +104,10 @@ static bool read_line(FILE *in,struct buffer *buffer)
 
 /**************************************************************************/
 
-static void read_label(struct buffer *buffer,label *label,char c)
+static bool read_label(struct buffer *buffer,label *label,char c)
 {
+  bool toolong = false;
+  
   assert(buffer != NULL);
   assert(label  != NULL);
   assert(isgraph(c));
@@ -116,42 +118,51 @@ static void read_label(struct buffer *buffer,label *label,char c)
   {
     if (i < sizeof(label->text))
       label->text[i++] = c;
+    else
+      toolong = true;
     c = buffer->buf[buffer->ridx++];
   }
   
   label->s = i;
   assert(buffer->ridx > 0);
   buffer->ridx--;
+  return toolong;
 }
 
 /**************************************************************************/
 
-bool parse_label(label *res,struct buffer *buffer,struct a09 *a09)
+bool parse_label(label *res,struct buffer *buffer,struct a09 *a09,int pass)
 {
   assert(res    != NULL);
   assert(buffer != NULL);
   assert(a09    != NULL);
+  assert((pass == 1) || (pass == 2));
   
   label tmp;
   char  c = buffer->buf[buffer->ridx];
+  bool  toolong;
   
   if ((c == '.') || (c == '_') || isalpha(c))
   {
     buffer->ridx++;
-    read_label(buffer,&tmp,c);
+    toolong = read_label(buffer,&tmp,c);
     if (tmp.text[0] == '.')
     {
       memcpy(res->text,a09->label.text,a09->label.s);
       size_t s = min(tmp.s,sizeof(tmp.text) - a09->label.s);
       assert(s <= sizeof(res->text));
       memcpy(&res->text[a09->label.s],tmp.text,s);
-      if (a09->label.s + tmp.s > sizeof(res->text))
-        message(a09,MSG_WARNING,"W0001: label '%.*s%.*s' exceeds %zu characters",a09->label.s,a09->label.text,tmp.s,tmp.text,sizeof(res->text));
       res->s = a09->label.s + s;
+      assert(res->s <= sizeof(res->text));
+      if ((pass == 1) && (a09->label.s + tmp.s > sizeof(res->text)))
+        message(a09,MSG_WARNING,"W0001: label '%.*s' exceeds %zu characters",res->s,res->text,sizeof(res->text));
     }
     else
+    {
+      if (toolong && (pass == 1))
+        message(a09,MSG_WARNING,"W0001: label '%.*s' exceeds %zu characters",tmp.s,tmp.text,sizeof(tmp.text));
       *res = tmp;
-      
+    }
     return true;
   }
   else
@@ -302,7 +313,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     .includehack = false,
   };
   
-  if (parse_label(&opd.label,&a09->inbuf,a09))
+  if (parse_label(&opd.label,&a09->inbuf,a09,pass))
   {
     if (pass == 1)
     {

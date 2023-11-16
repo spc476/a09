@@ -119,7 +119,7 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
     label          label;
     
     buffer->ridx--;
-    if (!parse_label(&label,buffer,a09))
+    if (!parse_label(&label,buffer,a09,pass))
       return false;
       
     sym = symbol_find(a09,&label);

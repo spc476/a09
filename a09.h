@@ -206,7 +206,7 @@ extern char const MSG_ERROR[];
 
 extern bool                 message           (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
 extern void                 add_file_dep      (struct a09 *,char const *);
-extern bool                 parse_label       (label *,struct buffer *,struct a09 *);
+extern bool                 parse_label       (label *,struct buffer *,struct a09 *,int);
 extern char                 skip_space        (struct buffer *);
 extern bool                 print_list        (struct a09 *,struct opcdata *,bool);
 extern bool                 assemble_pass     (struct a09 *,int);

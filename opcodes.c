@@ -995,7 +995,7 @@ static bool pseudo_end(struct opcdata *opd)
     
   opd->buffer->ridx--;
   
-  if (!parse_label(&label,opd->buffer,opd->a09))
+  if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))
     return message(opd->a09,MSG_ERROR,"E0050: not a label");
   sym = symbol_find(opd->a09,&label);
   if (sym == NULL)
@@ -1355,7 +1355,7 @@ static bool pseudo_extdp(struct opcdata *opd)
     if ((c == ';') || (c == '\0'))
       return message(opd->a09,MSG_ERROR,"E0045: EXTDP missing label");
     opd->buffer->ridx--;
-    if (!parse_label(&label,opd->buffer,opd->a09))
+    if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))
       return false;
     sym = symbol_add(opd->a09,&label,0x80);
     if (sym == NULL)
@@ -1384,7 +1384,7 @@ static bool pseudo_extern(struct opcdata *opd)
     if ((c == ';') || (c == '\0'))
       return message(opd->a09,MSG_ERROR,"E0047: EXTERN missing label");
     opd->buffer->ridx--;
-    if (!parse_label(&label,opd->buffer,opd->a09))
+    if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))
       return false;
     sym = symbol_add(opd->a09,&label,0x8000);
     if (sym == NULL)
