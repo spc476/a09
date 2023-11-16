@@ -431,7 +431,10 @@ static bool parse_operand(struct opcdata *opd)
              ;-------------------------------------------------------------*/
              
              if (opd->value.value == 0)
-               opd->value.postbyte = 0x84;
+             {
+               opd->value.postbyte |= 0x84;
+               opd->bits            = 0;
+             }
              else
              {
                if (indexindirect)
