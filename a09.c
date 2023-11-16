@@ -142,7 +142,7 @@ bool parse_label(label *res,struct buffer *buffer,struct a09 *a09)
     if (tmp.text[0] == '.')
     {
       memcpy(res->text,a09->label.text,a09->label.s);
-      size_t s = min(tmp.s,sizeof(tmp.text) - tmp.s);
+      size_t s = min(tmp.s,sizeof(tmp.text) - a09->label.s);
       assert(s <= sizeof(res->text));
       memcpy(&res->text[a09->label.s],tmp.text,s);
       if (a09->label.s + tmp.s > sizeof(res->text))
