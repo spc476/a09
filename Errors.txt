@@ -1,4 +1,4 @@
-W0001: label '%.*s%.*s' exceeds %zu characters
+W0001: label '%.*s' exceeds %zu characters
 W0002: symbol '%.*s' defined but not used
 W0003: 16-bit value truncated to 5 bits
 W0004: 16-bit value truncated to 8 bits
