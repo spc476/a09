@@ -55,6 +55,33 @@ static bool collect_string(struct opcdata *opd,struct buffer *buf,char delim)
   {
     if (c == '\0')
       return message(opd->a09,MSG_ERROR,"E0013: unexpected end of string");
+    if (buf->widx == sizeof(buf->buf))
+      return false;
+    buf->buf[buf->widx++] = c;
+  }
+  
+  return true;
+}
+
+/**************************************************************************/
+
+static bool collect_esc_string(struct opcdata *opd,struct buffer *buf,char delim)
+{
+  char c;
+  
+  assert(opd         != NULL);
+  assert(opd->a09    != NULL);
+  assert(opd->buffer != NULL);
+  assert(buf         != NULL);
+  
+  memset(buf->buf,0,sizeof(buf->buf));
+  buf->widx = 0;
+  buf->ridx = 0;
+  
+  while((c = opd->buffer->buf[opd->buffer->ridx++]) != delim)
+  {
+    if (c == '\0')
+      return message(opd->a09,MSG_ERROR,"E0013: unexpected end of string");
     if (c == '\\')
     {
       c = opd->buffer->buf[opd->buffer->ridx++];
@@ -97,7 +124,7 @@ static bool parse_string(struct opcdata *opd,struct buffer *buf)
   char c = skip_space(opd->buffer);
   
   if ((c == '"') || (c == '\''))
-    return collect_string(opd,buf,c);
+    return collect_esc_string(opd,buf,c);
   else
     return message(opd->a09,MSG_ERROR,"E0015: not a string");
 }
@@ -1465,6 +1492,38 @@ static bool pseudo_align(struct opcdata *opd)
 
 /**************************************************************************/
 
+static bool pseudo_fcs(struct opcdata *opd)
+{
+  assert(opd      != NULL);
+  assert(opd->a09 != NULL);
+  
+  struct buffer textstring;
+  char          c = skip_space(opd->buffer);
+  
+  if (c == '\0')
+    return message(opd->a09,MSG_ERROR,"E0010: unexpected end of input");
+  if (!collect_string(opd,&textstring,c))
+    return false;
+    
+  opd->data   = true;
+  opd->datasz = textstring.widx;
+  
+  if (opd->pass == 2)
+  {
+    textstring.buf[textstring.widx - 1] |= 0x80;
+    opd->sz = min(textstring.widx,sizeof(opd->bytes));
+    memcpy(opd->bytes,textstring.buf,opd->sz);
+    if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
+      return message(opd->a09,MSG_ERROR,"E0041: truncated output to object file");
+    if (ferror(opd->a09->out))
+      return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
+  }
+  
+  return true;
+}
+
+/**************************************************************************/
+
 static int opcode_cmp(void const *needle,void const *haystack)
 {
   char          const *key    = needle;
@@ -1548,7 +1607,7 @@ struct opcode const *op_find(char const *name)
     { "EXTERN"  , pseudo_extern  , 0x00 , 0x00 , false } ,
     { "FCB"     , pseudo_fcb     , 0x00 , 0x00 , false } ,
     { "FCC"     , pseudo_fcc     , 0x00 , 0x00 , false } ,
-    { "FCS"     , pseudo_asciih  , 0x00 , 0x00 , false } ,
+    { "FCS"     , pseudo_fcs     , 0x00 , 0x00 , false } ,
     { "FDB"     , pseudo_fdb     , 0x00 , 0x00 , false } ,
     { "INC"     , op_die         , 0x0C , 0x00 , false } ,
     { "INCA"    , op_inh         , 0x4C , 0x00 , false } ,
