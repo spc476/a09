@@ -883,7 +883,7 @@ static bool op_exg(struct opcdata *opd)
   
   if (!sop_findreg(&reg2,&opd->buffer->buf[opd->buffer->ridx],'\0'))
     return message(opd->a09,MSG_ERROR,"E0031: bad register name");
-  if (reg1->b16 != reg2->b16)
+  if ((opd->pass == 1) && (reg1->b16 != reg2->b16))
     message(opd->a09,MSG_WARNING,"W0008: ext/tfr mixed sized registers");
   operand |= reg2->telo;
   
