@@ -69,7 +69,6 @@ static bool fbin_org(union format *fmt,struct opcdata *opd,uint16_t start,uint16
     if (format->first)
     {
       uint16_t delta = start - last;
-      fprintf(stderr,"pc=%04X start=%04X delta=%d\n",last,start,delta);
       if (fseek(opd->a09->out,delta,SEEK_CUR) == -1)
         return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
     }
