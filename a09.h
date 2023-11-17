@@ -67,6 +67,7 @@ struct format_default
   bool (*align)(union format *,struct opcdata *);
   bool (*end)  (union format *,struct opcdata *,struct symbol const *);
   bool (*org)  (union format *,struct opcdata *,uint16_t,uint16_t);
+  bool (*rmb)  (union format *,struct opcdata *);
   bool (*setdp)(union format *,struct opcdata *);
 };
 
@@ -77,6 +78,7 @@ struct format_bin
   bool (*align)(union format *,struct opcdata *);
   bool (*end)  (union format *,struct opcdata *,struct symbol const *);
   bool (*org)  (union format *,struct opcdata *,uint16_t,uint16_t);
+  bool (*rmb)  (union format *,struct opcdata *);
   bool (*setdp)(union format *,struct opcdata *);
   bool   first;
 };
@@ -88,6 +90,7 @@ struct format_rsdos
   bool     (*align)(union format *,struct opcdata *);
   bool     (*end)  (union format *,struct opcdata *,struct symbol const *);
   bool     (*org)  (union format *,struct opcdata *,uint16_t,uint16_t);
+  bool     (*rmb)  (union format *,struct opcdata *);
   bool     (*setdp)(union format *,struct opcdata *);
   long       section_hdr;
   long       section_start;

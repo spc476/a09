@@ -945,12 +945,8 @@ static bool pseudo_rmb(struct opcdata *opd)
     return false;
   opd->data   = true;
   opd->datasz = opd->value.value;
-  if (opd->pass == 2)
-  {
-    if (fseek(opd->a09->out,opd->value.value,SEEK_CUR) == -1)
-      return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
-  }
-  return true;
+  
+  return opd->a09->format.def.align(&opd->a09->format,opd);
 }
 
 /**************************************************************************/

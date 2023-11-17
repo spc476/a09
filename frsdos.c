@@ -40,6 +40,58 @@ static bool update_section_size(struct format_rsdos *format,struct opcdata *opd)
 
 /**************************************************************************/
 
+static bool block_zero_write(
+        struct format_rsdos *format,
+        struct opcdata      *opd,
+        uint16_t             bsize
+)
+{
+  assert(format != NULL);
+  assert(opd    != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->pass == 2)
+  {
+    /*----------------------------------------------------------------------
+    ; If the alignment is less than the RSDOS program header size, then just
+    ; pad out the current code segment with 0.  Otherwise, end the current
+    ; code segment and start a new one, to save space in the executable.
+    ;-----------------------------------------------------------------------*/
+    
+    if (bsize < 6)
+    {
+      if (fseek(opd->a09->out,bsize,SEEK_CUR) == -1)
+        return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
+    }
+    else
+    {
+      unsigned char hdr[5];
+      long          pos;
+      uint16_t      addr;
+      
+      if (!update_section_size(format,opd))
+        return false;
+      
+      pos    = ftell(opd->a09->out);
+      addr   = opd->a09->pc + bsize;
+      hdr[0] = 0;
+      hdr[1] = 0;
+      hdr[2] = 0;
+      hdr[3] = addr >> 8;
+      hdr[4] = addr & 255;
+      
+      if (fwrite(hdr,1,sizeof(hdr),opd->a09->out) != sizeof(hdr))
+        return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
+      format->section_hdr   = pos;
+      format->section_start = ftell(opd->a09->out);
+    }
+  }
+  
+  return true;
+}
+
+/**************************************************************************/
+
 static bool frsdos_dp(union format *fmt,struct opcdata *opd)
 {
   (void)fmt;
@@ -60,50 +112,7 @@ static bool frsdos_code(union format *fmt,struct opcdata *opd)
 
 static bool frsdos_align(union format *fmt,struct opcdata *opd)
 {
-  assert(fmt != NULL);
-  assert(opd != NULL);
-  assert((opd->pass == 1) || (opd->pass == 2));
-  
-  if (opd->pass == 2)
-  {
-    struct format_rsdos *format = &fmt->rsdos;
-    
-    /*----------------------------------------------------------------------
-    ; If the alignment is less than the RSDOS program header size, then just
-    ; pad out the current code segment with 0.  Otherwise, end the current
-    ; code segment and start a new one, to save space in the executable.
-    ;-----------------------------------------------------------------------*/
-    
-    if (opd->datasz < 6)
-    {
-      if (fseek(opd->a09->out,opd->datasz,SEEK_CUR) == -1)
-        return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
-    }
-    else
-    {
-      unsigned char hdr[5];
-      long          pos;
-      uint16_t      addr;
-      
-      if (!update_section_size(format,opd))
-        return false;
-      
-      pos    = ftell(opd->a09->out);
-      addr   = opd->a09->pc + opd->datasz;
-      hdr[0] = 0;
-      hdr[1] = 0;
-      hdr[2] = 0;
-      hdr[3] = addr >> 8;
-      hdr[4] = addr & 255;
-      
-      if (fwrite(hdr,1,sizeof(hdr),opd->a09->out) != sizeof(hdr))
-        return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
-      format->section_hdr   = pos;
-      format->section_start = ftell(opd->a09->out);
-    }
-  }
-  
-  return true;
+  return block_zero_write(&fmt->rsdos,opd,opd->datasz);
 }
 
 /**************************************************************************/
@@ -187,6 +196,13 @@ static bool frsdos_org(union format *fmt,struct opcdata *opd,uint16_t start,uint
 
 /**************************************************************************/
 
+static bool frsdos_rmb(union format *fmt,struct opcdata *opd)
+{
+  return block_zero_write(&fmt->rsdos,opd,opd->value.value);
+}
+
+/**************************************************************************/
+
 static bool frsdos_setdp(union format *fmt,struct opcdata *opd)
 {
   (void)fmt;
@@ -207,6 +223,7 @@ bool format_rsdos_init(struct format_rsdos *fmt,struct a09 *a09)
   fmt->align         = frsdos_align;
   fmt->end           = frsdos_end;
   fmt->org           = frsdos_org;
+  fmt->rmb           = frsdos_rmb;
   fmt->setdp         = frsdos_setdp;
   fmt->section_hdr   = 0;
   fmt->section_start = 0;

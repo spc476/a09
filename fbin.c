@@ -80,6 +80,27 @@ static bool fbin_org(union format *fmt,struct opcdata *opd,uint16_t start,uint16
 
 /**************************************************************************/
 
+static bool fbin_rmb(union format *fmt,struct opcdata *opd)
+{
+  (void)fmt;
+  assert(opd != NULL);
+  assert((opd->pass == 1 ) || (opd->pass == 2));
+  
+  /*---------------------
+  ; XXX - maybe if the file offset is 0, skip this, to become
+  ; compatible with the Lua assembler I have?
+  ;--------------------*/
+  
+  if (opd->pass == 2)
+  {
+    if (fseek(opd->a09->out,opd->value.value,SEEK_CUR) == -1)
+      return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
+  }
+  return true;
+}
+
+/**************************************************************************/
+
 static bool fbin_setdp(union format *fmt,struct opcdata *opd)
 {
   (void)fmt;
@@ -100,6 +121,7 @@ bool format_bin_init(struct format_bin *fmt,struct a09 *a09)
   fmt->align = fbin_align;
   fmt->end   = fbin_end;
   fmt->org   = fbin_org;
+  fmt->rmb   = fbin_rmb;
   fmt->setdp = fbin_setdp;
   fmt->first = false;
   return true;
