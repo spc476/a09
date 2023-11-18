@@ -6,7 +6,7 @@ W0005: address could be 8-bits, maybe use '<'?
 W0006: offset could be 5-bits, maybe use '<<'?
 W0007: offset could be 8-bits, maybe use '<'?
 W0008: ext/tfr mixed sized registers
-W0009: offset could be 8-bits, maybe use short version of branch?
+W0009: offset could be 8-bits, maybe use short branch?
 W0010: missing initial label
 W0011: 5-bit offset upped to 8-bit offset for indirect mode
 W9999: FEATURE NOT FINISHED

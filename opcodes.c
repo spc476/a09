@@ -783,7 +783,7 @@ static bool op_lbr(struct opcdata *opd)
                    : opd->value.value - (opd->a09->pc + 4);
                    
     if ((opd->pass == 2) && ((delta < 0x80) || (delta > 0xFF80)))
-      message(opd->a09,MSG_WARNING,"W0009: offset could be 8-bits,\n\tmaybe use short version of branch?");
+      message(opd->a09,MSG_WARNING,"W0009: offset could be 8-bits, maybe use short branch?");
     opd->bytes[opd->sz++] = opd->op->page;
     opd->bytes[opd->sz++] = opd->op->opcode;
     opd->bytes[opd->sz++] = delta >> 8;
@@ -795,7 +795,7 @@ static bool op_lbr(struct opcdata *opd)
                    ? 0
                    : opd->value.value - (opd->a09->pc + 3);
     if ((opd->pass == 2) && ((delta < 0x80) || (delta > 0xFF80)))
-      message(opd->a09,MSG_WARNING,"W0009: offset could be 8-bits,\n\tmaybe use short version of branch?");
+      message(opd->a09,MSG_WARNING,"W0009: offset could be 8-bits, maybe use short branch?");
     opd->bytes[opd->sz++] = opd->op->opcode;
     opd->bytes[opd->sz++] = delta >> 8;
     opd->bytes[opd->sz++] = delta & 255;
