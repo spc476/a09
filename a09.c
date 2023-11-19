@@ -725,6 +725,7 @@ int main(int argc,char *argv[])
   }
   
   a09.pc = 0;
+  a09.dp = 0;
   rc     = assemble_pass(&a09,2);
   
   if (rc)
