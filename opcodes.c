@@ -1699,13 +1699,13 @@ struct opcode const *op_find(char const *name)
     { "SET"     , pseudo_set     , 0x00 , 0x00 , false } ,
     { "SETDP"   , pseudo_setdp   , 0x00 , 0x00 , false } ,
     { "SEX"     , op_inh         , 0x1D , 0x00 , false } ,
-    { "STA"     , op_die         , 0x87 , 0x00 , false } , // immediate mode
-    { "STB"     , op_die         , 0xC7 , 0x00 , false } , // not supported
-    { "STD"     , op_die         , 0xCD , 0x00 , true  } , // but the opcode
-    { "STS"     , op_die         , 0xCF , 0x10 , true  } , // space is required
-    { "STU"     , op_die         , 0xCF , 0x00 , true  } , // by the code here
-    { "STX"     , op_die         , 0x8F , 0x00 , true  } , // to adjust it
-    { "STY"     , op_die         , 0x8F , 0x10 , true  } , // appropriately
+    { "STA"     , op_die         , 0x87 , 0x00 , false } , // even though the
+    { "STB"     , op_die         , 0xC7 , 0x00 , false } , // immediate mode
+    { "STD"     , op_die         , 0xCD , 0x00 , true  } , // is invalid for
+    { "STS"     , op_die         , 0xCF , 0x10 , true  } , // these instructions,
+    { "STU"     , op_die         , 0xCF , 0x00 , true  } , // include the value
+    { "STX"     , op_die         , 0x8F , 0x00 , true  } , // here because the
+    { "STY"     , op_die         , 0x8F , 0x10 , true  } , // way the code works
     { "SUBA"    , op_idie        , 0x80 , 0x00 , false } ,
     { "SUBB"    , op_idie        , 0xC0 , 0x00 , false } ,
     { "SUBD"    , op_idie        , 0x83 , 0x00 , true  } ,
