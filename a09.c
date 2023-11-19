@@ -724,9 +724,10 @@ int main(int argc,char *argv[])
     fprintf(a09.list,"                         | FILE %s\n",a09.infile);
   }
   
-  a09.pc = 0;
-  a09.dp = 0;
-  rc     = assemble_pass(&a09,2);
+  a09.pc    = 0;
+  a09.dp    = 0;
+  a09.label = (label){ .s = 0 , .text = { '\0' } };
+  rc        = assemble_pass(&a09,2);
   
   if (rc)
     warning_unused_symbols(&a09,a09.symtab);
