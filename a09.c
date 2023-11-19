@@ -645,22 +645,13 @@ int main(int argc,char *argv[])
     .symtab    = NULL,
     .nowarn    = NULL,
     .nowsize   = 0,
-    .label     =
-    {
-      .s    = 0,
-      .text = { '\0' },
-    },
-    .pc     = 0,
-    .dp     = 0,
-    .debug  = false,
-    .mkdeps = false,
-    .mkdlen = 0,
-    .inbuf  =
-    {
-      .buf   = {0},
-      .widx  = 0,
-      .ridx  = 0,
-    },
+    .label     = { .s = 0, .text = { '\0' } },
+    .pc        = 0,
+    .dp        = 0,
+    .debug     = false,
+    .mkdeps    = false,
+    .mkdlen    = 0,
+    .inbuf     = { .buf = {0}, .widx = 0, .ridx = 0 },
   };
   
   ListInit(&a09.symbols);
