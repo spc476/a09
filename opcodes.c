@@ -210,6 +210,15 @@ static bool parse_operand(struct opcdata *opd)
   {
     if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
       return false;
+    
+    c = skip_space(opd->buffer);
+    if ((c != ';') && (c != '\0'))
+    {
+      if (c == ',')
+        return message(opd->a09,MSG_ERROR,"E0059: syntax error---mixing up immedate and indexed modes?");
+      else
+        return message(opd->a09,MSG_ERROR,"E0060: syntax error");
+    }
     opd->mode = AM_IMMED;
     return true;
   }

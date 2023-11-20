@@ -69,3 +69,5 @@ E0055: object size too large
 E0056: END section already written
 E0057: segment has no data
 E0058: improper warning tag
+E0059: syntax error---mixing up immedate and indexed modes?
+E0060: syntax error
