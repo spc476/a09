@@ -679,7 +679,7 @@ static bool op_idie(struct opcdata *opd)
          return true;
          
     case AM_INHERENT:
-         return message(opd->a09,MSG_ERROR,"E0025: How did this happen?");
+         return message(opd->a09,MSG_ERROR,"E0025: Internal error---this should not happen");
   }
   
   return false;
@@ -720,7 +720,7 @@ static bool op_die(struct opcdata *opd)
          return true;
          
     case AM_INHERENT:
-         return message(opd->a09,MSG_ERROR,"E0027: How did this happen again?");
+         return message(opd->a09,MSG_ERROR,"E0027: Internal error---how did this happen?");
   }
   
   return false;
