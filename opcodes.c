@@ -765,11 +765,11 @@ static bool op_br(struct opcdata *opd)
   {
     uint16_t delta = opd->value.value - (opd->a09->pc + 2);
     
-    if (opd->pass == 2)
+    if ((opd->pass == 2) && (opd->op->opcode != 0x21)) /* BRN is exempted */
     {
-      if ((delta == 0) && (opd->op->opcode != 0x21)) /* BRN is exempted */
+      if (delta == 0)
         message(opd->a09,MSG_WARNING,"W0012: branch to next location, maybe remove?");
-      if ((delta > 0x007F) && (delta < 0xFF80))
+      else if ((delta > 0x007F) && (delta < 0xFF80))
         return message(opd->a09,MSG_ERROR,"E0029: target exceeds 8-bit range");
     }
       
@@ -789,33 +789,28 @@ static bool op_lbr(struct opcdata *opd)
   
   if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
     return false;
-    
+  
   if (opd->op->page)
-  {
-    uint16_t delta = opd->value.external
-                   ? 0
-                   : opd->value.value - (opd->a09->pc + 4);
-                   
-    if (opd->pass == 2)
-    {
-      if ((delta == 0)) // && (opd->op->opcode != 0x21))
-          message(opd->a09,MSG_WARNING,"W0012: branch to next location, maybe remove?");
-      if ((delta < 0x80) || (delta > 0xFF80))
-        message(opd->a09,MSG_WARNING,"W0009: offset could be 8-bits, maybe use short branch?");
-    }
-    
     opd->bytes[opd->sz++] = opd->op->page;
+    
+  if (opd->value.external)
+  {
     opd->bytes[opd->sz++] = opd->op->opcode;
-    opd->bytes[opd->sz++] = delta >> 8;
-    opd->bytes[opd->sz++] = delta & 255;
+    opd->bytes[opd->sz++] = 0;
+    opd->bytes[opd->sz++] = 0;
   }
   else
   {
-    uint16_t delta = opd->value.external
-                   ? 0
-                   : opd->value.value - (opd->a09->pc + 3);
-    if ((opd->pass == 2) && ((delta < 0x80) || (delta > 0xFF80)))
-      message(opd->a09,MSG_WARNING,"W0009: offset could be 8-bits, maybe use short branch?");
+    uint16_t delta = opd->value.value - (opd->a09->pc + (opd->op->page ? 4 : 3));
+    
+    if ((opd->pass == 2) && (opd->op->opcode != 0x21))
+    {
+      if (delta == 0)
+        message(opd->a09,MSG_WARNING,"W0012: branch to next location, maybe remove?");
+      else if ((delta < 0x80) || (delta > 0xFF80))
+        message(opd->a09,MSG_WARNING,"W0009: offset could be 8-bits, maybe use short branch?");
+    }
+      
     opd->bytes[opd->sz++] = opd->op->opcode;
     opd->bytes[opd->sz++] = delta >> 8;
     opd->bytes[opd->sz++] = delta & 255;
