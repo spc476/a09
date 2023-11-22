@@ -119,25 +119,6 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
   
   pv->defined = true; /* optimistic setting */
   
-#if 0
-  if (c == '>')
-  {
-    pv->bits = 16;
-    c = buffer->buf[buffer->ridx++];
-  }
-  else if (c == '<')
-  {
-    if (buffer->buf[buffer->ridx] == '<')
-    {
-      buffer->ridx++;
-      pv->bits = 5;
-    }
-    else
-      pv->bits = 8;
-    c = buffer->buf[buffer->ridx++];
-  }
-#endif
-
   if (c == '*')
   {
     pv->value = a09->pc;
@@ -305,46 +286,6 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
     return value(pv,a09,buffer,pass);
   }
 }
-
-/**************************************************************************/
-
-#if 0
-static bool term(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
-{
-  assert(pv     != NULL);
-  assert(a09    != NULL);
-  assert(buffer != NULL);
-  assert((pass == 1) || (pass == 2));
-  
-  if (!factor(pv,a09,buffer,pass))
-    return false;
-    
-  while(true)
-  {
-    struct value val;
-    
-    char op = skip_space(buffer);
-    if (op == '\0')
-      return true;
-    if ((op != '*') && (op != '/'))
-    {
-      buffer->ridx--;
-      return true;
-    }
-    
-    char c = skip_space(buffer);
-    if (c == '\0')
-      return message(a09,MSG_ERROR,"E0012: unexpected end of expression");
-      
-    memset(&val,0,sizeof(val));
-    buffer->ridx--;
-    if (!factor(&val,a09,buffer,pass))
-      return false;
-    if (!eval(a09,pv,op,&val))
-      return false;
-  }
-}
-#endif
 
 /**************************************************************************/
 
