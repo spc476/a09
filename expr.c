@@ -18,6 +18,40 @@
 *
 *   Comments, questions and criticisms can be sent to: sean@conman.org
 *
+* ---------------------------------------------------------------------
+*
+* Shunting Yard algorithm.  See
+*
+*           https://en.wikipedia.org/wiki/Shunting_yard_algorithm
+*
+* for more information on this algorithem.  This is a modified Shunting Yard
+* algorithm, as we have no functions, and the parenthensis are handled by
+* factor().
+*
+* Note: Even though we don't have any right associative operators, we
+* do have support for them for the time when (if) they are added.
+*
+*	Precedence levels:
+*
+*		*	9
+*		/	9
+*		%	9	modulus
+*		+	8
+*		-	8
+*		<<	7	shift left
+*		>>	7	shift right
+*		&	6	boolean AND
+*		^	5	boolean XOR
+*		|	4	boolean OR
+*		>	3
+*		>=	3
+*		=	3	equal
+*		<=	3
+*		<	3
+*		<>	3	not equal
+*		&&	2	logical AND
+*		||	1	logical OR
+*
 ****************************************************************************/
 
 #include <string.h>
@@ -85,6 +119,7 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
   
   pv->defined = true; /* optimistic setting */
   
+#if 0
   if (c == '>')
   {
     pv->bits = 16;
@@ -101,7 +136,8 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
       pv->bits = 8;
     c = buffer->buf[buffer->ridx++];
   }
-  
+#endif
+
   if (c == '*')
   {
     pv->value = a09->pc;
@@ -187,27 +223,49 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
 
 /**************************************************************************/
 
-static bool eval(struct a09 *a09,struct value *v1,char op,struct value *v2)
+static bool eval(
+                  struct a09   *         a09,
+                  struct value *restrict v1,
+                  enum operator          op,
+                  struct value *restrict v2
+)
 {
-  assert(v1 != NULL);
-  assert(v2 != NULL);
+  assert(a09 != NULL);
+  assert(v1  != NULL);
+  assert(v2  != NULL);
   
   if (v1->external || v2->external)
     return message(a09,MSG_ERROR,"E0007: EXTERN in expression not allowed");
     
   switch(op)
   {
-    case '+': v1->value += v2->value; break;
-    case '-': v1->value -= v2->value; break;
-    case '*': v1->value *= v2->value; break;
-    case '/':
+    case OP_LOR:  v1->value = v1->value || v2->value; break;
+    case OP_LAND: v1->value = v1->value && v2->value; break;
+    case OP_GT:   v1->value = v1->value >  v2->value; break;
+    case OP_GE:   v1->value = v1->value >= v2->value; break;
+    case OP_EQ:   v1->value = v1->value == v2->value; break;
+    case OP_LE:   v1->value = v1->value <= v2->value; break;
+    case OP_LT:   v1->value = v1->value <  v2->value; break;
+    case OP_NE:   v1->value = v1->value != v2->value; break;
+    case OP_BOR:  v1->value = v1->value |  v2->value; break;
+    case OP_BEOR: v1->value = v1->value ^  v2->value; break;
+    case OP_BAND: v1->value = v1->value &  v2->value; break;
+    case OP_SHR:  v1->value = v1->value >> v2->value; break;
+    case OP_SHL:  v1->value = v1->value << v2->value; break;
+    case OP_SUB:  v1->value = v1->value -  v2->value; break;
+    case OP_ADD:  v1->value = v1->value +  v2->value; break;
+    case OP_MUL:  v1->value = v1->value *  v2->value; break;
+    case OP_DIV:
          if (v2->value == 0)
            return message(a09,MSG_ERROR,"E0008: divide by 0 error");
-         v1->value /= v2->value;
+         v1->value = v1->value / v2->value;
          break;
-         
-    default:
-         return message(a09,MSG_ERROR,"E0009: internal error");
+      
+    case OP_MOD:
+         if (v2->value == 0)
+           return message(a09,MSG_ERROR,"E0008: divide by 0 error");
+         v1->value = v1->value % v2->value;
+         break;
   }
   
   v1->unknownpass1 = v1->unknownpass1 || v2->unknownpass1;
@@ -250,6 +308,7 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
 
 /**************************************************************************/
 
+#if 0
 static bool term(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
 {
   assert(pv     != NULL);
@@ -285,45 +344,189 @@ static bool term(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass
       return false;
   }
 }
+#endif
+
+/**************************************************************************/
+
+static struct optable const *get_op(
+        struct a09     *a09,
+        struct buffer  *buffer
+)
+{
+  assert(a09    != NULL);
+  assert(buffer != NULL);
+  
+  char c = skip_space(buffer);
+  
+  switch(c)
+  {
+    case '*': return &(struct optable const) { OP_MUL  , AS_LEFT , 9 }; break;
+    case '/': return &(struct optable const) { OP_DIV  , AS_LEFT , 9 }; break;
+    case '%': return &(struct optable const) { OP_MOD  , AS_LEFT , 9 }; break;
+    case '+': return &(struct optable const) { OP_ADD  , AS_LEFT , 8 }; break;
+    case '-': return &(struct optable const) { OP_SUB  , AS_LEFT , 8 }; break;
+    case '^': return &(struct optable const) { OP_BEOR , AS_LEFT , 5 }; break;
+    case '=': return &(struct optable const) { OP_EQ   , AS_LEFT , 3 }; break;
+    
+    case '&':
+         if (buffer->buf[buffer->ridx] == '&')
+         {
+           buffer->ridx++;
+           return &(struct optable const) { OP_LAND , AS_LEFT , 2 };
+         }
+         else
+           return &(struct optable const) { OP_BAND , AS_LEFT , 6 };
+         
+    case '|':
+         if (buffer->buf[buffer->ridx] == '|')
+         {
+           buffer->ridx++;
+           return &(struct optable const) { OP_LOR , AS_LEFT , 1 };
+         }
+         else
+           return &(struct optable const) { OP_BOR , AS_LEFT , 4 };
+         
+    case '<':
+         if (buffer->buf[buffer->ridx] == '<')
+         {
+           buffer->ridx++;
+           return &(struct optable const) { OP_SHL , AS_LEFT , 7 };
+         }
+         else if (buffer->buf[buffer->ridx] == '=')
+         {
+           buffer->ridx++;
+           return &(struct optable const) { OP_LE , AS_LEFT , 3 };
+         }
+         else if (buffer->buf[buffer->ridx] == '>')
+         {
+           buffer->ridx++;
+           return &(struct optable const) { OP_NE , AS_LEFT , 3 };
+         }
+         else
+           return &(struct optable const) { OP_LT , AS_LEFT , 3 };
+         
+    case '>':
+         if (buffer->buf[buffer->ridx] == '>')
+         {
+           buffer->ridx++;
+           return &(struct optable const) { OP_SHR , AS_LEFT , 7 };
+         }
+         else if (buffer->buf[buffer->ridx] == '=')
+         {
+           buffer->ridx++;
+           return &(struct optable const) { OP_GE , AS_LEFT , 3 };
+         }
+         else
+           return &(struct optable const) { OP_GT , AS_LEFT , 3 };
+         
+    default:
+         buffer->ridx--;
+         return NULL;
+  }
+}
 
 /**************************************************************************/
 
 bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
 {
+  struct value          vstack[15];
+  struct optable const *ostack[15];
+  size_t                vsp  = sizeof(vstack) / sizeof(vstack[0]);
+  size_t                osp  = sizeof(ostack) / sizeof(ostack[0]);
+  size_t                bits;
+  char                  c;
+  
   assert(pv     != NULL);
   assert(a09    != NULL);
   assert(buffer != NULL);
   assert((pass == 1) || (pass == 2));
   
-  memset(pv,0,sizeof(struct value));
-  if (!term(pv,a09,buffer,pass))
+  memset(vstack,0,sizeof(vstack));
+  
+  c = skip_space(buffer);
+  if (c == '>')
+    bits = 16;
+  else if (c == '<')
+  {
+    if (buffer->buf[buffer->ridx] == '<')
+    {
+      buffer->ridx++;
+      bits = 5;
+    }
+    else
+      bits = 8;
+  }
+  else
+  {
+    buffer->ridx--;
+    bits = 0;
+  }
+  
+  if (!factor(&vstack[--vsp],a09,buffer,pass))
     return false;
     
   while(true)
   {
-    struct value val;
-    char op = skip_space(buffer);
-    if (op == '\0')
-      return true;
+    struct optable const *op;
+    
+    c = skip_space(buffer);
+    if (c == '\0')
+      break;
       
-    if ((op != '+') && (op != '-'))
+    buffer->ridx--;
+    if ((op = get_op(a09,buffer)) == NULL)
+      break;
+     
+    while(osp < sizeof(ostack) / sizeof(ostack[0]))
     {
-      buffer->ridx--;
-      return true;
+      if (
+               (ostack[osp]->pri >  op->pri)
+           || ((ostack[osp]->pri == op->pri) && (op->pri == AS_RIGHT))
+         )
+      {
+        if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
+          return message(a09,MSG_ERROR,"E9999: Internal error---expression parsing mismatch");
+        if (!eval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp]))
+          return false;
+        vsp++;
+        osp++;
+      }
     }
     
-    char c = skip_space(buffer);
+    if (osp == 0)
+      return message(a09,MSG_ERROR,"E9999: expression too complex");
+      
+    ostack[--osp] = op;
+    
+    c = skip_space(buffer);
     if (c == '\0')
       return message(a09,MSG_ERROR,"E0012: unexpected end of expression");
+    
+    if (vsp == 0)
+      return message(a09,MSG_ERROR,"E9999: expression too complex");
       
-    memset(&val,0,sizeof(val));
     buffer->ridx--;
-    if (!term(&val,a09,buffer,pass))
-      return false;
-      
-    if (!eval(a09,pv,op,&val))
+    
+    if (!factor(&vstack[--vsp],a09,buffer,pass))
       return false;
   }
+  
+  while(osp < sizeof(ostack) / sizeof(ostack[0]))
+  {
+    if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
+      return message(a09,MSG_ERROR,"E9999: Internal error---expression parsing mismatch");
+    if (!eval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp]))
+      return false;
+    vsp++;
+    osp++;
+  }
+  
+  assert(osp ==  sizeof(ostack) / sizeof(ostack[0]));
+  assert(vsp == (sizeof(vstack) / sizeof(vstack[0]) - 1));
+  
+  vstack[vsp].bits = bits;
+  *pv              = vstack[vsp];
+  return true;
 }
 
 /**************************************************************************/

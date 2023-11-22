@@ -61,6 +61,34 @@ enum symtype
   SYM_EXTERN,
 };
 
+enum associative
+{
+  AS_LEFT,
+  AS_RIGHT,
+};
+
+enum operator
+{
+  OP_LOR,
+  OP_LAND,
+  OP_GT,
+  OP_GE,
+  OP_EQ,
+  OP_LE,
+  OP_LT,
+  OP_NE,
+  OP_BOR,
+  OP_BEOR,
+  OP_BAND,
+  OP_SHR,
+  OP_SHL,
+  OP_SUB,
+  OP_ADD,
+  OP_MUL,
+  OP_DIV,
+  OP_MOD,
+};
+
 typedef struct label
 {
   unsigned char s;
@@ -218,6 +246,13 @@ struct indexregs
   unsigned char tehi;
   unsigned char telo;
   bool          b16;
+};
+
+struct optable
+{
+  enum operator    op;
+  enum associative as;
+  unsigned int     pri;
 };
 
 /**************************************************************************/
