@@ -193,7 +193,7 @@ static bool eval(struct a09 *a09,struct value *v1,char op,struct value *v2)
   assert(v2 != NULL);
   
   if (v1->external || v2->external)
-    return message(a09,MSG_ERROR,"E0007: EXTERN in expression not allowd");
+    return message(a09,MSG_ERROR,"E0007: EXTERN in expression not allowed");
     
   switch(op)
   {

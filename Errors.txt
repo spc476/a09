@@ -18,7 +18,7 @@ E0003: unknown opcode
 E0004: unknown symbol '%.*s'
 E0005: illegal escaped character in value
 E0006: not a value
-E0007: EXTERN in expression not allowd
+E0007: EXTERN in expression not allowed
 E0008: divide by 0 error
 E0009: internal error
 E0010: unexpected end of input
