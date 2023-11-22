@@ -348,7 +348,8 @@ static bool term(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass
 
 /**************************************************************************/
 
-static struct optable const *get_op(
+static bool get_op(
+        struct optable *op,
         struct a09     *a09,
         struct buffer  *buffer
 )
@@ -360,68 +361,87 @@ static struct optable const *get_op(
   
   switch(c)
   {
-    case '*': return &(struct optable const) { OP_MUL  , AS_LEFT , 9 }; break;
-    case '/': return &(struct optable const) { OP_DIV  , AS_LEFT , 9 }; break;
-    case '%': return &(struct optable const) { OP_MOD  , AS_LEFT , 9 }; break;
-    case '+': return &(struct optable const) { OP_ADD  , AS_LEFT , 8 }; break;
-    case '-': return &(struct optable const) { OP_SUB  , AS_LEFT , 8 }; break;
-    case '^': return &(struct optable const) { OP_BEOR , AS_LEFT , 5 }; break;
-    case '=': return &(struct optable const) { OP_EQ   , AS_LEFT , 3 }; break;
+    case '*': op->op = OP_MUL;  op->as = AS_LEFT; op->pri = 9; return true;
+    case '/': op->op = OP_DIV;  op->as = AS_LEFT; op->pri = 9; return true;
+    case '%': op->op = OP_MOD;  op->as = AS_LEFT; op->pri = 9; return true;
+    case '+': op->op = OP_ADD;  op->as = AS_LEFT; op->pri = 8; return true;
+    case '-': op->op = OP_SUB;  op->as = AS_LEFT; op->pri = 8; return true;
+    case '^': op->op = OP_BEOR; op->as = AS_LEFT; op->pri = 5; return true;
+    case '=': op->op = OP_EQ;   op->as = AS_LEFT; op->pri = 3; return true;
     
     case '&':
          if (buffer->buf[buffer->ridx] == '&')
          {
            buffer->ridx++;
-           return &(struct optable const) { OP_LAND , AS_LEFT , 2 };
+           op->op = OP_LAND; op->as = AS_LEFT; op->pri = 2;
+           return true;
          }
          else
-           return &(struct optable const) { OP_BAND , AS_LEFT , 6 };
+         {
+           op->op = OP_BAND; op->as = AS_LEFT; op->pri = 6;
+           return true;
+         }
          
     case '|':
          if (buffer->buf[buffer->ridx] == '|')
          {
            buffer->ridx++;
-           return &(struct optable const) { OP_LOR , AS_LEFT , 1 };
+           op->op = OP_LOR; op->as = AS_LEFT; op->pri = 1;
+           return true;
          }
          else
-           return &(struct optable const) { OP_BOR , AS_LEFT , 4 };
+         {
+           op->op = OP_BOR; op->as = AS_LEFT; op->pri = 4;
+           return true;
+         }
          
     case '<':
          if (buffer->buf[buffer->ridx] == '<')
          {
            buffer->ridx++;
-           return &(struct optable const) { OP_SHL , AS_LEFT , 7 };
+           op->op = OP_SHL; op->as = AS_LEFT; op->pri = 7;
+           return true;
          }
          else if (buffer->buf[buffer->ridx] == '=')
          {
            buffer->ridx++;
-           return &(struct optable const) { OP_LE , AS_LEFT , 3 };
+           op->op = OP_LE; op->as = AS_LEFT; op->pri = 3;
+           return true;
          }
          else if (buffer->buf[buffer->ridx] == '>')
          {
            buffer->ridx++;
-           return &(struct optable const) { OP_NE , AS_LEFT , 3 };
+           op->op = OP_NE; op->as = AS_LEFT; op->pri = 3;
+           return true;
          }
          else
-           return &(struct optable const) { OP_LT , AS_LEFT , 3 };
+         {
+           op->op = OP_LT; op->as = AS_LEFT; op->pri = 3;
+           return true;
+         }
          
     case '>':
          if (buffer->buf[buffer->ridx] == '>')
          {
            buffer->ridx++;
-           return &(struct optable const) { OP_SHR , AS_LEFT , 7 };
+           op->op = OP_SHR; op->as = AS_LEFT; op->pri = 7;
+           return true;
          }
          else if (buffer->buf[buffer->ridx] == '=')
          {
            buffer->ridx++;
-           return &(struct optable const) { OP_GE , AS_LEFT , 3 };
+           op->op = OP_GE; op->as = AS_LEFT; op->pri = 3;
+           return true;
          }
          else
-           return &(struct optable const) { OP_GT , AS_LEFT , 3 };
+         {
+           op->op = OP_GT; op->as = AS_LEFT; op->pri = 3;
+           return true;
+         }
          
     default:
          buffer->ridx--;
-         return NULL;
+         return false;
   }
 }
 
@@ -429,12 +449,13 @@ static struct optable const *get_op(
 
 bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
 {
-  struct value          vstack[15];
-  struct optable const *ostack[15];
-  size_t                vsp  = sizeof(vstack) / sizeof(vstack[0]);
-  size_t                osp  = sizeof(ostack) / sizeof(ostack[0]);
-  size_t                bits;
-  char                  c;
+  struct optable op;
+  struct value   vstack[15];
+  struct optable ostack[15];
+  size_t         vsp  = sizeof(vstack) / sizeof(vstack[0]);
+  size_t         osp  = sizeof(ostack) / sizeof(ostack[0]);
+  size_t         bits;
+  char           c;
   
   assert(pv     != NULL);
   assert(a09    != NULL);
@@ -467,26 +488,24 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
     
   while(true)
   {
-    struct optable const *op;
-    
     c = skip_space(buffer);
     if (c == '\0')
       break;
       
     buffer->ridx--;
-    if ((op = get_op(a09,buffer)) == NULL)
+    if (!get_op(&op,a09,buffer))
       break;
      
     while(osp < sizeof(ostack) / sizeof(ostack[0]))
     {
       if (
-               (ostack[osp]->pri >  op->pri)
-           || ((ostack[osp]->pri == op->pri) && (op->pri == AS_RIGHT))
+               (ostack[osp].pri >  op.pri)
+           || ((ostack[osp].pri == op.pri) && (op.pri == AS_LEFT))
          )
       {
         if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
           return message(a09,MSG_ERROR,"E9999: Internal error---expression parsing mismatch");
-        if (!eval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp]))
+        if (!eval(a09,&vstack[vsp + 1],ostack[osp].op,&vstack[vsp]))
           return false;
         vsp++;
         osp++;
@@ -517,7 +536,7 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   {
     if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
       return message(a09,MSG_ERROR,"E9999: Internal error---expression parsing mismatch");
-    if (!eval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp]))
+    if (!eval(a09,&vstack[vsp + 1],ostack[osp].op,&vstack[vsp]))
       return false;
     vsp++;
     osp++;
