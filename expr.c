@@ -491,6 +491,8 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
         vsp++;
         osp++;
       }
+      else
+        break;
     }
     
     if (osp == 0)
