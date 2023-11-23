@@ -100,7 +100,7 @@ static bool collect_esc_string(
   assert(a09  != NULL);
   assert(wbuf != NULL);
   assert(rbuf != NULL);
-  assert((c == '"') || (c == '\''));
+  assert((delim == '"') || (delim == '\''));
   
   memset(wbuf->buf,0,sizeof(wbuf->buf));
   wbuf->widx = 0;
