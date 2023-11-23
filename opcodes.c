@@ -1084,47 +1084,31 @@ static bool pseudo_fcb(struct opcdata *opd)
   assert(opd->buffer != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  if (opd->pass == 1)
+  opd->data = true;
+  
+  while(true)
   {
-    opd->data = true;
-    while(true)
+    char c = skip_space(opd->buffer);
+    opd->buffer->ridx--;
+    opd->datasz++;
+    if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
+      return false;
+      
+    if (opd->pass == 2)
     {
-      char c = skip_space(opd->buffer);
-      opd->buffer->ridx--;
-      opd->datasz++;
-      if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
-        return false;
-      c = skip_space(opd->buffer);
-      if ((c == ';') || (c == '\0'))
-        return true;
-      if (c != ',')
-        return message(opd->a09,MSG_ERROR,"E0034: missing comma");
-    }
-  }
-  else
-  {
-    opd->data = true;
-    
-    while(true)
-    {
-      char c = skip_space(opd->buffer);
-      opd->buffer->ridx--;
-      opd->datasz++;
-      if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
-        return false;
       unsigned char byte = value_lsb(opd->a09,opd->value.value,opd->pass);
       if (opd->sz < sizeof(opd->bytes))
         opd->bytes[opd->sz++] = byte;
       fwrite(&byte,1,1,opd->a09->out);
       if (ferror(opd->a09->out))
         return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
-      c = skip_space(opd->buffer);
-      
-      if ((c == ';') || (c == '\0'))
-        return true;
-      if (c != ',')
-        return message(opd->a09,MSG_ERROR,"E0034: missing comma");
     }
+    
+    c = skip_space(opd->buffer);
+    if ((c == ';') || (c == '\0'))
+      return true;
+    if (c != ',')
+      return message(opd->a09,MSG_ERROR,"E0034: missing comma");
   }
 }
 
