@@ -291,8 +291,7 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
 
 /**************************************************************************/
 
-static bool get_op(
-        struct optable *op,
+static struct optable const *get_op(
         struct a09     *a09,
         struct buffer  *buffer
 )
@@ -300,91 +299,94 @@ static bool get_op(
   assert(a09    != NULL);
   assert(buffer != NULL);
   
+  static struct optable const cops[] =
+  {
+    [OP_MUL]  = { OP_MUL  , AS_LEFT , 9 } ,
+    [OP_DIV]  = { OP_DIV  , AS_LEFT , 9 } ,
+    [OP_MOD]  = { OP_MOD  , AS_LEFT , 9 } ,
+    [OP_ADD]  = { OP_ADD  , AS_LEFT , 8 } ,
+    [OP_SUB]  = { OP_SUB  , AS_LEFT , 8 } ,
+    [OP_SHL]  = { OP_SHL  , AS_LEFT , 7 } ,
+    [OP_SHR]  = { OP_SHR  , AS_LEFT , 7 } ,
+    [OP_BAND] = { OP_BAND , AS_LEFT , 6 } ,
+    [OP_BEOR] = { OP_BEOR , AS_LEFT , 5 } ,
+    [OP_BOR]  = { OP_BOR  , AS_LEFT , 4 } ,
+    [OP_NE]   = { OP_NE   , AS_LEFT , 3 } ,
+    [OP_LT]   = { OP_LT   , AS_LEFT , 3 } ,
+    [OP_LE]   = { OP_LE   , AS_LEFT , 3 } ,
+    [OP_EQ]   = { OP_EQ   , AS_LEFT , 3 } ,
+    [OP_GE]   = { OP_GE   , AS_LEFT , 3 } ,
+    [OP_GT]   = { OP_GT   , AS_LEFT , 3 } ,
+    [OP_LAND] = { OP_LAND , AS_LEFT , 2 } ,
+    [OP_LOR]  = { OP_LOR  , AS_LEFT , 1 } ,
+  };
+
   char c = skip_space(buffer);
   
   switch(c)
   {
-    case '*': op->op = OP_MUL;  op->as = AS_LEFT; op->pri = 9; return true;
-    case '/': op->op = OP_DIV;  op->as = AS_LEFT; op->pri = 9; return true;
-    case '%': op->op = OP_MOD;  op->as = AS_LEFT; op->pri = 9; return true;
-    case '+': op->op = OP_ADD;  op->as = AS_LEFT; op->pri = 8; return true;
-    case '-': op->op = OP_SUB;  op->as = AS_LEFT; op->pri = 8; return true;
-    case '^': op->op = OP_BEOR; op->as = AS_LEFT; op->pri = 5; return true;
-    case '=': op->op = OP_EQ;   op->as = AS_LEFT; op->pri = 3; return true;
+    case '*': return &cops[OP_MUL];
+    case '/': return &cops[OP_DIV];
+    case '%': return &cops[OP_MOD];
+    case '+': return &cops[OP_ADD];
+    case '-': return &cops[OP_SUB];
+    case '^': return &cops[OP_BEOR];
+    case '=': return &cops[OP_EQ];
     
     case '&':
          if (buffer->buf[buffer->ridx] == '&')
          {
            buffer->ridx++;
-           op->op = OP_LAND; op->as = AS_LEFT; op->pri = 2;
-           return true;
+           return &cops[OP_LAND];
          }
          else
-         {
-           op->op = OP_BAND; op->as = AS_LEFT; op->pri = 6;
-           return true;
-         }
-         
+           return &cops[OP_BAND];
+           
     case '|':
          if (buffer->buf[buffer->ridx] == '|')
          {
            buffer->ridx++;
-           op->op = OP_LOR; op->as = AS_LEFT; op->pri = 1;
-           return true;
+           return &cops[OP_LOR];
          }
          else
-         {
-           op->op = OP_BOR; op->as = AS_LEFT; op->pri = 4;
-           return true;
-         }
+           return &cops[OP_BOR];
          
     case '<':
          if (buffer->buf[buffer->ridx] == '<')
          {
            buffer->ridx++;
-           op->op = OP_SHL; op->as = AS_LEFT; op->pri = 7;
-           return true;
+           return &cops[OP_SHL];
          }
          else if (buffer->buf[buffer->ridx] == '=')
          {
            buffer->ridx++;
-           op->op = OP_LE; op->as = AS_LEFT; op->pri = 3;
-           return true;
+           return &cops[OP_LE];
          }
          else if (buffer->buf[buffer->ridx] == '>')
          {
            buffer->ridx++;
-           op->op = OP_NE; op->as = AS_LEFT; op->pri = 3;
-           return true;
+           return &cops[OP_NE];
          }
          else
-         {
-           op->op = OP_LT; op->as = AS_LEFT; op->pri = 3;
-           return true;
-         }
-         
+           return &cops[OP_LT];
+           
     case '>':
          if (buffer->buf[buffer->ridx] == '>')
          {
            buffer->ridx++;
-           op->op = OP_SHR; op->as = AS_LEFT; op->pri = 7;
-           return true;
+           return &cops[OP_SHR];
          }
          else if (buffer->buf[buffer->ridx] == '=')
          {
            buffer->ridx++;
-           op->op = OP_GE; op->as = AS_LEFT; op->pri = 3;
-           return true;
+           return &cops[OP_GE];
          }
          else
-         {
-           op->op = OP_GT; op->as = AS_LEFT; op->pri = 3;
-           return true;
-         }
-         
+           return &cops[OP_GT];
+           
     default:
          buffer->ridx--;
-         return false;
+         return NULL;
   }
 }
 
@@ -392,7 +394,7 @@ static bool get_op(
 
 bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
 {
-  struct optable op;
+  struct optable const *op;
   struct value   vstack[15];
   struct optable ostack[15];
   size_t         vsp  = sizeof(vstack) / sizeof(vstack[0]);
@@ -436,14 +438,14 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
       break;
       
     buffer->ridx--;
-    if (!get_op(&op,a09,buffer))
+    if ((op = get_op(a09,buffer)) == NULL)
       break;
-     
+
     while(osp < sizeof(ostack) / sizeof(ostack[0]))
     {
       if (
-               (ostack[osp].pri >  op.pri)
-           || ((ostack[osp].pri == op.pri) && (op.pri == AS_LEFT))
+               (ostack[osp].pri >  op->pri)
+           || ((ostack[osp].pri == op->pri) && (op->pri == AS_LEFT))
          )
       {
         if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
@@ -460,7 +462,7 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
     if (osp == 0)
       return message(a09,MSG_ERROR,"E9999: expression too complex");
       
-    ostack[--osp] = op;
+    ostack[--osp] = *op;
     
     c = skip_space(buffer);
     if (c == '\0')
