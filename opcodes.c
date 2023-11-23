@@ -1116,6 +1116,11 @@ static bool pseudo_fcb(struct opcdata *opd)
 
 static bool pseudo_fdb(struct opcdata *opd)
 {
+  assert(opd         != NULL);
+  assert(opd->a09    != NULL);
+  assert(opd->buffer != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
   if (opd->pass == 1)
   {
     opd->data = true;
