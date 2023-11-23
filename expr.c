@@ -395,12 +395,12 @@ static struct optable const *get_op(
 bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
 {
   struct optable const *op;
-  struct value   vstack[15];
-  struct optable ostack[15];
-  size_t         vsp  = sizeof(vstack) / sizeof(vstack[0]);
-  size_t         osp  = sizeof(ostack) / sizeof(ostack[0]);
-  size_t         bits;
-  char           c;
+  struct value          vstack[15];
+  struct optable const *ostack[15];
+  size_t                vsp  = sizeof(vstack) / sizeof(vstack[0]);
+  size_t                osp  = sizeof(ostack) / sizeof(ostack[0]);
+  size_t                bits;
+  char                  c;
   
   assert(pv     != NULL);
   assert(a09    != NULL);
@@ -444,13 +444,13 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
     while(osp < sizeof(ostack) / sizeof(ostack[0]))
     {
       if (
-               (ostack[osp].pri >  op->pri)
-           || ((ostack[osp].pri == op->pri) && (op->pri == AS_LEFT))
+               (ostack[osp]->pri >  op->pri)
+           || ((ostack[osp]->pri == op->pri) && (op->pri == AS_LEFT))
          )
       {
         if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
           return message(a09,MSG_ERROR,"E9999: Internal error---expression parsing mismatch");
-        if (!eval(a09,&vstack[vsp + 1],ostack[osp].op,&vstack[vsp]))
+        if (!eval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp]))
           return false;
         vsp++;
         osp++;
@@ -462,7 +462,7 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
     if (osp == 0)
       return message(a09,MSG_ERROR,"E9999: expression too complex");
       
-    ostack[--osp] = *op;
+    ostack[--osp] = op;
     
     c = skip_space(buffer);
     if (c == '\0')
@@ -481,7 +481,7 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   {
     if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
       return message(a09,MSG_ERROR,"E9999: Internal error---expression parsing mismatch");
-    if (!eval(a09,&vstack[vsp + 1],ostack[osp].op,&vstack[vsp]))
+    if (!eval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp]))
       return false;
     vsp++;
     osp++;
