@@ -186,6 +186,8 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
     if (isgraph(c))
     {
       pv->value = c;
+      if (buffer->buf[buffer->ridx] == '\'')
+        buffer->ridx++;
       return true;
     }
     else
