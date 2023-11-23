@@ -20,7 +20,7 @@ E0005: illegal escaped character in value
 E0006: not a value
 E0007: EXTERN in expression not allowed
 E0008: divide by 0 error
-E0009: internal error
+E0009:
 E0010: unexpected end of input
 E0011: missing right parenthesis
 E0012: unexpected end of expression
@@ -42,9 +42,9 @@ E0027: Internal error---how did this happen?
 E0028: instruction only supports immediate mode
 E0029: target exceeds 8-bit range
 E0030: bad operand
-E0031: bad register name
+E0031: bad register name for PSH/PUL
 E0032: missing comma in register list
-E0033: bad register name
+E0033: bad register name for EXG/TRF
 E0034: missing comma
 E0035: missing label for EQU
 E0036: redefining EQU value
@@ -53,7 +53,7 @@ E0038: %s
 E0039: missing value for ORG
 E0040: failed writing object file
 E0041: truncated output to object file
-E0042: %s: %s
+E0042: %s: '%s'
 E0043: %s: file too big
 E0044: %s: failed reading
 E0045: EXTDP missing label

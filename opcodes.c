@@ -318,7 +318,7 @@ static bool parse_operand(struct opcdata *opd)
     else if ((c == ';') || (c == '\0') || isspace(c))
     {
       if (indexindirect)
-        return message(opd->a09,MSG_ERROR,"E0019: missing end of indirection error");
+        return message(opd->a09,MSG_ERROR,"E0019: missing end of index indirect mode");
       return true;
     }
     else
@@ -575,14 +575,14 @@ static bool parse_operand(struct opcdata *opd)
          break;
          
     default:
-         return message(opd->a09,MSG_ERROR,"E0016: invalid index regster");
+         return message(opd->a09,MSG_ERROR,"E0016: invalid index register");
   }
   
   c = skip_space(opd->buffer);
   if (c == ']')
   {
     if (!indexindirect)
-      return message(opd->a09,MSG_ERROR,"E0017: end of indirection without start indirection error");
+      return message(opd->a09,MSG_ERROR,"E0017: end of indirection without start of indirection error");
     opd->value.postbyte |= 0x10;
     if (opd->bits == 5)
       opd->bits = 8;
@@ -909,7 +909,7 @@ static bool op_pshpul(struct opcdata *opd)
     struct indexregs const *reg;
     
     if (!sop_findreg(&reg,&opd->buffer->buf[opd->buffer->ridx],skip))
-      return message(opd->a09,MSG_ERROR,"E0031: bad register name");
+      return message(opd->a09,MSG_ERROR,"E0031: bad register name for PSH/PUL");
     opd->buffer->ridx += reg->reg[0];
     operand |= reg->pushpull;
     c = skip_space(opd->buffer);
@@ -945,7 +945,7 @@ static bool op_exg(struct opcdata *opd)
   opd->buffer->ridx--;
   
   if (!sop_findreg(&reg1,&opd->buffer->buf[opd->buffer->ridx],'\0'))
-    return message(opd->a09,MSG_ERROR,"E0033: bad register name");
+    return message(opd->a09,MSG_ERROR,"E0033: bad register name for EXG/TRF");
   opd->buffer->ridx += reg1->reg[0];
   operand |= reg1->tehi;
   if (opd->buffer->buf[opd->buffer->ridx] != ',')
@@ -953,7 +953,7 @@ static bool op_exg(struct opcdata *opd)
   opd->buffer->ridx++;
   
   if (!sop_findreg(&reg2,&opd->buffer->buf[opd->buffer->ridx],'\0'))
-    return message(opd->a09,MSG_ERROR,"E0031: bad register name");
+    return message(opd->a09,MSG_ERROR,"E0033: bad register name for EXG/TRF");
   if ((opd->pass == 1) && (reg1->b16 != reg2->b16))
     message(opd->a09,MSG_WARNING,"W0008: ext/tfr mixed sized registers");
   operand |= reg2->telo;
@@ -1208,7 +1208,7 @@ static bool pseudo_ascii(struct opcdata *opd)
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
-      return message(opd->a09,MSG_ERROR,"E0041: truncate output to object file");
+      return message(opd->a09,MSG_ERROR,"E0041: truncated output to object file");
     if (ferror(opd->a09->out))
       return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
   }
@@ -1237,7 +1237,7 @@ static bool pseudo_asciih(struct opcdata *opd)
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
-      return message(opd->a09,MSG_ERROR,"E0041: truncate output to object file");
+      return message(opd->a09,MSG_ERROR,"E0041: truncated output to object file");
     if (ferror(opd->a09->out))
       return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
   }
@@ -1266,7 +1266,7 @@ static bool pseudo_asciiz(struct opcdata *opd)
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
-      return message(opd->a09,MSG_ERROR,"E0041: truncate output to object file");
+      return message(opd->a09,MSG_ERROR,"E0041: truncated output to object file");
     if (ferror(opd->a09->out))
       return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
   }
@@ -1297,7 +1297,7 @@ static bool pseudo_include(struct opcdata *opd)
   new.in     = fopen(filename.buf,"r");
   
   if (new.in == NULL)
-    return message(opd->a09,MSG_ERROR,"E0042: %s: %s",filename.buf,strerror(errno));
+    return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
     
   if ((opd->pass == 1) && opd->a09->mkdeps)
     add_file_dep(opd->a09,filename.buf);
