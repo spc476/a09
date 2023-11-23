@@ -1208,7 +1208,7 @@ static bool pseudo_ascii(struct opcdata *opd)
   
   struct buffer textstring;
   
-  if (!parse_string(opd->a09,opd->buffer,&textstring))
+  if (!parse_string(opd->a09,&textstring,opd->buffer))
     return false;
     
   opd->data   = true;
@@ -1236,7 +1236,7 @@ static bool pseudo_asciih(struct opcdata *opd)
   
   struct buffer textstring;
   
-  if (!parse_string(opd->a09,opd->buffer,&textstring))
+  if (!parse_string(opd->a09,&textstring,opd->buffer))
     return false;
     
   opd->data   = true;
@@ -1265,7 +1265,7 @@ static bool pseudo_asciiz(struct opcdata *opd)
   
   struct buffer textstring;
   
-  if (!parse_string(opd->a09,opd->buffer,&textstring))
+  if (!parse_string(opd->a09,&textstring,opd->buffer))
     return false;
     
   opd->data   = true;
@@ -1296,7 +1296,7 @@ static bool pseudo_include(struct opcdata *opd)
   bool          rc;
   struct a09    new = *opd->a09;
   
-  if (!parse_string(opd->a09,opd->buffer,&filename))
+  if (!parse_string(opd->a09,&filename,opd->buffer))
     return false;
   
   assert(filename.widx < sizeof(filename.buf));
@@ -1341,7 +1341,7 @@ static bool pseudo_incbin(struct opcdata *opd)
   FILE          *fp;
   bool           fill = false;
   
-  if (!parse_string(opd->a09,opd->buffer,&filename))
+  if (!parse_string(opd->a09,&filename,opd->buffer))
     return false;
     
   assert(filename.widx < sizeof(filename.buf));
