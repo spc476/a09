@@ -69,6 +69,7 @@ static bool collect_string(
   assert(a09  != NULL);
   assert(wbuf != NULL);
   assert(rbuf != NULL);
+  assert(isgraph(delim));
   
   memset(wbuf->buf,0,sizeof(wbuf->buf));
   wbuf->widx = 0;
