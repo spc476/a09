@@ -57,26 +57,29 @@ static unsigned char value_lsb(struct a09 *a09,uint16_t value,int pass)
 
 /**************************************************************************/
 
-static bool collect_string(struct opcdata *opd,struct buffer *buf,char delim)
+static bool collect_string(
+        struct a09              *a09,
+        struct buffer *restrict  wbuf,
+        struct buffer *restrict  rbuf,
+        char                     delim
+)
 {
   char c;
   
-  assert(opd         != NULL);
-  assert(opd->a09    != NULL);
-  assert(opd->buffer != NULL);
-  assert(buf         != NULL);
+  assert(a09  != NULL);
+  assert(wbuf != NULL);
+  assert(rbuf != NULL);
   
-  memset(buf->buf,0,sizeof(buf->buf));
-  buf->widx = 0;
-  buf->ridx = 0;
+  memset(wbuf->buf,0,sizeof(wbuf->buf));
+  wbuf->widx = 0;
+  wbuf->ridx = 0;
   
-  while((c = opd->buffer->buf[opd->buffer->ridx++]) != delim)
+  while((c = rbuf->buf[rbuf->ridx++]) != delim)
   {
     if (c == '\0')
-      return message(opd->a09,MSG_ERROR,"E0013: unexpected end of string");
-    if (buf->widx == sizeof(buf->buf))
-      return false;
-    buf->buf[buf->widx++] = c;
+      return message(a09,MSG_ERROR,"E0013: unexpected end of string");
+    wbuf->buf[wbuf->widx++] = c;
+    assert(wbuf->widx < sizeof(wbuf->buf));
   }
   
   return true;
@@ -1186,7 +1189,7 @@ static bool pseudo_fcc(struct opcdata *opd)
   
   if (c == '\0')
     return message(opd->a09,MSG_ERROR,"E0010: unexpected end of input");
-  if (!collect_string(opd,&textstring,c))
+  if (!collect_string(opd->a09,&textstring,opd->buffer,c))
     return false;
     
   opd->data   = true;
@@ -1536,7 +1539,7 @@ static bool pseudo_fcs(struct opcdata *opd)
   
   if (c == '\0')
     return message(opd->a09,MSG_ERROR,"E0010: unexpected end of input");
-  if (!collect_string(opd,&textstring,c))
+  if (!collect_string(opd->a09,&textstring,opd->buffer,c))
     return false;
     
   opd->data   = true;
