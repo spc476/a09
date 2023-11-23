@@ -88,26 +88,31 @@ static bool collect_string(
 
 /**************************************************************************/
 
-static bool collect_esc_string(struct opcdata *opd,struct buffer *buf,char delim)
+static bool collect_esc_string(
+        struct a09              *a09,
+        struct buffer *restrict  wbuf,
+        struct buffer *restrict  rbuf,
+        char                     delim
+)
 {
   char c;
   
-  assert(opd         != NULL);
-  assert(opd->a09    != NULL);
-  assert(opd->buffer != NULL);
-  assert(buf         != NULL);
+  assert(a09  != NULL);
+  assert(wbuf != NULL);
+  assert(rbuf != NULL);
+  assert((c == '"') || (c == '\''));
   
-  memset(buf->buf,0,sizeof(buf->buf));
-  buf->widx = 0;
-  buf->ridx = 0;
+  memset(wbuf->buf,0,sizeof(wbuf->buf));
+  wbuf->widx = 0;
+  wbuf->ridx = 0;
   
-  while((c = opd->buffer->buf[opd->buffer->ridx++]) != delim)
+  while((c = rbuf->buf[rbuf->ridx++]) != delim)
   {
     if (c == '\0')
-      return message(opd->a09,MSG_ERROR,"E0013: unexpected end of string");
+      return message(a09,MSG_ERROR,"E0013: unexpected end of string");
     if (c == '\\')
     {
-      c = opd->buffer->buf[opd->buffer->ridx++];
+      c = rbuf->buf[rbuf->ridx++];
       switch(c)
       {
         case 'a':  c = '\a'; break;
@@ -121,35 +126,36 @@ static bool collect_esc_string(struct opcdata *opd,struct buffer *buf,char delim
         case '"':  c = '"';  break;
         case '\'': c = '\''; break;
         case '\\': c = '\\'; break;
-        case '\0': return message(opd->a09,MSG_ERROR,"E0013: unexpected end of string");
-        default:   return message(opd->a09,MSG_ERROR,"E0014: invalid escape character");
+        case '\0': return message(a09,MSG_ERROR,"E0013: unexpected end of string");
+        default:   return message(a09,MSG_ERROR,"E0014: invalid escape character");
       }
     }
     
-    if (buf->widx == sizeof(buf->buf)-1)
-      return false;
-    buf->buf[buf->widx++] = c;
+    wbuf->buf[wbuf->widx++] = c;
+    assert(wbuf->widx < sizeof(wbuf->buf));
   }
-  
-  assert(buf->widx < sizeof(buf->buf));
-  buf->buf[buf->widx] = '\0';
+    
   return true;
 }
 
 /**************************************************************************/
 
-static bool parse_string(struct opcdata *opd,struct buffer *buf)
+static bool parse_string(
+        struct a09              *a09,
+        struct buffer *restrict  wbuf,
+        struct buffer *restrict  rbuf
+)
 {
-  assert(opd         != NULL);
-  assert(opd->buffer != NULL);
-  assert(buf         != NULL);
+  assert(a09  != NULL);
+  assert(wbuf != NULL);
+  assert(rbuf != NULL);
   
-  char c = skip_space(opd->buffer);
+  char c = skip_space(rbuf);
   
   if ((c == '"') || (c == '\''))
-    return collect_esc_string(opd,buf,c);
+    return collect_esc_string(a09,wbuf,rbuf,c);
   else
-    return message(opd->a09,MSG_ERROR,"E0015: not a string");
+    return message(a09,MSG_ERROR,"E0015: not a string");
 }
 
 /**************************************************************************/
@@ -1218,7 +1224,7 @@ static bool pseudo_ascii(struct opcdata *opd)
   
   struct buffer textstring;
   
-  if (!parse_string(opd,&textstring))
+  if (!parse_string(opd->a09,opd->buffer,&textstring))
     return false;
     
   opd->data = true;
@@ -1246,7 +1252,7 @@ static bool pseudo_asciih(struct opcdata *opd)
   
   struct buffer textstring;
   
-  if (!parse_string(opd,&textstring))
+  if (!parse_string(opd->a09,opd->buffer,&textstring))
     return false;
     
   opd->data = true;
@@ -1275,7 +1281,7 @@ static bool pseudo_asciiz(struct opcdata *opd)
   
   struct buffer textstring;
   
-  if (!parse_string(opd,&textstring))
+  if (!parse_string(opd->a09,opd->buffer,&textstring))
     return false;
     
   opd->data = true;
@@ -1306,9 +1312,12 @@ static bool pseudo_include(struct opcdata *opd)
   bool          rc;
   struct a09    new = *opd->a09;
   
-  if (!parse_string(opd,&filename))
+  if (!parse_string(opd->a09,opd->buffer,&filename))
     return false;
-    
+  
+  assert(filename.widx < sizeof(filename.buf));
+  filename.buf[filename.widx++] = '\0';
+  
   new.label  = (label){ .s = 0 , .text = { '\0' } };
   new.inbuf  = (struct buffer){ .buf = {0}, .widx = 0 , .ridx = 0 };
   new.infile = filename.buf;
@@ -1348,9 +1357,12 @@ static bool pseudo_incbin(struct opcdata *opd)
   FILE          *fp;
   bool           fill = false;
   
-  if (!parse_string(opd,&filename))
+  if (!parse_string(opd->a09,opd->buffer,&filename))
     return false;
     
+  assert(filename.widx < sizeof(filename.buf));
+  filename.buf[filename.widx++] = '\0';
+  
   if (opd->pass == 1)
   {
     fp = fopen(filename.buf,"rb");
