@@ -26,31 +26,10 @@
 *
 * for more information on this algorithem.  This is a modified Shunting Yard
 * algorithm, as we have no functions, and the parenthensis are handled by
-* factor().
+* factor().  See the table cops[] in get_op() for the precedence levels.
 *
 * Note: Even though we don't have any right associative operators, we
 * do have support for them for the time when (if) they are added.
-*
-*	Precedence levels:
-*
-*		*	9
-*		/	9
-*		%	9	modulus
-*		+	8
-*		-	8
-*		<<	7	shift left
-*		>>	7	shift right
-*		&	6	boolean AND
-*		^	5	boolean XOR
-*		|	4	boolean OR
-*		>	3
-*		>=	3
-*		=	3	equal
-*		<=	3
-*		<	3
-*		<>	3	not equal
-*		&&	2	logical AND
-*		||	1	logical OR
 *
 ****************************************************************************/
 
@@ -301,26 +280,26 @@ static struct optable const *get_op(
   
   static struct optable const cops[] =
   {
-    [OP_MUL]  = { OP_MUL  , AS_LEFT , 9 } ,
-    [OP_DIV]  = { OP_DIV  , AS_LEFT , 9 } ,
-    [OP_MOD]  = { OP_MOD  , AS_LEFT , 9 } ,
-    [OP_ADD]  = { OP_ADD  , AS_LEFT , 8 } ,
-    [OP_SUB]  = { OP_SUB  , AS_LEFT , 8 } ,
-    [OP_SHL]  = { OP_SHL  , AS_LEFT , 7 } ,
-    [OP_SHR]  = { OP_SHR  , AS_LEFT , 7 } ,
-    [OP_BAND] = { OP_BAND , AS_LEFT , 6 } ,
-    [OP_BEOR] = { OP_BEOR , AS_LEFT , 5 } ,
-    [OP_BOR]  = { OP_BOR  , AS_LEFT , 4 } ,
-    [OP_NE]   = { OP_NE   , AS_LEFT , 3 } ,
-    [OP_LT]   = { OP_LT   , AS_LEFT , 3 } ,
-    [OP_LE]   = { OP_LE   , AS_LEFT , 3 } ,
-    [OP_EQ]   = { OP_EQ   , AS_LEFT , 3 } ,
-    [OP_GE]   = { OP_GE   , AS_LEFT , 3 } ,
-    [OP_GT]   = { OP_GT   , AS_LEFT , 3 } ,
-    [OP_LAND] = { OP_LAND , AS_LEFT , 2 } ,
-    [OP_LOR]  = { OP_LOR  , AS_LEFT , 1 } ,
+    [OP_MUL]  = { OP_MUL  , AS_LEFT , 900 } ,
+    [OP_DIV]  = { OP_DIV  , AS_LEFT , 900 } ,
+    [OP_MOD]  = { OP_MOD  , AS_LEFT , 900 } ,
+    [OP_ADD]  = { OP_ADD  , AS_LEFT , 800 } ,
+    [OP_SUB]  = { OP_SUB  , AS_LEFT , 800 } ,
+    [OP_SHL]  = { OP_SHL  , AS_LEFT , 700 } ,
+    [OP_SHR]  = { OP_SHR  , AS_LEFT , 700 } ,
+    [OP_BAND] = { OP_BAND , AS_LEFT , 600 } ,
+    [OP_BEOR] = { OP_BEOR , AS_LEFT , 500 } ,
+    [OP_BOR]  = { OP_BOR  , AS_LEFT , 400 } ,
+    [OP_NE]   = { OP_NE   , AS_LEFT , 300 } ,
+    [OP_LT]   = { OP_LT   , AS_LEFT , 300 } ,
+    [OP_LE]   = { OP_LE   , AS_LEFT , 300 } ,
+    [OP_EQ]   = { OP_EQ   , AS_LEFT , 300 } ,
+    [OP_GE]   = { OP_GE   , AS_LEFT , 300 } ,
+    [OP_GT]   = { OP_GT   , AS_LEFT , 300 } ,
+    [OP_LAND] = { OP_LAND , AS_LEFT , 200 } ,
+    [OP_LOR]  = { OP_LOR  , AS_LEFT , 100 } ,
   };
-
+  
   char c = skip_space(buffer);
   
   switch(c)
