@@ -1227,7 +1227,7 @@ static bool pseudo_ascii(struct opcdata *opd)
   if (!parse_string(opd->a09,opd->buffer,&textstring))
     return false;
     
-  opd->data = true;
+  opd->data   = true;
   opd->datasz = textstring.widx;
   
   if (opd->pass == 2)
@@ -1255,7 +1255,7 @@ static bool pseudo_asciih(struct opcdata *opd)
   if (!parse_string(opd->a09,opd->buffer,&textstring))
     return false;
     
-  opd->data = true;
+  opd->data   = true;
   opd->datasz = textstring.widx;
   
   if (opd->pass == 2)
@@ -1284,7 +1284,7 @@ static bool pseudo_asciiz(struct opcdata *opd)
   if (!parse_string(opd->a09,opd->buffer,&textstring))
     return false;
     
-  opd->data = true;
+  opd->data   = true;
   opd->datasz = textstring.widx + 1;
   
   if (opd->pass == 2)
