@@ -689,7 +689,7 @@ static bool op_idie(struct opcdata *opd)
          return true;
          
     case AM_INHERENT:
-         return message(opd->a09,MSG_ERROR,"E0025: Internal error---this should not happen");
+         return message(opd->a09,MSG_ERROR,"E0025: instruction not inherent");
   }
   
   return false;

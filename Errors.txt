@@ -36,7 +36,7 @@ E0021: syntax error in index mode
 E0022: invalid accumulator register in index mode
 E0023: missing expected comma
 E0024: operands found for op with no operands
-E0025: Internal error---this should not happen
+E0025: instruction not inherent
 E0026: immediate mode not supported for opcode
 E0027: Internal error---how did this happen?
 E0028: instruction only supports immediate mode
