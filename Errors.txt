@@ -44,7 +44,7 @@ E0029: target exceeds 8-bit range
 E0030: bad operand
 E0031: bad register name for PSH/PUL
 E0032: missing comma in register list
-E0033: bad register name for EXG/TRF
+E0033: bad register name for EXG/TFR
 E0034: missing comma
 E0035: missing label for EQU
 E0036: redefining EQU value

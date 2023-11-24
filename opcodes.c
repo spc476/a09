@@ -945,7 +945,7 @@ static bool op_exg(struct opcdata *opd)
   opd->buffer->ridx--;
   
   if (!sop_findreg(&reg1,&opd->buffer->buf[opd->buffer->ridx],'\0'))
-    return message(opd->a09,MSG_ERROR,"E0033: bad register name for EXG/TRF");
+    return message(opd->a09,MSG_ERROR,"E0033: bad register name for EXG/TFR");
   opd->buffer->ridx += reg1->reg[0];
   operand |= reg1->tehi;
   if (opd->buffer->buf[opd->buffer->ridx] != ',')
@@ -953,7 +953,7 @@ static bool op_exg(struct opcdata *opd)
   opd->buffer->ridx++;
   
   if (!sop_findreg(&reg2,&opd->buffer->buf[opd->buffer->ridx],'\0'))
-    return message(opd->a09,MSG_ERROR,"E0033: bad register name for EXG/TRF");
+    return message(opd->a09,MSG_ERROR,"E0033: bad register name for EXG/TFR");
   if ((opd->pass == 1) && (reg1->b16 != reg2->b16))
     message(opd->a09,MSG_WARNING,"W0008: ext/tfr mixed sized registers");
   operand |= reg2->telo;
