@@ -20,7 +20,7 @@ E0005: illegal escaped character in value
 E0006: not a value
 E0007: EXTERN in expression not allowed
 E0008: divide by 0 error
-E0009:
+E0009: literal exceeds absolute allowable range of 0..65535
 E0010: unexpected end of input
 E0011: missing right parenthesis
 E0012: unexpected end of expression
@@ -72,3 +72,4 @@ E0057: segment has no data
 E0058: improper warning tag
 E0059: syntax error---mixing up immedate and indexed modes?
 E0060: syntax error
+E0061: E0061: '%c' not allowed in literal number

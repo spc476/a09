@@ -43,7 +43,7 @@
 
 /**************************************************************************/
 
-static bool s2num(uint16_t *pv,struct buffer *buffer,uint16_t base)
+static bool s2num(struct a09 *a09,uint16_t *pv,struct buffer *buffer,uint16_t base)
 {
   assert(pv     != NULL);
   assert(buffer != NULL);
@@ -71,11 +71,13 @@ static bool s2num(uint16_t *pv,struct buffer *buffer,uint16_t base)
     uint16_t v = (uint16_t)((char const *)memchr(trans,toupper(c),sizeof(trans)) - trans);
     
     if (v >= base)
-      return false;
-    if (*pv > UINT16_MAX - v)
-      return false;
+      return message(a09,MSG_ERROR,"E0061: '%c' not allowed in literal number",c);
       
     *pv *= base;
+    
+    if (*pv > UINT16_MAX - v)
+      return message(a09,MSG_ERROR,"literal exceeds absolute allowable range of 0..65535");
+      
     *pv += v;
     buffer->ridx++;
     cnt++;
@@ -118,15 +120,15 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
     c = buffer->buf[buffer->ridx++];
     
   if (c == '$')
-    rc = s2num(&pv->value,buffer,16);
+    rc = s2num(a09,&pv->value,buffer,16);
   else if (c == '&')
-    rc = s2num(&pv->value,buffer,8);
+    rc = s2num(a09,&pv->value,buffer,8);
   else if (c == '%')
-    rc = s2num(&pv->value,buffer,2);
+    rc = s2num(a09,&pv->value,buffer,2);
   else if (isdigit(c))
   {
     buffer->ridx--;
-    rc = s2num(&pv->value,buffer,10);
+    rc = s2num(a09,&pv->value,buffer,10);
   }
   else if ((c == '_') || (c == '.') || isalpha(c))
   {
