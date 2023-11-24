@@ -152,7 +152,7 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
     }
     else
     {
-      pv->unknownpass1 = sym->ldef > a09->lnum;
+      pv->unknownpass1 = (sym->filename == a09->infile) && (sym->ldef > a09->lnum);
       pv->value        = sym->value;
       pv->external     = sym->type == SYM_EXTERN;
       if (pass == 2)
