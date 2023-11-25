@@ -272,12 +272,8 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
 
 /**************************************************************************/
 
-static struct optable const *get_op(
-        struct a09     *a09,
-        struct buffer  *buffer
-)
+static struct optable const *get_op(struct buffer  *buffer)
 {
-  assert(a09    != NULL);
   assert(buffer != NULL);
   
   static struct optable const cops[] =
@@ -419,7 +415,7 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
       break;
       
     buffer->ridx--;
-    if ((op = get_op(a09,buffer)) == NULL)
+    if ((op = get_op(buffer)) == NULL)
       break;
 
     while(osp < sizeof(ostack) / sizeof(ostack[0]))
