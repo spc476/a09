@@ -272,7 +272,7 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
 
 /**************************************************************************/
 
-static struct optable const *get_op(struct buffer  *buffer)
+static struct optable const *get_op(struct buffer *buffer)
 {
   assert(buffer != NULL);
   
