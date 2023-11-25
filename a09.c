@@ -717,6 +717,11 @@ int main(int argc,char *argv[])
     fprintf(a09.list,"                         | FILE %s\n",a09.infile);
   }
   
+  /*-----------------------------------------------------------------------
+  ; This initialization phase belongs here and not in assemble_pass().  We
+  ; don't want ot reset the PC or DP or global label when using INCLUDE.
+  ;------------------------------------------------------------------------*/
+  
   a09.pc    = 0;
   a09.dp    = 0;
   a09.label = (label){ .s = 0 , .text = { '\0' } };
