@@ -971,14 +971,15 @@ static bool pseudo_equ(struct opcdata *opd)
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (!parse_dirext(opd))
-    return message(opd->a09,MSG_ERROR,"E0035: missing label for EQU");
+    return message(opd->a09,MSG_ERROR,"E0062: missing value for EQU");
     
   if (opd->pass == 1)
   {
     struct symbol *sym = symbol_find(opd->a09,&opd->label);
-    assert(sym != NULL); /* this should always be the case */
+    if (sym == NULL)
+      return message(opd->a09,MSG_ERROR,"E0035: missing label for EQU");
     if (sym->type != SYM_ADDRESS)
-      return message(opd->a09,MSG_ERROR,"E0036: redefining EQU value");
+      return message(opd->a09,MSG_ERROR,"E0036: trying to EQU a SET value");
       
     sym->value = opd->value.value;
     sym->type  = SYM_EQU;

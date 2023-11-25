@@ -47,7 +47,7 @@ E0032: missing comma in register list
 E0033: bad register name for EXG/TFR
 E0034: missing comma
 E0035: missing label for EQU
-E0036: redefining EQU value
+E0036: trying to EQU a SET value
 E0037: missing label for SET
 E0038: %s
 E0039: missing value for ORG
@@ -73,3 +73,4 @@ E0058: improper warning tag
 E0059: syntax error---mixing up immedate and indexed modes?
 E0060: syntax error
 E0061: '%c' not allowed in literal number
+E0062: missing value for EQU
