@@ -997,13 +997,18 @@ static bool pseudo_set(struct opcdata *opd)
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (!parse_dirext(opd))
-    return message(opd->a09,MSG_ERROR,"E0037: missing label for SET");
-    
-  struct symbol  *sym = symbol_find(opd->a09,&opd->label);
-  assert(sym != NULL);
-  sym->value          = opd->value.value;
-  sym->type           = SYM_SET;
-  sym->bits           = opd->value.value < 256 ? 8 : 16;
+    return message(opd->a09,MSG_ERROR,"E0063: missing value for SET");
+  
+  if (opd->pass == 1)
+  {  
+    struct symbol  *sym = symbol_find(opd->a09,&opd->label);
+    if (sym == NULL)
+      return message(opd->a09,MSG_ERROR,"E0037: missing label for SET");
+      
+    sym->value          = opd->value.value;
+    sym->type           = SYM_SET;
+    sym->bits           = opd->value.value < 256 ? 8 : 16;
+  }
   
   return true;
 }

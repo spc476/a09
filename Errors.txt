@@ -74,3 +74,4 @@ E0059: syntax error---mixing up immedate and indexed modes?
 E0060: syntax error
 E0061: '%c' not allowed in literal number
 E0062: missing value for EQU
+E0063: missing value for SET
