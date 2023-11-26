@@ -433,7 +433,7 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
          )
       {
         if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
-          return message(a09,MSG_ERROR,"E9999: Internal error---expression parsing mismatch");
+          return message(a09,MSG_ERROR,"E0065: Internal error---expression parser mismatch");
         if (!eval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp]))
           return false;
         vsp++;
@@ -444,7 +444,7 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
     }
     
     if (osp == 0)
-      return message(a09,MSG_ERROR,"E9999: expression too complex");
+      return message(a09,MSG_ERROR,"E0066: expression too complex");
       
     ostack[--osp] = op;
     
@@ -453,7 +453,7 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
       return message(a09,MSG_ERROR,"E0012: unexpected end of expression");
     
     if (vsp == 0)
-      return message(a09,MSG_ERROR,"E9999: expression too complex");
+      return message(a09,MSG_ERROR,"E0066: expression too complex");
       
     buffer->ridx--;
     
@@ -464,7 +464,7 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   while(osp < sizeof(ostack) / sizeof(ostack[0]))
   {
     if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
-      return message(a09,MSG_ERROR,"E9999: Internal error---expression parsing mismatch");
+      return message(a09,MSG_ERROR,"E0065: Internal error---expression parser mismatch");
     if (!eval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp]))
       return false;
     vsp++;
