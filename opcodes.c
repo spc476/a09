@@ -1397,16 +1397,15 @@ static bool pseudo_incbin(struct opcdata *opd)
 
 static bool pseudo_extdp(struct opcdata *opd)
 {
-  struct symbol *sym;
-  label          label;
-  char           c;
-  
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 1)
   {
-    c = skip_space(opd->buffer);
+    struct symbol *sym;
+    label          label;
+    char           c = skip_space(opd->buffer);
+    
     if ((c == ';') || (c == '\0'))
       return message(opd->a09,MSG_ERROR,"E0045: EXTDP missing label");
     opd->buffer->ridx--;
@@ -1426,16 +1425,15 @@ static bool pseudo_extdp(struct opcdata *opd)
 
 static bool pseudo_extern(struct opcdata *opd)
 {
-  struct symbol *sym;
-  label          label;
-  char           c;
-  
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 1)
   {
-    c = skip_space(opd->buffer);
+    struct symbol *sym;
+    label          label;
+    char           c = skip_space(opd->buffer);
+    
     if ((c == ';') || (c == '\0'))
       return message(opd->a09,MSG_ERROR,"E0047: EXTERN missing label");
     opd->buffer->ridx--;
