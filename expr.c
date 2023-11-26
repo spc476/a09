@@ -387,6 +387,13 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   memset(vstack,0,sizeof(vstack));
   
   c = skip_space(buffer);
+  
+  if ((c == ';') || (c == '\0'))
+  {
+    buffer->ridx--;
+    return false;
+  }
+  
   if (c == '>')
     bits = 16;
   else if (c == '<')
