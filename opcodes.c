@@ -1005,9 +1005,9 @@ static bool pseudo_set(struct opcdata *opd)
     if (sym == NULL)
       return message(opd->a09,MSG_ERROR,"E0037: missing label for SET");
       
-    sym->value          = opd->value.value;
-    sym->type           = SYM_SET;
-    sym->bits           = opd->value.value < 256 ? 8 : 16;
+    sym->value = opd->value.value;
+    sym->type  = SYM_SET;
+    sym->bits  = opd->value.value < 256 ? 8 : 16;
   }
   
   return true;
@@ -1022,7 +1022,6 @@ static bool pseudo_rmb(struct opcdata *opd)
     return false;
   opd->data   = true;
   opd->datasz = opd->value.value;
-  
   return opd->a09->format.def.align(&opd->a09->format,opd);
 }
 
