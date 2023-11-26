@@ -1411,6 +1411,9 @@ static bool pseudo_extdp(struct opcdata *opd)
     opd->buffer->ridx--;
     if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))
       return false;
+    sym = symbol_find(opd->a09,&label);
+    if (sym != NULL)
+      return message(opd->a09,MSG_ERROR,"E0064: symbol '%.*s' already defined",sym->name.s,sym->name.text);
     sym = symbol_add(opd->a09,&label,0x80);
     if (sym == NULL)
       return message(opd->a09,MSG_ERROR,"E0046: out of memory");
@@ -1439,6 +1442,9 @@ static bool pseudo_extern(struct opcdata *opd)
     opd->buffer->ridx--;
     if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))
       return false;
+    sym = symbol_find(opd->a09,&label);
+    if (sym != NULL)
+      return message(opd->a09,MSG_ERROR,"E0064: symbol '%.*s' already defined",sym->name.s,sym->name.text);
     sym = symbol_add(opd->a09,&label,0x8000);
     if (sym == NULL)
       return message(opd->a09,MSG_ERROR,"E0046: out of memory");
