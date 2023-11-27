@@ -76,7 +76,7 @@ static bool s2num(struct a09 *a09,uint16_t *pv,struct buffer *buffer,uint16_t ba
     *pv *= base;
     
     if (*pv > UINT16_MAX - v)
-      return message(a09,MSG_ERROR,"literal exceeds absolute allowable range of 0..65535");
+      return message(a09,MSG_ERROR,"E0009: literal exceeds absolute allowable range of 0..65535");
       
     *pv += v;
     buffer->ridx++;
