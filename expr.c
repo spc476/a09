@@ -417,11 +417,6 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
     
   while(true)
   {
-    c = skip_space(buffer);
-    if (c == '\0')
-      break;
-      
-    buffer->ridx--;
     if ((op = get_op(buffer)) == NULL)
       break;
 
@@ -445,18 +440,10 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
     
     if (osp == 0)
       return message(a09,MSG_ERROR,"E0066: expression too complex");
-      
     ostack[--osp] = op;
     
-    c = skip_space(buffer);
-    if (c == '\0')
-      return message(a09,MSG_ERROR,"E0012: unexpected end of expression");
-    
     if (vsp == 0)
-      return message(a09,MSG_ERROR,"E0066: expression too complex");
-      
-    buffer->ridx--;
-    
+      return message(a09,MSG_ERROR,"E0066: expression too complex");      
     if (!factor(&vstack[--vsp],a09,buffer,pass))
       return false;
   }
