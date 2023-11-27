@@ -246,6 +246,7 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
   assert(buffer != NULL);
   assert((pass == 1) || (pass == 2));
   
+  memset(pv,0,sizeof(struct value));
   char c = skip_space(buffer);
   if (c == '\0')
     return message(a09,MSG_ERROR,"E0010: unexpected end of input");
@@ -400,8 +401,6 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   assert(a09    != NULL);
   assert(buffer != NULL);
   assert((pass == 1) || (pass == 2));
-  
-  memset(vstack,0,sizeof(vstack));
   
   if (!factor(&vstack[--vsp],a09,buffer,pass))
     return false;
