@@ -250,6 +250,24 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
   if (c == '\0')
     return message(a09,MSG_ERROR,"E0010: unexpected end of input");
     
+  if (c == '>')
+  {
+    pv->bits = 16;
+    c = skip_space(buffer);
+  }
+  else if (c == '<')
+  {
+    if (buffer->buf[buffer->ridx] == '<')
+    {
+      buffer->ridx++;
+      pv->bits = 5;
+    }
+    else
+      pv->bits = 8;
+      
+    c = skip_space(buffer);
+  }
+  
   if (c == '(')
   {
     c = skip_space(buffer);
@@ -377,8 +395,6 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   struct optable const *ostack[15];
   size_t                vsp  = sizeof(vstack) / sizeof(vstack[0]);
   size_t                osp  = sizeof(ostack) / sizeof(ostack[0]);
-  size_t                bits;
-  char                  c;
   
   assert(pv     != NULL);
   assert(a09    != NULL);
@@ -386,32 +402,6 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   assert((pass == 1) || (pass == 2));
   
   memset(vstack,0,sizeof(vstack));
-  
-  c = skip_space(buffer);
-  
-  if ((c == ';') || (c == '\0'))
-  {
-    buffer->ridx--;
-    return false;
-  }
-  
-  if (c == '>')
-    bits = 16;
-  else if (c == '<')
-  {
-    if (buffer->buf[buffer->ridx] == '<')
-    {
-      buffer->ridx++;
-      bits = 5;
-    }
-    else
-      bits = 8;
-  }
-  else
-  {
-    buffer->ridx--;
-    bits = 0;
-  }
   
   if (!factor(&vstack[--vsp],a09,buffer,pass))
     return false;
@@ -462,8 +452,7 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   assert(osp ==  sizeof(ostack) / sizeof(ostack[0]));
   assert(vsp == (sizeof(vstack) / sizeof(vstack[0]) - 1));
   
-  vstack[vsp].bits = bits;
-  *pv              = vstack[vsp];
+  *pv = vstack[vsp];
   return true;
 }
 
