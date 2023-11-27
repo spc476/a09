@@ -611,7 +611,7 @@ static void dump_symbols(FILE *out,tree__s *tree)
     
     dump_symbols(out,tree->left);
     struct symbol *sym = tree2sym(tree);
-    if (sym->type != SYM_SET)
+    if ((sym->type != SYM_SET) && (sym->refs > 0))
     {
       fprintf(
              out,
