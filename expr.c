@@ -362,7 +362,8 @@ static struct optable const *get_op(struct buffer *buffer)
            return &cops[OP_GT];
            
     default:
-         buffer->ridx--;
+         if (c != '\0')
+           buffer->ridx--;
          return NULL;
   }
 }
