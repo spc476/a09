@@ -51,7 +51,6 @@ static void write_record(
   unsigned char chksum;
   
   assert(out  != NULL);
-  assert(data != NULL);
   assert(max  >= 3);
   assert(max  <= 255);
   assert((type == '0') || (type == '1') || (type == '9'));
@@ -143,6 +142,33 @@ static bool fsrec_pass_start(union format *fmt,struct a09 *a09,int pass)
 
 /**************************************************************************/
 
+static bool fsrec_end(
+        union format        *fmt,
+        struct opcdata      *opd,
+        struct symbol const *sym
+)
+{
+  assert(fmt != NULL);
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->pass == 2)
+  {
+    struct format_srec *format = &fmt->srec;
+    
+    if (format->endf)
+      return message(opd->a09,MSG_ERROR,"E0056: END section already written");
+    
+    if (sym != NULL)
+      write_record(opd->a09->out,'9',sym->value,NULL,3);
+    format->endf = true;
+  }
+  
+  return true;
+}
+
+/**************************************************************************/
+
 bool format_srec_init(struct format_srec *fmt,struct a09 *a09)
 {
   assert(fmt != NULL);
@@ -155,13 +181,14 @@ bool format_srec_init(struct format_srec *fmt,struct a09 *a09)
   fmt->dp         = fdefault;
   fmt->code       = fdefault;
   fmt->align      = fdefault;
-  fmt->end        = fdefault_end;
+  fmt->end        = fsrec_end;
   fmt->org        = fdefault_org;
   fmt->rmb        = fdefault;
   fmt->setdp      = fdefault;
   fmt->addr       = 0;
   fmt->recsize    = 37;
   fmt->idx        = 0;
+  fmt->endf       = false;
   return true;
 }
 

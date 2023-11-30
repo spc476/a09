@@ -170,6 +170,7 @@ struct format_srec
   uint16_t       addr;
   size_t         recsize;
   size_t         idx;
+  bool           endf;
   unsigned char  buffer[252];
 };
 
