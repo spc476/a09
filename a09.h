@@ -186,12 +186,29 @@ struct format_srec
   unsigned char  buffer[252];
 };
 
+struct format_test
+{
+  bool (*cmdline)   (union format *,int *,char *[]);
+  bool (*pass_start)(union format *,struct a09 *,int);
+  bool (*pass_end)  (union format *,struct a09 *,int);
+  bool (*inst_write)(union format *,struct opcdata *);
+  bool (*data_write)(union format *,struct opcdata *,char const *,size_t);
+  bool (*dp)        (union format *,struct opcdata *);
+  bool (*code)      (union format *,struct opcdata *);
+  bool (*align)     (union format *,struct opcdata *);
+  bool (*end)       (union format *,struct opcdata *,struct symbol const *);
+  bool (*org)       (union format *,struct opcdata *,uint16_t,uint16_t);
+  bool (*rmb)       (union format *,struct opcdata *);
+  bool (*setdp)     (union format *,struct opcdata *);
+};
+
 union format
 {
   struct format_default def;
   struct format_bin     bin;
   struct format_rsdos   rsdos;
   struct format_srec    srec;
+  struct format_test    test;
 };
 
 struct nowarn
@@ -320,6 +337,7 @@ extern struct symbol       *symbol_add         (struct a09 *,label const *,uint1
 extern bool                 format_bin_init    (struct format_bin   *,struct a09 *);
 extern bool                 format_rsdos_init  (struct format_rsdos *,struct a09 *);
 extern bool                 format_srec_init   (struct format_srec  *,struct a09 *);
+extern bool                 format_test_init   (struct format_test  *,struct a09 *);
 extern bool                 fdefault           (union format *,struct opcdata *);
 extern bool                 fdefault_end       (union format *,struct opcdata *,struct symbol const *);
 extern bool                 fdefault_org       (union format *,struct opcdata *,uint16_t,uint16_t);

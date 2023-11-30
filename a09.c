@@ -547,6 +547,11 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
                if (!format_srec_init(&a09->format.srec,a09))
                  exit(1);
              }
+             else if (strcmp(format,"test") == 0)
+             {
+               if (!format_test_init(&a09->format.test,a09))
+                 exit(1);
+             }
              else
              {
                fprintf(stderr,"%s: E0053: format '%s' not supported\n",MSG_ERROR,format);
@@ -569,7 +574,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
                       "\t-M\t\tgenerate Makefile dependencies on stdout\n"
                       "\t-h\t\thelp (this text)\n"
                       "\n"
-                      "\tformats: bin rsdos srec\n"
+                      "\tformats: bin rsdos srec test\n"
                       "%s"
                       "%s"
                       "%s"
