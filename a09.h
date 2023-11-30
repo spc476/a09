@@ -177,9 +177,12 @@ struct format_srec
   bool (*setdp)     (union format *,struct opcdata *);
   char const    *S0file;
   uint16_t       addr;
+  uint16_t       exec;
   size_t         recsize;
   size_t         idx;
   bool           endf;
+  bool           execf;
+  bool           override;
   unsigned char  buffer[252];
 };
 

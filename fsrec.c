@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <limits.h>
 #include <assert.h>
 
 #include "a09.h"
@@ -35,6 +36,9 @@ char const format_srec_usage[] =
         "SREC format options:\n"
         "\t-R size\tset #bytes per record (min=1, max=252, default=34)\n"
         "\t-0 file\tcreate S0 record from file\n"
+        "\t-L addr\tinitial load address\n"
+        "\t-E addr\texecution address\n"
+        "\t-O\tforce override of load and exec address\n"
         "\n"
         "NOTE:\tS0 record will be truncated to max record size\n";
 
@@ -100,6 +104,37 @@ static bool fsrec_cmdline(union format *fmt,int *pi,char *argv[])
          format->recsize = value;
          break;
          
+    case 'L':
+         if (argv[i][2] == '\0')
+           value = strtoul(argv[++i],NULL,0);
+         else
+           value = strtoul(&argv[i][2],NULL,0);
+         if (value > USHRT_MAX)
+         {
+           fprintf(stderr,"%s: E9999: address exceeds address space\n",MSG_ERROR);
+           exit(1);
+         }
+         format->addr = value;
+         break;
+         
+    case 'E':
+         if (argv[i][2] == '\0')
+           value = strtoul(argv[++i],NULL,0);
+         else
+           value = strtoul(&argv[i][2],NULL,0);
+         if (value > USHRT_MAX)
+         {
+           fprintf(stderr,"%s: E9999: address exceeds address space\n",MSG_ERROR);
+           exit(1);
+         }
+         format->exec = value;
+         format->execf = true;
+         break;
+         
+    case 'O':
+         format->override = true;
+         break;
+         
     case '0':
          if (argv[i][2] == '\0')
            format->S0file = argv[++i];
@@ -160,8 +195,13 @@ static bool fsrec_pass_end(union format *fmt,struct a09 *a09,int pass)
   {
     struct format_srec *format = &fmt->srec;
     
-    if ((!format->endf) && (format->idx > 0))
-      write_record(a09->out,'1',format->addr,format->buffer,format->idx);
+    if (!format->endf)
+    {
+      if (format->idx > 0)
+        write_record(a09->out,'1',format->addr,format->buffer,format->idx);
+      if (format->execf)
+        write_record(a09->out,'9',format->exec,NULL,0);
+    }
   }
   
   return true;
@@ -188,9 +228,12 @@ static bool fsrec_end(
     
     if (format->idx > 0)
       write_record(opd->a09->out,'1',format->addr,format->buffer,format->idx);
-    if (sym != NULL)
+    if (!format->override && (sym != NULL))
       write_record(opd->a09->out,'9',sym->value,NULL,0);
-    format->endf = true;
+    else
+      write_record(opd->a09->out,'9',format->exec,NULL,0);
+    format->endf  = true;
+    format->execf = true;
   }
   
   return true;
@@ -220,7 +263,8 @@ static bool fsrec_org(
       format->idx = 0;
     }
     
-    format->addr = start;
+    if (!format->override)
+      format->addr = start;
   }
   
   return true;
@@ -323,9 +367,12 @@ bool format_srec_init(struct format_srec *fmt,struct a09 *a09)
   fmt->rmb        = fsrec_rmb;
   fmt->setdp      = fdefault;
   fmt->addr       = 0;
+  fmt->exec       = 0;
   fmt->recsize    = 34;
   fmt->idx        = 0;
   fmt->endf       = false;
+  fmt->execf      = false;
+  fmt->override   = false;
   return true;
 }
 
