@@ -169,6 +169,36 @@ static bool fsrec_end(
 
 /**************************************************************************/
 
+static bool fsrec_org(
+        union format   *fmt,
+        struct opcdata *opd,
+        uint16_t        start,
+        uint16_t        last
+)
+{
+  assert(fmt != NULL);
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  (void)last;
+  
+  if (opd->pass == 2)
+  {
+    struct format_srec *format = &fmt->srec;
+    
+    if (format->idx > 0)
+    {
+      write_record(opd->a09->out,'1',format->addr,format->buffer,format->idx);
+      format->idx = 0;
+    }
+    
+    format->addr = start;
+  }
+  
+  return true;
+}
+
+/**************************************************************************/
+
 bool format_srec_init(struct format_srec *fmt,struct a09 *a09)
 {
   assert(fmt != NULL);
@@ -182,7 +212,7 @@ bool format_srec_init(struct format_srec *fmt,struct a09 *a09)
   fmt->code       = fdefault;
   fmt->align      = fdefault;
   fmt->end        = fsrec_end;
-  fmt->org        = fdefault_org;
+  fmt->org        = fsrec_org;
   fmt->rmb        = fdefault;
   fmt->setdp      = fdefault;
   fmt->addr       = 0;
