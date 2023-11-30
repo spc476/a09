@@ -332,18 +332,54 @@ static bool fsrec_data_write(
 
 static bool fsrec_align(union format *fmt,struct opcdata *opd)
 {
-  (void)fmt;
-  (void)opd;
-  return false;
+  assert(fmt != NULL);
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->pass == 2)
+  {
+    struct format_srec *format = &fmt->srec;
+    
+    for (size_t i = 0 ; i < opd->datasz ; i++)
+    {
+      if (format->idx == format->recsize)
+      {
+        write_record(opd->a09->out,'1',format->addr,format->buffer,format->recsize);
+        format->addr += format->recsize;
+        format->idx = 0;
+      }
+      format->buffer[format->idx++] = 0;
+    }
+  }
+  
+  return true;
 }
 
 /**************************************************************************/
 
 static bool fsrec_rmb(union format *fmt,struct opcdata *opd)
 {
-  (void)fmt;
-  (void)opd;
-  return false;
+  assert(fmt != NULL);
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->pass == 2)
+  {
+    struct format_srec *format = &fmt->srec;
+    
+    for (size_t i = 0 ; i < opd->value.value ; i++)
+    {
+      if (format->idx == format->recsize)
+      {
+        write_record(opd->a09->out,'1',format->addr,format->buffer,format->recsize);
+        format->addr += format->recsize;
+        format->idx = 0;
+      }
+      format->buffer[format->idx++] = 0;
+    }
+  }
+  
+  return true;
 }
 
 /**************************************************************************/
