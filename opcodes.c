@@ -1551,6 +1551,54 @@ static bool pseudo_fcs(struct opcdata *opd)
 
 /**************************************************************************/
 
+static bool pseudo__assert(struct opcdata *opd)
+{
+  (void)opd;
+  return true;
+}
+
+/**************************************************************************/
+
+static bool pseudo__endtst(struct opcdata *opd)
+{
+  (void)opd;
+  return true;
+}
+
+/**************************************************************************/
+
+static bool pseudo__notest(struct opcdata *opd)
+{
+  (void)opd;
+  return true;
+}
+
+/**************************************************************************/
+
+static bool pseudo__test(struct opcdata *opd)
+{
+  (void)opd;
+  return true;
+}
+
+/**************************************************************************/
+
+static bool pseudo__troff(struct opcdata *opd)
+{
+  (void)opd;
+  return true;
+}
+
+/**************************************************************************/
+
+static bool pseudo__tron(struct opcdata *opd)
+{
+  (void)opd;
+  return true;
+}
+
+/**************************************************************************/
+
 static int opcode_cmp(void const *needle,void const *haystack)
 {
   char          const *key    = needle;
@@ -1565,8 +1613,14 @@ struct opcode const *op_find(char const *name)
 {
   static struct opcode const opcodes[] =
   {
+    { ".ASSERT" , pseudo__assert , 0x00 , 0x00 , false } ,
     { ".CODE"   , pseudo__code   , 0x00 , 0x00 , false } ,
     { ".DP"     , pseudo__dp     , 0x00 , 0x00 , false } ,
+    { ".ENDTST" , pseudo__endtst , 0x00 , 0x00 , false } ,
+    { ".NOTEST" , pseudo__notest , 0x00 , 0x00 , false } ,
+    { ".TEST"   , pseudo__test   , 0x00 , 0x00 , false } ,
+    { ".TROFF"  , pseudo__troff  , 0x00 , 0x00 , false } ,
+    { ".TRON"   , pseudo__tron   , 0x00 , 0x00 , false } ,
     { "ABX"     , op_inh         , 0x3A , 0x00 , false } ,
     { "ADCA"    , op_idie        , 0x89 , 0x00 , false } ,
     { "ADCB"    , op_idie        , 0xC9 , 0x00 , false } ,
