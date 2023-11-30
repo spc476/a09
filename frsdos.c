@@ -111,24 +111,6 @@ static bool block_zero_write(
 
 /**************************************************************************/
 
-static bool frsdos_dp(union format *fmt,struct opcdata *opd)
-{
-  (void)fmt;
-  (void)opd;
-  return true;
-}
-
-/**************************************************************************/
-
-static bool frsdos_code(union format *fmt,struct opcdata *opd)
-{
-  (void)fmt;
-  (void)opd;
-  return true;
-}
-
-/**************************************************************************/
-
 static bool frsdos_align(union format *fmt,struct opcdata *opd)
 {
   return block_zero_write(&fmt->rsdos,opd,opd->datasz);
@@ -222,28 +204,19 @@ static bool frsdos_rmb(union format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool frsdos_setdp(union format *fmt,struct opcdata *opd)
-{
-  (void)fmt;
-  (void)opd;
-  return true;
-}
-
-/**************************************************************************/
-
 bool format_rsdos_init(struct format_rsdos *fmt,struct a09 *a09)
 {
   assert(fmt != NULL);
   assert(a09 != NULL);
   (void)a09;
   
-  fmt->dp            = frsdos_dp;
-  fmt->code          = frsdos_code;
+  fmt->dp            = fdefault;
+  fmt->code          = fdefault;
   fmt->align         = frsdos_align;
   fmt->end           = frsdos_end;
   fmt->org           = frsdos_org;
   fmt->rmb           = frsdos_rmb;
-  fmt->setdp         = frsdos_setdp;
+  fmt->setdp         = fdefault;
   fmt->section_hdr   = 0;
   fmt->section_start = 0;
   fmt->entry         = 0;

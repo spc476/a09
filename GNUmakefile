@@ -27,14 +27,15 @@ LDLIBS  = -lcgi6
 
 .PHONY: clean
 
-a09 : a09.o opcodes.o symbol.o expr.o fbin.o frsdos.o
+a09 : a09.o opcodes.o symbol.o expr.o fbin.o frsdos.o fdefault.o
 
-a09.o     : a09.h
-opcodes.o : a09.h
-symbol.o  : a09.h
-expr.o    : a09.h
-fbin.o    : a09.h
-frsdos.o  : a09.h
+a09.o      : a09.h
+opcodes.o  : a09.h
+symbol.o   : a09.h
+expr.o     : a09.h
+fbin.o     : a09.h
+frsdos.o   : a09.h
+fdefault.o : a09.h
 
 clean:
 	$(RM) $(shell find . -name '*.o')

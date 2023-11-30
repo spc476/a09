@@ -274,6 +274,10 @@ extern struct symbol       *symbol_add        (struct a09 *,label const *,uint16
 extern bool                 format_bin_init   (struct format_bin   *,struct a09 *);
 extern bool                 format_rsdos_init (struct format_rsdos *,struct a09 *);
 
+extern bool                 fdefault          (union format *,struct opcdata *);
+extern bool                 fdefault_end      (union format *,struct opcdata *,struct symbol const *);
+extern bool                 fdefault_org      (union format *,struct opcdata *,uint16_t,uint16_t);
+
 /**************************************************************************/
 
 static inline size_t min(size_t a,size_t b)

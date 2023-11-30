@@ -29,24 +29,6 @@
 
 /**************************************************************************/
 
-static bool fbin_dp(union format *fmt,struct opcdata *opd)
-{
-  (void)fmt;
-  (void)opd;
-  return true;
-}
-
-/**************************************************************************/
-
-static bool fbin_code(union format *fmt,struct opcdata *opd)
-{
-  (void)fmt;
-  (void)opd;
-  return true;
-}
-
-/**************************************************************************/
-
 static bool fbin_align(union format *fmt,struct opcdata *opd)
 {
   assert(fmt != NULL);
@@ -60,16 +42,6 @@ static bool fbin_align(union format *fmt,struct opcdata *opd)
       return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
   }
   
-  return true;
-}
-
-/**************************************************************************/
-
-static bool fbin_end(union format *fmt,struct opcdata *opd,struct symbol const *sym)
-{
-  (void)fmt;
-  (void)opd;
-  (void)sym;
   return true;
 }
 
@@ -120,28 +92,19 @@ static bool fbin_rmb(union format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool fbin_setdp(union format *fmt,struct opcdata *opd)
-{
-  (void)fmt;
-  (void)opd;
-  return true;
-}
-
-/**************************************************************************/
-
 bool format_bin_init(struct format_bin *fmt,struct a09 *a09)
 {
   assert(fmt != NULL);
   assert(a09 != NULL);
   (void)a09;
   
-  fmt->dp    = fbin_dp;
-  fmt->code  = fbin_code;
+  fmt->dp    = fdefault;
+  fmt->code  = fdefault;
   fmt->align = fbin_align;
-  fmt->end   = fbin_end;
+  fmt->end   = fdefault_end;
   fmt->org   = fbin_org;
   fmt->rmb   = fbin_rmb;
-  fmt->setdp = fbin_setdp;
+  fmt->setdp = fdefault;
   fmt->first = false;
   return true;
 }
