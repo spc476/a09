@@ -49,6 +49,7 @@ enum admode
   AM_INDEX,
   AM_EXTENDED,
   AM_INHERENT,
+  AM_BRANCH,
 };
 
 enum symtype
@@ -112,6 +113,8 @@ struct format_default
   bool (*cmdline)   (union format *,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
+  bool (*inst_write)(union format *,struct opcdata *);
+  bool (*data_write)(union format *,struct opcdata *);
   bool (*dp)        (union format *,struct opcdata *);
   bool (*code)      (union format *,struct opcdata *);
   bool (*align)     (union format *,struct opcdata *);
@@ -126,6 +129,8 @@ struct format_bin
   bool (*cmdline)   (union format *,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
+  bool (*inst_write)(union format *,struct opcdata *);
+  bool (*data_write)(union format *,struct opcdata *);
   bool (*dp)        (union format *,struct opcdata *);
   bool (*code)      (union format *,struct opcdata *);
   bool (*align)     (union format *,struct opcdata *);
@@ -141,6 +146,8 @@ struct format_rsdos
   bool (*cmdline)   (union format *,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
+  bool (*inst_write)(union format *,struct opcdata *);
+  bool (*data_write)(union format *,struct opcdata *);
   bool (*dp)        (union format *,struct opcdata *);
   bool (*code)      (union format *,struct opcdata *);
   bool (*align)     (union format *,struct opcdata *);
@@ -159,6 +166,8 @@ struct format_srec
   bool (*cmdline)   (union format *,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
+  bool (*inst_write)(union format *,struct opcdata *);
+  bool (*data_write)(union format *,struct opcdata *);
   bool (*dp)        (union format *,struct opcdata *);
   bool (*code)      (union format *,struct opcdata *);
   bool (*align)     (union format *,struct opcdata *);

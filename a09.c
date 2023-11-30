@@ -393,9 +393,13 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
       
     if ((pass == 2) && (opd.sz > 0) && opd.datasz == 0)
     {
+#if 0
       size_t x = fwrite(opd.bytes,1,opd.sz,a09->out);
       if (x != opd.sz)
         rc = false;
+#else
+      return a09->format.def.inst_write(&a09->format,&opd);
+#endif
     }
   }
   

@@ -689,6 +689,7 @@ static bool op_idie(struct opcdata *opd)
          return true;
          
     case AM_INHERENT:
+    case AM_BRANCH:
          return message(opd->a09,MSG_ERROR,"E0025: instruction not inherent");
   }
   
@@ -730,6 +731,7 @@ static bool op_die(struct opcdata *opd)
          return true;
          
     case AM_INHERENT:
+    case AM_BRANCH:
          return message(opd->a09,MSG_ERROR,"E0027: Internal error---how did this happen?");
   }
   
@@ -765,7 +767,7 @@ static bool op_br(struct opcdata *opd)
   
   if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
     return false;
-    
+
   if (opd->value.external)
   {
     opd->bytes[opd->sz++] = opd->op->opcode;
@@ -786,6 +788,8 @@ static bool op_br(struct opcdata *opd)
     opd->bytes[opd->sz++] = opd->op->opcode;
     opd->bytes[opd->sz++] = delta & 255;
   }
+  
+  opd->mode = AM_BRANCH;
   return true;
 }
 
@@ -825,6 +829,8 @@ static bool op_lbr(struct opcdata *opd)
     opd->bytes[opd->sz++] = delta >> 8;
     opd->bytes[opd->sz++] = delta & 255;
   }
+  
+  opd->mode = AM_BRANCH;
   return true;
 }
 

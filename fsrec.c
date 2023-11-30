@@ -122,21 +122,25 @@ static bool fsrec_pass_start(union format *fmt,struct a09 *a09,int pass)
   if (pass == 2)
   {
     struct format_srec *format = &fmt->srec;
-    FILE               *fp     = fopen(format->S0file,"rb");
-    if (fp != NULL)
+    
+    if (format->S0file != NULL)
     {
-      size_t bytes = fread(format->buffer,1,format->recsize,fp);
-      size_t max   = (bytes < format->recsize ? bytes : format->recsize) + 3;
-      write_record(a09->out,'0',0,format->buffer,max);
-      fclose(fp);
-    }
-    else
-    {
-      fprintf(stderr,"%s: E9999: %s: %s\n",MSG_ERROR,format->S0file,strerror(errno));
-      return false;
+      FILE               *fp     = fopen(format->S0file,"rb");
+      if (fp != NULL)
+      {
+        size_t bytes = fread(format->buffer,1,format->recsize,fp);
+        size_t max   = (bytes < format->recsize ? bytes : format->recsize) + 3;
+        write_record(a09->out,'0',0,format->buffer,max);
+        fclose(fp);
+      }
+      else
+      {
+        fprintf(stderr,"%s: E9999: %s: %s\n",MSG_ERROR,format->S0file,strerror(errno));
+        return false;
+      }
     }
   }
-  
+    
   return true;
 }
 
@@ -199,6 +203,31 @@ static bool fsrec_org(
 
 /**************************************************************************/
 
+static bool fsrec_inst_write(union format *fmt,struct opcdata *opd)
+{
+  assert(fmt       != NULL);
+  assert(opd       != NULL);
+  assert(opd->pass == 2);
+  
+  static char const *mode[] = { "IMMEDIATE" , "DIRECT" , "INDEX" , "EXTENDED" , "INHERENT" , "BRANCH" };
+  fprintf(
+           stderr,
+           "line=%zu "
+           "mode=%s "
+           "data=%s "
+           " rel=%s "
+           "\n",
+           opd->a09->lnum,
+           mode[opd->mode],
+           opd->data  ? "true" : "false",
+           opd->pcrel ? "true" : "false"
+        );
+        
+  return true;
+}
+
+/**************************************************************************/
+
 bool format_srec_init(struct format_srec *fmt,struct a09 *a09)
 {
   assert(fmt != NULL);
@@ -208,6 +237,8 @@ bool format_srec_init(struct format_srec *fmt,struct a09 *a09)
   fmt->cmdline    = fsrec_cmdline;
   fmt->pass_start = fsrec_pass_start;
   fmt->pass_end   = fdefault_pass;
+  fmt->inst_write = fsrec_inst_write;
+  fmt->data_write = fsrec_inst_write;
   fmt->dp         = fdefault;
   fmt->code       = fdefault;
   fmt->align      = fdefault;
