@@ -34,7 +34,7 @@ bool fdefault_cmdline(union format *fmt,int *pi,char *argv[])
 
 /**************************************************************************/
 
-bool fdefault_pass_start(union format *fmt,struct a09 *a09,int pass)
+bool fdefault_pass(union format *fmt,struct a09 *a09,int pass)
 {
   (void)fmt;
   (void)pass;

@@ -103,7 +103,8 @@ bool format_bin_init(struct format_bin *fmt,struct a09 *a09)
   (void)a09;
   
   fmt->cmdline    = fdefault_cmdline;
-  fmt->pass_start = fdefault_pass_start;
+  fmt->pass_start = fdefault_pass;
+  fmt->pass_end   = fdefault_pass;
   fmt->dp         = fdefault;
   fmt->code       = fdefault;
   fmt->align      = fbin_align;

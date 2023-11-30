@@ -151,6 +151,7 @@ bool format_srec_init(struct format_srec *fmt,struct a09 *a09)
 
   fmt->cmdline    = fsrec_cmdline;
   fmt->pass_start = fsrec_pass_start;
+  fmt->pass_end   = fdefault_pass;
   fmt->dp         = fdefault;
   fmt->code       = fdefault;
   fmt->align      = fdefault;

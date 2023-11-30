@@ -430,6 +430,9 @@ bool assemble_pass(struct a09 *a09,int pass)
       return false;
   }
   
+  if (!a09->format.def.pass_end(&a09->format,a09,pass))
+    return false;
+    
   a09->label = saved;
   return true;
 }
