@@ -55,7 +55,7 @@ static void write_record(
   assert((type == '0') || (type == '1') || (type == '9'));
   
   fprintf(out,"S%c%02zX%04X",type,max+3,addr);
-  chksum  = (unsigned char)max + (addr >> 8) + (addr & 0xFF);
+  chksum  = (unsigned char)max + 3 + (addr >> 8) + (addr & 0xFF);
   
   for (size_t i = 0 ; i < max ; i++)
   {
