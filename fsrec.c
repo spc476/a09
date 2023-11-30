@@ -390,6 +390,7 @@ bool format_srec_init(struct format_srec *fmt,struct a09 *a09)
   assert(a09 != NULL);
   (void)a09;
 
+  fmt->backend    = BACKEND_SREC;
   fmt->cmdline    = fsrec_cmdline;
   fmt->pass_start = fsrec_pass_start;
   fmt->pass_end   = fsrec_pass_end;

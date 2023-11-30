@@ -84,7 +84,7 @@ void add_file_dep(struct a09 *a09,char const *filename)
 
 /**************************************************************************/
 
-static bool read_line(FILE *in,struct buffer *buffer)
+bool read_line(FILE *in,struct buffer *buffer)
 {
   assert(in     != NULL);
   assert(buffer != NULL);
@@ -190,7 +190,7 @@ bool parse_label(label *res,struct buffer *buffer,struct a09 *a09,int pass)
 
 /**************************************************************************/
 
-static bool parse_op(struct buffer *buffer,struct opcode const **pop)
+bool parse_op(struct buffer *buffer,struct opcode const **pop)
 {
   assert(buffer != NULL);
   assert(pop    != NULL);

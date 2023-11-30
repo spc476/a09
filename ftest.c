@@ -29,7 +29,8 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
   assert(fmt != NULL);
   assert(a09 != NULL);
   (void)a09;
-  
+
+  fmt->backend    = BACKEND_TEST;  
   fmt->cmdline    = fdefault_cmdline;
   fmt->pass_start = fdefault_pass;
   fmt->pass_end   = fdefault_pass;

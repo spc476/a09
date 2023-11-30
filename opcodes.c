@@ -1577,8 +1577,40 @@ static bool pseudo__notest(struct opcdata *opd)
 
 static bool pseudo__test(struct opcdata *opd)
 {
-  (void)opd;
-  return true;
+  assert(opd      != NULL);
+  assert(opd->a09 != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->a09->format.backend == BACKEND_TEST)
+    return true;
+  
+  print_list(opd->a09,opd,false);
+  
+  while(!feof(opd->a09->in))
+  {
+    struct opcode const *op;
+    label                label;
+    char                 c;
+    
+    if (!read_line(opd->a09->in,&opd->a09->inbuf))
+      return true;
+
+    opd->a09->lnum++;
+    print_list(opd->a09,opd,false);
+    
+    parse_label(&label,&opd->a09->inbuf,opd->a09,opd->pass);
+    c = skip_space(&opd->a09->inbuf);
+    if ((c == ';') || (c == '\0'))
+      continue;
+      
+    opd->a09->inbuf.ridx--;
+    if (!parse_op(&opd->a09->inbuf,&op))
+      return message(opd->a09,MSG_ERROR,"E0003: unknown opcode");
+    if (op->func == pseudo__endtst)
+      return true;
+  }
+  
+  return message(opd->a09,MSG_ERROR,"E0010: unexpected end of input");
 }
 
 /**************************************************************************/
@@ -1613,14 +1645,14 @@ struct opcode const *op_find(char const *name)
 {
   static struct opcode const opcodes[] =
   {
-    { ".ASSERT" , pseudo__assert , 0x00 , 0x00 , false } ,
+    { ".ASSERT" , pseudo__assert , 0x00 , 0x00 , false } , // test
     { ".CODE"   , pseudo__code   , 0x00 , 0x00 , false } ,
     { ".DP"     , pseudo__dp     , 0x00 , 0x00 , false } ,
-    { ".ENDTST" , pseudo__endtst , 0x00 , 0x00 , false } ,
-    { ".NOTEST" , pseudo__notest , 0x00 , 0x00 , false } ,
-    { ".TEST"   , pseudo__test   , 0x00 , 0x00 , false } ,
-    { ".TROFF"  , pseudo__troff  , 0x00 , 0x00 , false } ,
-    { ".TRON"   , pseudo__tron   , 0x00 , 0x00 , false } ,
+    { ".ENDTST" , pseudo__endtst , 0x00 , 0x00 , false } , // test
+    { ".NOTEST" , pseudo__notest , 0x00 , 0x00 , false } , // test
+    { ".TEST"   , pseudo__test   , 0x00 , 0x00 , false } , // test
+    { ".TROFF"  , pseudo__troff  , 0x00 , 0x00 , false } , // test
+    { ".TRON"   , pseudo__tron   , 0x00 , 0x00 , false } , // test
     { "ABX"     , op_inh         , 0x3A , 0x00 , false } ,
     { "ADCA"    , op_idie        , 0x89 , 0x00 , false } ,
     { "ADCB"    , op_idie        , 0xC9 , 0x00 , false } ,

@@ -214,6 +214,7 @@ bool format_rsdos_init(struct format_rsdos *fmt,struct a09 *a09)
   assert(a09 != NULL);
   (void)a09;
   
+  fmt->backend       = BACKEND_RSDOS;
   fmt->cmdline       = fdefault_cmdline;
   fmt->pass_start    = fdefault_pass;
   fmt->pass_end      = fdefault_pass;

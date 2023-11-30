@@ -42,6 +42,14 @@
 #include <cgilib6/nodelist.h>
 #include <cgilib6/tree.h>
 
+enum backend
+{
+  BACKEND_BIN,
+  BACKEND_RSDOS,
+  BACKEND_SREC,
+  BACKEND_TEST,
+};
+
 enum admode
 {
   AM_IMMED,
@@ -110,6 +118,7 @@ union format;
 
 struct format_default
 {
+  enum backend backend;
   bool (*cmdline)   (union format *,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
@@ -126,6 +135,7 @@ struct format_default
 
 struct format_bin
 {
+  enum backend backend;
   bool (*cmdline)   (union format *,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
@@ -143,6 +153,7 @@ struct format_bin
 
 struct format_rsdos
 {
+  enum backend backend;
   bool (*cmdline)   (union format *,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
@@ -163,6 +174,7 @@ struct format_rsdos
 
 struct format_srec
 {
+  enum backend backend;
   bool (*cmdline)   (union format *,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
@@ -188,6 +200,7 @@ struct format_srec
 
 struct format_test
 {
+  enum backend backend;
   bool (*cmdline)   (union format *,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
@@ -204,6 +217,7 @@ struct format_test
 
 union format
 {
+  enum backend          backend;
   struct format_default def;
   struct format_bin     bin;
   struct format_rsdos   rsdos;
@@ -326,7 +340,9 @@ extern char const format_srec_usage[];
 
 extern bool                 message            (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
 extern void                 add_file_dep       (struct a09 *,char const *);
+extern bool                 read_line          (FILE *,struct buffer *);
 extern bool                 parse_label        (label *,struct buffer *,struct a09 *,int);
+extern bool                 parse_op           (struct buffer *,struct opcode const **);
 extern char                 skip_space         (struct buffer *);
 extern bool                 print_list         (struct a09 *,struct opcdata *,bool);
 extern bool                 assemble_pass      (struct a09 *,int);

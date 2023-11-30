@@ -101,7 +101,8 @@ bool format_bin_init(struct format_bin *fmt,struct a09 *a09)
   assert(fmt != NULL);
   assert(a09 != NULL);
   (void)a09;
-  
+
+  fmt->backend    = BACKEND_BIN;
   fmt->cmdline    = fdefault_cmdline;
   fmt->pass_start = fdefault_pass;
   fmt->pass_end   = fdefault_pass;
