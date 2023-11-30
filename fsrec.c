@@ -33,7 +33,7 @@
 char const format_srec_usage[] =
         "\n"
         "SREC format options:\n"
-        "\t-R size\tset record size (max=252)\n"
+        "\t-R size\tset #bytes per record (min=1, max=252, default=34)\n"
         "\t-0 file\tcreate S0 record from file\n"
         "\n"
         "NOTE:\tS0 record will be truncated to max record size\n";
@@ -50,14 +50,12 @@ static void write_record(
 {
   unsigned char chksum;
   
-  assert(out  != NULL);
-  assert(max  >= 3);
-  assert(max  <= 255);
+  assert(out != NULL);
+  assert(max <= 252);
   assert((type == '0') || (type == '1') || (type == '9'));
   
-  fprintf(out,"S%c%02zX%04X",type,max,addr);
+  fprintf(out,"S%c%02zX%04X",type,max+3,addr);
   chksum  = (unsigned char)max + (addr >> 8) + (addr & 0xFF);
-  max    -= 3;
   
   for (size_t i = 0 ; i < max ; i++)
   {
@@ -88,9 +86,15 @@ static bool fsrec_cmdline(union format *fmt,int *pi,char *argv[])
            value = strtoul(argv[++i],NULL,0);
          else
            value = strtoul(&argv[i][2],NULL,0);
-         if (value > 252)
+           
+         if (value == 0)
          {
-           fprintf(stderr,"%s: E9999: bad record size\n",MSG_ERROR);
+           fprintf(stderr,"%s: E9999: minimum record size: 1\n",MSG_ERROR);
+           exit(1);
+         }
+         else if (value > 252)
+         {
+           fprintf(stderr,"%s: E9999: maximum record size: 252\n",MSG_ERROR);
            exit(1);
          }
          format->recsize = value;
@@ -129,7 +133,7 @@ static bool fsrec_pass_start(union format *fmt,struct a09 *a09,int pass)
       if (fp != NULL)
       {
         size_t bytes = fread(format->buffer,1,format->recsize,fp);
-        size_t max   = (bytes < format->recsize ? bytes : format->recsize) + 3;
+        size_t max   = bytes < format->recsize ? bytes : format->recsize;
         write_record(a09->out,'0',0,format->buffer,max);
         fclose(fp);
       }
@@ -141,6 +145,25 @@ static bool fsrec_pass_start(union format *fmt,struct a09 *a09,int pass)
     }
   }
     
+  return true;
+}
+
+/**************************************************************************/
+
+static bool fsrec_pass_end(union format *fmt,struct a09 *a09,int pass)
+{
+  assert(fmt != NULL);
+  assert(a09 != NULL);
+  assert((pass == 1) || (pass == 2));
+  
+  if (pass == 2)
+  {
+    struct format_srec *format = &fmt->srec;
+    
+    if ((!format->endf) && (format->idx > 0))
+      write_record(a09->out,'1',format->addr,format->buffer,format->idx);
+  }
+  
   return true;
 }
 
@@ -163,8 +186,10 @@ static bool fsrec_end(
     if (format->endf)
       return message(opd->a09,MSG_ERROR,"E0056: END section already written");
     
+    if (format->idx > 0)
+      write_record(opd->a09->out,'1',format->addr,format->buffer,format->idx);
     if (sym != NULL)
-      write_record(opd->a09->out,'9',sym->value,NULL,3);
+      write_record(opd->a09->out,'9',sym->value,NULL,0);
     format->endf = true;
   }
   
@@ -203,27 +228,78 @@ static bool fsrec_org(
 
 /**************************************************************************/
 
+static bool write_data(
+        struct format_srec *format,
+        FILE               *out,
+        void const         *ptr,
+        size_t              len
+)
+{
+  assert(format != NULL);
+  assert(out    != NULL);
+  assert(ptr    != NULL);
+  
+  char const *buffer = ptr;
+  
+  for (size_t i = 0 ; i < len ; i++)
+  {
+    if (format->idx == format->recsize)
+    {
+      write_record(out,'1',format->addr,format->buffer,format->recsize);
+      format->addr += format->recsize;
+      format->idx   = 0;
+    }
+    format->buffer[format->idx++] = buffer[i];
+  }
+  
+  return true;
+}
+
+/**************************************************************************/
+
 static bool fsrec_inst_write(union format *fmt,struct opcdata *opd)
 {
   assert(fmt       != NULL);
   assert(opd       != NULL);
   assert(opd->pass == 2);
+  assert(!opd->data);
   
-  static char const *mode[] = { "IMMEDIATE" , "DIRECT" , "INDEX" , "EXTENDED" , "INHERENT" , "BRANCH" };
-  fprintf(
-           stderr,
-           "line=%zu "
-           "mode=%s "
-           "data=%s "
-           " rel=%s "
-           "\n",
-           opd->a09->lnum,
-           mode[opd->mode],
-           opd->data  ? "true" : "false",
-           opd->pcrel ? "true" : "false"
-        );
-        
-  return true;
+  return write_data(&fmt->srec,opd->a09->out,opd->bytes,opd->sz);
+}
+
+/**************************************************************************/
+
+static bool fsrec_data_write(
+        union format   *fmt,
+        struct opcdata *opd,
+        char const     *buffer,
+        size_t          len
+)
+{
+  assert(fmt       != NULL);
+  assert(opd       != NULL);
+  assert(buffer    != NULL);
+  assert(opd->pass == 2);
+  assert(opd->data);
+  return write_data(&fmt->srec,opd->a09->out,buffer,len);
+}
+
+/**************************************************************************/
+
+static bool fsrec_align(union format *fmt,struct opcdata *opd)
+{
+  (void)fmt;
+  (void)opd;
+  return false;
+}
+
+/**************************************************************************/
+
+static bool fsrec_rmb(union format *fmt,struct opcdata *opd)
+{
+  (void)fmt;
+  (void)opd;
+  return false;
 }
 
 /**************************************************************************/
@@ -236,18 +312,18 @@ bool format_srec_init(struct format_srec *fmt,struct a09 *a09)
 
   fmt->cmdline    = fsrec_cmdline;
   fmt->pass_start = fsrec_pass_start;
-  fmt->pass_end   = fdefault_pass;
+  fmt->pass_end   = fsrec_pass_end;
   fmt->inst_write = fsrec_inst_write;
-  fmt->data_write = fsrec_inst_write;
+  fmt->data_write = fsrec_data_write;
   fmt->dp         = fdefault;
   fmt->code       = fdefault;
-  fmt->align      = fdefault;
+  fmt->align      = fsrec_align;
   fmt->end        = fsrec_end;
   fmt->org        = fsrec_org;
-  fmt->rmb        = fdefault;
+  fmt->rmb        = fsrec_rmb;
   fmt->setdp      = fdefault;
   fmt->addr       = 0;
-  fmt->recsize    = 37;
+  fmt->recsize    = 34;
   fmt->idx        = 0;
   fmt->endf       = false;
   return true;

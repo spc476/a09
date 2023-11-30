@@ -73,3 +73,45 @@ bool fdefault_org(union format *fmt,struct opcdata *opd,uint16_t start,uint16_t 
 }
 
 /**************************************************************************/
+
+bool fdefault_inst_write(union format *fmt,struct opcdata *opd)
+{
+  (void)fmt;
+  assert(opd       != NULL);
+  assert(opd->pass == 2);
+  
+  if (fwrite(opd->bytes,1,opd->sz,opd->a09->out) != opd->sz)
+  {
+    if (ferror(opd->a09->out))
+      return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
+    else
+      return message(opd->a09,MSG_ERROR,"E0041: truncated output to object file");
+  }
+  return true;
+}
+
+/**************************************************************************/
+
+bool fdefault_data_write(
+        union format   *fmt,
+        struct opcdata *opd,
+        char const     *buffer,
+        size_t          len
+)
+{
+  (void)fmt;
+  assert(opd       != NULL);
+  assert(opd->pass == 2);
+  assert(buffer    != NULL);
+  
+  if (fwrite(buffer,1,len,opd->a09->out) != len)
+  {
+    if (ferror(opd->a09->out))
+      return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
+    else
+      return message(opd->a09,MSG_ERROR,"E0041: truncated output to object file");
+  }
+  return true;
+}
+
+/**************************************************************************/

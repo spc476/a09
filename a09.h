@@ -114,7 +114,7 @@ struct format_default
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
-  bool (*data_write)(union format *,struct opcdata *);
+  bool (*data_write)(union format *,struct opcdata *,char const *,size_t);
   bool (*dp)        (union format *,struct opcdata *);
   bool (*code)      (union format *,struct opcdata *);
   bool (*align)     (union format *,struct opcdata *);
@@ -130,7 +130,7 @@ struct format_bin
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
-  bool (*data_write)(union format *,struct opcdata *);
+  bool (*data_write)(union format *,struct opcdata *,char const *,size_t);
   bool (*dp)        (union format *,struct opcdata *);
   bool (*code)      (union format *,struct opcdata *);
   bool (*align)     (union format *,struct opcdata *);
@@ -147,7 +147,7 @@ struct format_rsdos
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
-  bool (*data_write)(union format *,struct opcdata *);
+  bool (*data_write)(union format *,struct opcdata *,char const *,size_t);
   bool (*dp)        (union format *,struct opcdata *);
   bool (*code)      (union format *,struct opcdata *);
   bool (*align)     (union format *,struct opcdata *);
@@ -167,7 +167,7 @@ struct format_srec
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
-  bool (*data_write)(union format *,struct opcdata *);
+  bool (*data_write)(union format *,struct opcdata *,char const *,size_t);
   bool (*dp)        (union format *,struct opcdata *);
   bool (*code)      (union format *,struct opcdata *);
   bool (*align)     (union format *,struct opcdata *);
@@ -304,24 +304,26 @@ extern char const format_bin_usage[];
 extern char const format_rsdos_usage[];
 extern char const format_srec_usage[];
 
-extern bool                 message           (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
-extern void                 add_file_dep      (struct a09 *,char const *);
-extern bool                 parse_label       (label *,struct buffer *,struct a09 *,int);
-extern char                 skip_space        (struct buffer *);
-extern bool                 print_list        (struct a09 *,struct opcdata *,bool);
-extern bool                 assemble_pass     (struct a09 *,int);
-extern struct opcode const *op_find           (char const *);
-extern bool                 expr              (struct value *,struct a09 *,struct buffer *,int);
-extern struct symbol       *symbol_find       (struct a09 *,label const *);
-extern struct symbol       *symbol_add        (struct a09 *,label const *,uint16_t);
-extern bool                 format_bin_init   (struct format_bin   *,struct a09 *);
-extern bool                 format_rsdos_init (struct format_rsdos *,struct a09 *);
-extern bool                 format_srec_init  (struct format_srec  *,struct a09 *);
-extern bool                 fdefault          (union format *,struct opcdata *);
-extern bool                 fdefault_end      (union format *,struct opcdata *,struct symbol const *);
-extern bool                 fdefault_org      (union format *,struct opcdata *,uint16_t,uint16_t);
-extern bool                 fdefault_cmdline  (union format *,int *,char *[]);
-extern bool                 fdefault_pass     (union format *,struct a09 *,int);
+extern bool                 message            (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
+extern void                 add_file_dep       (struct a09 *,char const *);
+extern bool                 parse_label        (label *,struct buffer *,struct a09 *,int);
+extern char                 skip_space         (struct buffer *);
+extern bool                 print_list         (struct a09 *,struct opcdata *,bool);
+extern bool                 assemble_pass      (struct a09 *,int);
+extern struct opcode const *op_find            (char const *);
+extern bool                 expr               (struct value *,struct a09 *,struct buffer *,int);
+extern struct symbol       *symbol_find        (struct a09 *,label const *);
+extern struct symbol       *symbol_add         (struct a09 *,label const *,uint16_t);
+extern bool                 format_bin_init    (struct format_bin   *,struct a09 *);
+extern bool                 format_rsdos_init  (struct format_rsdos *,struct a09 *);
+extern bool                 format_srec_init   (struct format_srec  *,struct a09 *);
+extern bool                 fdefault           (union format *,struct opcdata *);
+extern bool                 fdefault_end       (union format *,struct opcdata *,struct symbol const *);
+extern bool                 fdefault_org       (union format *,struct opcdata *,uint16_t,uint16_t);
+extern bool                 fdefault_cmdline   (union format *,int *,char *[]);
+extern bool                 fdefault_pass      (union format *,struct a09 *,int);
+extern bool                 fdefault_inst_write(union format *,struct opcdata *);
+extern bool                 fdefault_data_write(union format *,struct opcdata *,char const *,size_t);
 
 /**************************************************************************/
 

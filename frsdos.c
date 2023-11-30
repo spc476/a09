@@ -217,8 +217,8 @@ bool format_rsdos_init(struct format_rsdos *fmt,struct a09 *a09)
   fmt->cmdline       = fdefault_cmdline;
   fmt->pass_start    = fdefault_pass;
   fmt->pass_end      = fdefault_pass;
-  fmt->inst_write    = fdefault;
-  fmt->data_write    = fdefault;
+  fmt->inst_write    = fdefault_inst_write;
+  fmt->data_write    = fdefault_data_write;
   fmt->dp            = fdefault;
   fmt->code          = fdefault;
   fmt->align         = frsdos_align;

@@ -392,15 +392,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
       a09->pc += opd.sz;
       
     if ((pass == 2) && (opd.sz > 0) && opd.datasz == 0)
-    {
-#if 0
-      size_t x = fwrite(opd.bytes,1,opd.sz,a09->out);
-      if (x != opd.sz)
-        rc = false;
-#else
       return a09->format.def.inst_write(&a09->format,&opd);
-#endif
-    }
   }
   
   return rc;
@@ -428,7 +420,7 @@ bool assemble_pass(struct a09 *a09,int pass)
   while(!feof(a09->in))
   {
     if (!read_line(a09->in,&a09->inbuf))
-      return true;
+      break;
     a09->lnum++;
     if (!parse_line(a09,&a09->inbuf,pass))
       return false;
@@ -577,7 +569,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
                       "\t-M\t\tgenerate Makefile dependencies on stdout\n"
                       "\t-h\t\thelp (this text)\n"
                       "\n"
-                      "\tformats: bin rsdos\n"
+                      "\tformats: bin rsdos srec\n"
                       "%s"
                       "%s"
                       "%s"

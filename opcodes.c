@@ -789,7 +789,8 @@ static bool op_br(struct opcdata *opd)
     opd->bytes[opd->sz++] = delta & 255;
   }
   
-  opd->mode = AM_BRANCH;
+  opd->mode  = AM_BRANCH;
+  opd->pcrel = true;
   return true;
 }
 
@@ -830,7 +831,8 @@ static bool op_lbr(struct opcdata *opd)
     opd->bytes[opd->sz++] = delta & 255;
   }
   
-  opd->mode = AM_BRANCH;
+  opd->mode  = AM_BRANCH;
+  opd->pcrel = true;
   return true;
 }
 
@@ -1110,9 +1112,8 @@ static bool pseudo_fcb(struct opcdata *opd)
       unsigned char byte = value_lsb(opd->a09,opd->value.value,opd->pass);
       if (opd->sz < sizeof(opd->bytes))
         opd->bytes[opd->sz++] = byte;
-      fwrite(&byte,1,1,opd->a09->out);
-      if (ferror(opd->a09->out))
-        return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
+      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,(char *)&byte,1))
+        return false;
     }
     
     c = skip_space(opd->buffer);
@@ -1155,9 +1156,8 @@ static bool pseudo_fdb(struct opcdata *opd)
         opd->bytes[opd->sz++] = word[0];
         opd->bytes[opd->sz++] = word[1];
       }
-      fwrite(word,1,2,opd->a09->out);
-      if (ferror(opd->a09->out))
-        return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
+      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,(char *)word,2))
+        return false;
     }
     
     c = skip_space(opd->buffer);
@@ -1190,10 +1190,8 @@ static bool pseudo_fcc(struct opcdata *opd)
   {
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
-    if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
-      return message(opd->a09,MSG_ERROR,"E0041: truncated output to object file");
-    if (ferror(opd->a09->out))
-      return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
+    if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
+      return false;
   }
   
   return true;
@@ -1218,10 +1216,8 @@ static bool pseudo_ascii(struct opcdata *opd)
   {
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
-    if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
-      return message(opd->a09,MSG_ERROR,"E0041: truncated output to object file");
-    if (ferror(opd->a09->out))
-      return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
+    if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
+      return false;
   }
   
   return true;
@@ -1247,10 +1243,8 @@ static bool pseudo_asciih(struct opcdata *opd)
     textstring.buf[textstring.widx - 1] |= 0x80;
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
-    if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
-      return message(opd->a09,MSG_ERROR,"E0041: truncated output to object file");
-    if (ferror(opd->a09->out))
-      return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
+    if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
+      return false;
   }
   
   return true;
@@ -1276,10 +1270,8 @@ static bool pseudo_asciiz(struct opcdata *opd)
     textstring.widx++;
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
-    if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
-      return message(opd->a09,MSG_ERROR,"E0041: truncated output to object file");
-    if (ferror(opd->a09->out))
-      return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
+    if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
+      return false;
   }
   
   return true;
@@ -1387,9 +1379,8 @@ static bool pseudo_incbin(struct opcdata *opd)
         memcpy(opd->bytes,buffer,opd->sz);
       }
       
-      fwrite(buffer,1,bsz,opd->a09->out);
-      if (ferror(opd->a09->out))
-        return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
+      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,buffer,bsz))
+        return false;
       opd->datasz += bsz;
     } while (bsz > 0);
     fclose(fp);
@@ -1551,10 +1542,8 @@ static bool pseudo_fcs(struct opcdata *opd)
     textstring.buf[textstring.widx - 1] |= 0x80;
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
-    if (fwrite(textstring.buf,1,textstring.widx,opd->a09->out) != textstring.widx)
-      return message(opd->a09,MSG_ERROR,"E0041: truncated output to object file");
-    if (ferror(opd->a09->out))
-      return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
+    if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
+      return false;
   }
   
   return true;
