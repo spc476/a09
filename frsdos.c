@@ -30,6 +30,10 @@
 
 /**************************************************************************/
 
+char const format_rsdos_usage[] = "";
+
+/**************************************************************************/
+
 static bool update_section_size(struct format_rsdos *format,struct opcdata *opd)
 {
   unsigned char datasize[2];
@@ -210,6 +214,7 @@ bool format_rsdos_init(struct format_rsdos *fmt,struct a09 *a09)
   assert(a09 != NULL);
   (void)a09;
   
+  fmt->cmdline       = fdefault_cmdline;
   fmt->dp            = fdefault;
   fmt->code          = fdefault;
   fmt->align         = frsdos_align;

@@ -109,40 +109,59 @@ union format;
 
 struct format_default
 {
-  bool (*dp)   (union format *,struct opcdata *);
-  bool (*code) (union format *,struct opcdata *);
-  bool (*align)(union format *,struct opcdata *);
-  bool (*end)  (union format *,struct opcdata *,struct symbol const *);
-  bool (*org)  (union format *,struct opcdata *,uint16_t,uint16_t);
-  bool (*rmb)  (union format *,struct opcdata *);
-  bool (*setdp)(union format *,struct opcdata *);
+  bool (*cmdline)(union format *,int *,char *[]);
+  bool (*dp)     (union format *,struct opcdata *);
+  bool (*code)   (union format *,struct opcdata *);
+  bool (*align)  (union format *,struct opcdata *);
+  bool (*end)    (union format *,struct opcdata *,struct symbol const *);
+  bool (*org)    (union format *,struct opcdata *,uint16_t,uint16_t);
+  bool (*rmb)    (union format *,struct opcdata *);
+  bool (*setdp)  (union format *,struct opcdata *);
 };
 
 struct format_bin
 {
-  bool (*dp)   (union format *,struct opcdata *);
-  bool (*code) (union format *,struct opcdata *);
-  bool (*align)(union format *,struct opcdata *);
-  bool (*end)  (union format *,struct opcdata *,struct symbol const *);
-  bool (*org)  (union format *,struct opcdata *,uint16_t,uint16_t);
-  bool (*rmb)  (union format *,struct opcdata *);
-  bool (*setdp)(union format *,struct opcdata *);
+  bool (*cmdline)(union format *,int *,char *[]);
+  bool (*dp)     (union format *,struct opcdata *);
+  bool (*code)   (union format *,struct opcdata *);
+  bool (*align)  (union format *,struct opcdata *);
+  bool (*end)    (union format *,struct opcdata *,struct symbol const *);
+  bool (*org)    (union format *,struct opcdata *,uint16_t,uint16_t);
+  bool (*rmb)    (union format *,struct opcdata *);
+  bool (*setdp)  (union format *,struct opcdata *);
   bool   first;
 };
 
 struct format_rsdos
 {
-  bool     (*dp)   (union format *,struct opcdata *);
-  bool     (*code) (union format *,struct opcdata *);
-  bool     (*align)(union format *,struct opcdata *);
-  bool     (*end)  (union format *,struct opcdata *,struct symbol const *);
-  bool     (*org)  (union format *,struct opcdata *,uint16_t,uint16_t);
-  bool     (*rmb)  (union format *,struct opcdata *);
-  bool     (*setdp)(union format *,struct opcdata *);
-  long       section_hdr;
-  long       section_start;
-  bool       endf;
-  uint16_t   entry;
+  bool (*cmdline)(union format *,int *,char *[]);
+  bool (*dp)     (union format *,struct opcdata *);
+  bool (*code)   (union format *,struct opcdata *);
+  bool (*align)  (union format *,struct opcdata *);
+  bool (*end)    (union format *,struct opcdata *,struct symbol const *);
+  bool (*org)    (union format *,struct opcdata *,uint16_t,uint16_t);
+  bool (*rmb)    (union format *,struct opcdata *);
+  bool (*setdp)  (union format *,struct opcdata *);
+  long     section_hdr;
+  long     section_start;
+  bool     endf;
+  uint16_t entry;
+};
+
+struct format_srec
+{
+  bool (*cmdline)(union format *,int *,char *[]);
+  bool (*dp)     (union format *,struct opcdata *);
+  bool (*code)   (union format *,struct opcdata *);
+  bool (*align)  (union format *,struct opcdata *);
+  bool (*end)    (union format *,struct opcdata *,struct symbol const *);
+  bool (*org)    (union format *,struct opcdata *,uint16_t,uint16_t);
+  bool (*rmb)    (union format *,struct opcdata *);
+  bool (*setdp)  (union format *,struct opcdata *);
+  char const    *S0file;
+  uint16_t       addr;
+  size_t         recsize;
+  unsigned char  chksum;
 };
 
 union format
@@ -150,6 +169,7 @@ union format
   struct format_default def;
   struct format_bin     bin;
   struct format_rsdos   rsdos;
+  struct format_srec    srec;
 };
 
 struct nowarn
@@ -261,6 +281,10 @@ extern char const MSG_DEBUG[];
 extern char const MSG_WARNING[];
 extern char const MSG_ERROR[];
 
+extern char const format_bin_usage[];
+extern char const format_rsdos_usage[];
+extern char const format_srec_usage[];
+
 extern bool                 message           (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
 extern void                 add_file_dep      (struct a09 *,char const *);
 extern bool                 parse_label       (label *,struct buffer *,struct a09 *,int);
@@ -273,10 +297,11 @@ extern struct symbol       *symbol_find       (struct a09 *,label const *);
 extern struct symbol       *symbol_add        (struct a09 *,label const *,uint16_t);
 extern bool                 format_bin_init   (struct format_bin   *,struct a09 *);
 extern bool                 format_rsdos_init (struct format_rsdos *,struct a09 *);
-
+extern bool                 format_srec_init  (struct format_srec  *,struct a09 *);
 extern bool                 fdefault          (union format *,struct opcdata *);
 extern bool                 fdefault_end      (union format *,struct opcdata *,struct symbol const *);
 extern bool                 fdefault_org      (union format *,struct opcdata *,uint16_t,uint16_t);
+extern bool                 fdefault_cmdline  (union format *,int *,char *[]);
 
 /**************************************************************************/
 

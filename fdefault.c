@@ -24,6 +24,16 @@
 
 /**************************************************************************/
 
+bool fdefault_cmdline(union format *fmt,int *pi,char *argv[])
+{
+  (void)fmt;
+  (void)pi;
+  (void)argv;
+  return false;
+}
+
+/**************************************************************************/
+
 bool fdefault(union format *fmt,struct opcdata *opd)
 {
   (void)fmt;

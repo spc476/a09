@@ -29,6 +29,10 @@
 
 /**************************************************************************/
 
+char const format_bin_usage[] = "";
+
+/**************************************************************************/
+
 static bool fbin_align(union format *fmt,struct opcdata *opd)
 {
   assert(fmt != NULL);
@@ -98,14 +102,15 @@ bool format_bin_init(struct format_bin *fmt,struct a09 *a09)
   assert(a09 != NULL);
   (void)a09;
   
-  fmt->dp    = fdefault;
-  fmt->code  = fdefault;
-  fmt->align = fbin_align;
-  fmt->end   = fdefault_end;
-  fmt->org   = fbin_org;
-  fmt->rmb   = fbin_rmb;
-  fmt->setdp = fdefault;
-  fmt->first = false;
+  fmt->cmdline = fdefault_cmdline;
+  fmt->dp      = fdefault;
+  fmt->code    = fdefault;
+  fmt->align   = fbin_align;
+  fmt->end     = fdefault_end;
+  fmt->org     = fbin_org;
+  fmt->rmb     = fbin_rmb;
+  fmt->setdp   = fdefault;
+  fmt->first   = false;
   return true;
 }
 
