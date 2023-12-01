@@ -403,6 +403,11 @@ bool format_srec_init(struct format_srec *fmt,struct a09 *a09)
   fmt->org        = fsrec_org;
   fmt->rmb        = fsrec_rmb;
   fmt->setdp      = fdefault;
+  fmt->test       = fdefault_test;
+  fmt->tron       = fdefault;
+  fmt->troff      = fdefault;
+  fmt->assert     = fdefault;
+  fmt->fini       = fdefault_fini;
   fmt->addr       = 0;
   fmt->exec       = 0;
   fmt->recsize    = 34;

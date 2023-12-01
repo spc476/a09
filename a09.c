@@ -766,6 +766,8 @@ int main(int argc,char *argv[])
     remove(a09.outfile);
   }
   
+  a09.format.def.fini(&a09.format,&a09);
+  
   for(
        Node *node = ListRemTail(&a09.symbols);
        NodeValid(node);

@@ -115,3 +115,50 @@ bool fdefault_data_write(
 }
 
 /**************************************************************************/
+
+bool fdefault_test(union format *fmt,struct opcdata *opd)
+{
+  (void)fmt;
+  assert(opd      != NULL);
+  assert(opd->a09 != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  print_list(opd->a09,opd,false);
+  
+  while(!feof(opd->a09->in))
+  {
+    struct opcode const *op;
+    label                label;
+    char                 c;
+    
+    if (!read_line(opd->a09->in,&opd->a09->inbuf))
+      return true;
+    
+    opd->a09->lnum++;
+    print_list(opd->a09,opd,false);
+    
+    parse_label(&label,&opd->a09->inbuf,opd->a09,opd->pass);
+    c = skip_space(&opd->a09->inbuf);
+    if ((c == ';') || (c == '\0'))
+      continue;
+  
+    opd->a09->inbuf.ridx--;
+    if (!parse_op(&opd->a09->inbuf,&op))
+      return message(opd->a09,MSG_ERROR,"E0003: unknown opcode");
+    if (op->opcode == 1)
+      return true;
+  }
+  
+  return message(opd->a09,MSG_ERROR,"E0010: unexpected end of input");
+}
+
+/**************************************************************************/
+
+bool fdefault_fini(union format *fmt,struct a09 *a09)
+{
+  (void)fmt;
+  (void)a09;
+  return true;
+}
+
+/**************************************************************************/

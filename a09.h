@@ -41,6 +41,8 @@
 
 #include <cgilib6/nodelist.h>
 #include <cgilib6/tree.h>
+#include <mc6809.h>
+#include <mc6809dis.h>
 
 enum backend
 {
@@ -131,6 +133,11 @@ struct format_default
   bool (*org)       (union format *,struct opcdata *,uint16_t,uint16_t);
   bool (*rmb)       (union format *,struct opcdata *);
   bool (*setdp)     (union format *,struct opcdata *);
+  bool (*test)      (union format *,struct opcdata *);
+  bool (*tron)      (union format *,struct opcdata *);
+  bool (*troff)     (union format *,struct opcdata *);
+  bool (*assert)    (union format *,struct opcdata *);
+  bool (*fini)      (union format *,struct a09 *);
 };
 
 struct format_bin
@@ -148,6 +155,11 @@ struct format_bin
   bool (*org)       (union format *,struct opcdata *,uint16_t,uint16_t);
   bool (*rmb)       (union format *,struct opcdata *);
   bool (*setdp)     (union format *,struct opcdata *);
+  bool (*test)      (union format *,struct opcdata *);
+  bool (*tron)      (union format *,struct opcdata *);
+  bool (*troff)     (union format *,struct opcdata *);
+  bool (*assert)    (union format *,struct opcdata *);
+  bool (*fini)      (union format *,struct a09 *);
   bool   first;
 };
 
@@ -166,6 +178,11 @@ struct format_rsdos
   bool (*org)       (union format *,struct opcdata *,uint16_t,uint16_t);
   bool (*rmb)       (union format *,struct opcdata *);
   bool (*setdp)     (union format *,struct opcdata *);
+  bool (*test)      (union format *,struct opcdata *);
+  bool (*tron)      (union format *,struct opcdata *);
+  bool (*troff)     (union format *,struct opcdata *);
+  bool (*assert)    (union format *,struct opcdata *);
+  bool (*fini)      (union format *,struct a09 *);
   long     section_hdr;
   long     section_start;
   bool     endf;
@@ -187,6 +204,11 @@ struct format_srec
   bool (*org)       (union format *,struct opcdata *,uint16_t,uint16_t);
   bool (*rmb)       (union format *,struct opcdata *);
   bool (*setdp)     (union format *,struct opcdata *);
+  bool (*test)      (union format *,struct opcdata *);
+  bool (*tron)      (union format *,struct opcdata *);
+  bool (*troff)     (union format *,struct opcdata *);
+  bool (*assert)    (union format *,struct opcdata *);
+  bool (*fini)      (union format *,struct a09 *);
   char const    *S0file;
   uint16_t       addr;
   uint16_t       exec;
@@ -197,6 +219,8 @@ struct format_srec
   bool           override;
   unsigned char  buffer[252];
 };
+
+struct testdata;
 
 struct format_test
 {
@@ -213,6 +237,13 @@ struct format_test
   bool (*org)       (union format *,struct opcdata *,uint16_t,uint16_t);
   bool (*rmb)       (union format *,struct opcdata *);
   bool (*setdp)     (union format *,struct opcdata *);
+  bool (*test)      (union format *,struct opcdata *);
+  bool (*tron)      (union format *,struct opcdata *);
+  bool (*troff)     (union format *,struct opcdata *);
+  bool (*assert)    (union format *,struct opcdata *);
+  bool (*fini)      (union format *,struct a09 *);
+  bool   intest;
+  struct testdata *data;
 };
 
 union format
@@ -341,6 +372,7 @@ extern char const format_srec_usage[];
 extern bool                 message            (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
 extern void                 add_file_dep       (struct a09 *,char const *);
 extern bool                 read_line          (FILE *,struct buffer *);
+extern bool                 parse_string       (struct a09 *,struct buffer *restrict,struct buffer *restrict);
 extern bool                 parse_label        (label *,struct buffer *,struct a09 *,int);
 extern bool                 parse_op           (struct buffer *,struct opcode const **);
 extern char                 skip_space         (struct buffer *);
@@ -361,6 +393,8 @@ extern bool                 fdefault_cmdline   (union format *,int *,char *[]);
 extern bool                 fdefault_pass      (union format *,struct a09 *,int);
 extern bool                 fdefault_inst_write(union format *,struct opcdata *);
 extern bool                 fdefault_data_write(union format *,struct opcdata *,char const *,size_t);
+extern bool                 fdefault_test      (union format *,struct opcdata *);
+extern bool                 fdefault_fini      (union format *,struct a09 *);
 
 /**************************************************************************/
 

@@ -115,6 +115,11 @@ bool format_bin_init(struct format_bin *fmt,struct a09 *a09)
   fmt->org        = fbin_org;
   fmt->rmb        = fbin_rmb;
   fmt->setdp      = fdefault;
+  fmt->test       = fdefault_test;
+  fmt->tron       = fdefault;
+  fmt->troff      = fdefault;
+  fmt->assert     = fdefault;
+  fmt->fini       = fdefault_fini;
   fmt->first      = false;
   return true;
 }
