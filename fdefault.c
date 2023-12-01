@@ -135,7 +135,7 @@ bool fdefault_test(union format *fmt,struct opcdata *opd)
       return true;
     
     opd->a09->lnum++;
-    print_list(opd->a09,opd,false);
+    print_list(opd->a09,opd,false); // XXX extra line in list file
     
     parse_label(&label,&opd->a09->inbuf,opd->a09,opd->pass);
     c = skip_space(&opd->a09->inbuf);
@@ -147,6 +147,9 @@ bool fdefault_test(union format *fmt,struct opcdata *opd)
       return message(opd->a09,MSG_ERROR,"E0003: unknown opcode");
     if (op->opcode == 1)
       return true;
+
+    //print_list(opd->a09,opd,false); // XXX missing line in list file
+
   }
   
   return message(opd->a09,MSG_ERROR,"E0010: unexpected end of input");

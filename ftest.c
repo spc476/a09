@@ -20,12 +20,39 @@
 *
 ****************************************************************************/
 
+// XXX - the way the code is now, we can't call forward in the tests
+//	because the code isn't laid down yet.
+
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
 #include <errno.h>
 
 #include "a09.h"
+
+enum vmops
+{
+  VM_LIT = OP_MOD + 1,
+  VM_MEM,
+  VM_CPUCCc,
+  VM_CPUCCv,
+  VM_CPUCCz,
+  VM_CPUCCn,
+  VM_CPUCCi,
+  VM_CPUCCh,
+  VM_CPUCCf,
+  VM_CPUCCe,
+  VM_CPUA,
+  VM_CPUB,
+  VM_CPDP,
+  VM_CPUD,
+  VM_CPUX,
+  VM_CPUY,
+  VM_CPUU,
+  VM_CPUS,
+  VM_CPUPC,
+  VM_EXIT,
+};
 
 struct memprot
 {
@@ -34,6 +61,12 @@ struct memprot
   bool exec  : 1;
   bool tron  : 1;
   bool check : 1;
+};
+
+struct vmcode
+{
+  mc6809addr__t here;
+  uint16_t      *prog;
 };
 
 struct testdata
@@ -48,6 +81,7 @@ struct testdata
   uint16_t        sp;
   mc6809byte__t   fill;
   bool            tron;
+  struct vmcode   triggers[2];
   mc6809byte__t   memory[65536u];
   struct memprot  prot  [65536u];
 };
@@ -75,6 +109,79 @@ char const format_test_usage[] =
 
 /**************************************************************************/
 
+static bool runvm(struct a09 *a09,mc6809__t *cpu,uint16_t *prog)
+{
+  assert(a09  != NULL);
+  assert(cpu  != NULL);
+  assert(prog != NULL);
+  
+  uint16_t stack[15];
+  uint16_t result;
+  size_t   sp = sizeof(stack) / sizeof(stack[0]);
+  size_t   ip = 0;
+    
+  while(true)
+  {
+    switch(prog[ip++])
+    {
+      case OP_LOR:
+      case OP_LAND:
+      case OP_GT:
+      case OP_GE:
+      case OP_EQ:
+           result = stack[sp + 1] == stack[sp];
+           sp++;
+           stack[sp] = result;
+           break;
+           
+      case OP_LE:
+      case OP_LT:
+      case OP_NE:
+           result = stack[sp + 1] != stack[sp];
+           sp++;
+           stack[sp] = result;
+           break;
+           
+      case OP_BOR:
+      case OP_BEOR:
+      case OP_BAND:
+      case OP_SHR:
+      case OP_SHL:
+      case OP_SUB:
+      case OP_ADD:
+      case OP_MUL:
+      case OP_DIV:
+      case OP_MOD:
+      case VM_LIT:    stack[--sp] = prog[ip++]; break;
+      case VM_MEM:
+      case VM_CPUCCc:
+      case VM_CPUCCv:
+      case VM_CPUCCz: stack[--sp] = cpu->cc.z; break;
+      case VM_CPUCCn:
+      case VM_CPUCCi:
+      case VM_CPUCCh:
+      case VM_CPUCCf:
+      case VM_CPUCCe:
+      case VM_CPUA:
+      case VM_CPUB:
+           stack[--sp] = cpu->B;
+           break;
+      case VM_CPDP:
+      case VM_CPUD:
+      case VM_CPUX:
+      case VM_CPUY:
+      case VM_CPUU:
+      case VM_CPUS:
+      case VM_CPUPC:
+      case VM_EXIT:
+           assert(sp == (sizeof(stack) / sizeof(stack[0]) - 1));
+           return stack[sp] != 0;
+    }
+  }
+}
+
+/**************************************************************************/
+
 static mc6809byte__t ft_cpu_read(mc6809__t *cpu,mc6809addr__t addr,bool inst)
 {
   assert(cpu       != NULL);
@@ -90,23 +197,6 @@ static mc6809byte__t ft_cpu_read(mc6809__t *cpu,mc6809addr__t addr,bool inst)
       message(data->a09,MSG_WARNING,"W9999: reading from non-readable memory");
     if (!data->prot[addr].exec)
       message(data->a09,MSG_WARNING,"W9998: possible code execution in the weeds");
-    if (data->prot[addr].tron)
-    {
-      char inst[128];
-      char regs[128];
-      int  rc;
-      
-      data->dis.pc = addr;
-      rc = mc6809dis_step(&data->dis,cpu);
-      if (rc != 0)
-        longjmp(cpu->err,rc);
-      mc6809dis_format(&data->dis,inst,sizeof(inst));
-      mc6809dis_registers(cpu,regs,sizeof(regs));
-      printf("%s | %s\n",regs,inst);
-    }
-    if (data->prot[addr].check)
-    {
-    }
   }
   
   return data->memory[addr];
@@ -413,6 +503,8 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
     
     data->cpu.pc.w = data->pc;
     data->cpu.S.w  = data->sp - 2;
+    data->prot[0x4029].check = true;
+    data->prot[0x402B].check = true;
     
     do
     {
@@ -421,6 +513,36 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
         message(opd->a09,MSG_WARNING,"W9994: code went into the weeds\n");
         break;
       }
+      
+      if (data->prot[data->cpu.pc.w].tron)
+      {
+        char inst[128];
+        char regs[128];
+        
+        data->dis.pc = data->cpu.pc.w;
+        rc = mc6809dis_step(&data->dis,&data->cpu);
+        if (rc != 0)
+          break;
+        mc6809dis_format(&data->dis,inst,sizeof(inst));
+        mc6809dis_registers(&data->cpu,regs,sizeof(regs));
+        printf("%s | %s\n",regs,inst);
+      }
+      
+      if (data->prot[data->cpu.pc.w].check)
+      {
+        bool okay;
+        
+        if (data->cpu.pc.w == 0x4029)
+          okay = runvm(data->a09,&data->cpu,data->triggers[0].prog);
+        else
+          okay = runvm(data->a09,&data->cpu,data->triggers[1].prog);
+        if (!okay)
+        {
+          rc = MC6809_FAULT_user;
+          break;
+        }
+      }
+      
       rc = mc6809_step(&data->cpu);
     }
     while((rc == 0) && (data->cpu.S.w != data->sp));
@@ -429,7 +551,7 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
     {
       if (rc < MC6809_FAULT_user)
         return message(opd->a09,MSG_ERROR,"E9999: Internal error---%s",mfaults[rc]);
-      else
+      else // XXX
         return message(opd->a09,MSG_ERROR,"E9999: Internal error---fault %d",rc);
     }
   }
@@ -535,6 +657,14 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     fmt->data->dis.fault = ft_dis_fault;
     fmt->data->sp        = 0x8000;
     fmt->data->fill      = 0x3F; // SWI instruction
+    
+    static uint16_t p1[5] = { VM_CPUB   , VM_LIT , 0 , OP_NE , VM_EXIT };
+    static uint16_t p2[5] = { VM_CPUCCz , VM_LIT , 0 , OP_NE , VM_EXIT };
+    
+    fmt->data->triggers[0].here = 0x4029;
+    fmt->data->triggers[0].prog = p1;
+    fmt->data->triggers[1].here = 0x402B;
+    fmt->data->triggers[1].prog = p2;
     
     memset(fmt->data->memory,fmt->data->fill,65536u);
     memset(fmt->data->prot,init.b,65536u);
