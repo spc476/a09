@@ -578,10 +578,12 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
                       "%s"
                       "%s"
                       "%s"
+                      "%s"
                       "",
                       format_bin_usage,
                       format_rsdos_usage,
-                      format_srec_usage
+                      format_srec_usage,
+                      format_test_usage
                     );
              exit(1);
       }

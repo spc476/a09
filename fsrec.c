@@ -34,11 +34,11 @@
 char const format_srec_usage[] =
         "\n"
         "SREC format options:\n"
-        "\t-R size\tset #bytes per record (min=1, max=252, default=34)\n"
-        "\t-0 file\tcreate S0 record from file\n"
-        "\t-L addr\tinitial load address\n"
-        "\t-E addr\texecution address\n"
-        "\t-O\tforce override of load and exec address\n"
+        "\t-R size\t\tset #bytes per record (min=1, max=252, default=34)\n"
+        "\t-0 file\t\tcreate S0 record from file\n"
+        "\t-L addr\t\tinitial load address\n"
+        "\t-E addr\t\texecution address\n"
+        "\t-O\t\tforce override of load and exec address\n"
         "\n"
         "NOTE:\tS0 record will be truncated to max record size\n";
 
@@ -407,6 +407,7 @@ bool format_srec_init(struct format_srec *fmt,struct a09 *a09)
   fmt->tron       = fdefault;
   fmt->troff      = fdefault;
   fmt->assert     = fdefault;
+  fmt->endtst     = fdefault;
   fmt->fini       = fdefault_fini;
   fmt->addr       = 0;
   fmt->exec       = 0;

@@ -1561,8 +1561,11 @@ static bool pseudo__assert(struct opcdata *opd)
 
 static bool pseudo__endtst(struct opcdata *opd)
 {
-  (void)opd;
-  return true;
+  assert(opd      != NULL);
+  assert(opd->a09 != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  return opd->a09->format.def.endtst(&opd->a09->format,opd);
 }
 
 /**************************************************************************/

@@ -119,6 +119,7 @@ bool format_bin_init(struct format_bin *fmt,struct a09 *a09)
   fmt->tron       = fdefault;
   fmt->troff      = fdefault;
   fmt->assert     = fdefault;
+  fmt->endtst     = fdefault;
   fmt->fini       = fdefault_fini;
   fmt->first      = false;
   return true;

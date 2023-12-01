@@ -231,6 +231,7 @@ bool format_rsdos_init(struct format_rsdos *fmt,struct a09 *a09)
   fmt->tron          = fdefault;
   fmt->troff         = fdefault;
   fmt->assert        = fdefault;
+  fmt->endtst        = fdefault;
   fmt->fini          = fdefault_fini;
   fmt->section_hdr   = 0;
   fmt->section_start = 0;

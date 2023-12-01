@@ -137,6 +137,7 @@ struct format_default
   bool (*tron)      (union format *,struct opcdata *);
   bool (*troff)     (union format *,struct opcdata *);
   bool (*assert)    (union format *,struct opcdata *);
+  bool (*endtst)    (union format *,struct opcdata *);
   bool (*fini)      (union format *,struct a09 *);
 };
 
@@ -159,6 +160,7 @@ struct format_bin
   bool (*tron)      (union format *,struct opcdata *);
   bool (*troff)     (union format *,struct opcdata *);
   bool (*assert)    (union format *,struct opcdata *);
+  bool (*endtst)    (union format *,struct opcdata *);
   bool (*fini)      (union format *,struct a09 *);
   bool   first;
 };
@@ -182,6 +184,7 @@ struct format_rsdos
   bool (*tron)      (union format *,struct opcdata *);
   bool (*troff)     (union format *,struct opcdata *);
   bool (*assert)    (union format *,struct opcdata *);
+  bool (*endtst)    (union format *,struct opcdata *);
   bool (*fini)      (union format *,struct a09 *);
   long     section_hdr;
   long     section_start;
@@ -208,6 +211,7 @@ struct format_srec
   bool (*tron)      (union format *,struct opcdata *);
   bool (*troff)     (union format *,struct opcdata *);
   bool (*assert)    (union format *,struct opcdata *);
+  bool (*endtst)    (union format *,struct opcdata *);
   bool (*fini)      (union format *,struct a09 *);
   char const    *S0file;
   uint16_t       addr;
@@ -241,6 +245,7 @@ struct format_test
   bool (*tron)      (union format *,struct opcdata *);
   bool (*troff)     (union format *,struct opcdata *);
   bool (*assert)    (union format *,struct opcdata *);
+  bool (*endtst)    (union format *,struct opcdata *);
   bool (*fini)      (union format *,struct a09 *);
   bool   intest;
   struct testdata *data;
@@ -368,6 +373,7 @@ extern char const MSG_ERROR[];
 extern char const format_bin_usage[];
 extern char const format_rsdos_usage[];
 extern char const format_srec_usage[];
+extern char const format_test_usage[];
 
 extern bool                 message            (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
 extern void                 add_file_dep       (struct a09 *,char const *);
