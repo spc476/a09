@@ -46,6 +46,7 @@ struct testdata
   uint16_t        addr;
   uint16_t        pc;
   uint16_t        sp;
+  mc6809byte__t   fill;
   bool            tron;
   mc6809byte__t   memory[65536u];
   struct memprot  prot  [65536u];
@@ -57,6 +58,7 @@ char const format_test_usage[] =
         "\n"
         "Test format options:\n"
         "\t-S addr\t\taddress of system stack (default=0x8000)\n"
+        "\t-F byte\t\tfill memory with value (default=0x3F, SWI inst)\n"
         "\t-R range\tmark memory read-only (see below)\n"
         "\t-W range\tmark memory write-only (see below)\n"
         "\t-E range\tmark memory as code (see below)\n"
@@ -102,10 +104,11 @@ static mc6809byte__t ft_cpu_read(mc6809__t *cpu,mc6809addr__t addr,bool inst)
       mc6809dis_registers(cpu,regs,sizeof(regs));
       printf("%s | %s\n",regs,inst);
     }
+    if (data->prot[addr].check)
+    {
+    }
   }
-  if (data->prot[addr].check)
-  {
-  }
+  
   return data->memory[addr];
 }
 
@@ -197,6 +200,21 @@ static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
            data->corefile = argv[++i];
          else
            data->corefile = &argv[i][2];
+         break;
+         
+    case 'F':
+         if (argv[i][2] == '\0')
+           value = strtoul(argv[++i],NULL,0);
+         else
+           value = strtoul(&argv[i][2],NULL,0);
+         
+         if (value > 255)
+         {
+           fprintf(stderr,"%s: E9999: byte should be 0..255\n",MSG_ERROR);
+           exit(1);
+         }
+         
+         data->fill = value;
          break;
          
     case 'R':
@@ -398,7 +416,7 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
     
     do
     {
-      if (data->memory[data->cpu.pc.w] == 0x3F) // SWI
+      if (data->memory[data->cpu.pc.w] == data->fill) // SWI
       {
         message(opd->a09,MSG_WARNING,"W9994: code went into the weeds\n");
         break;
@@ -466,7 +484,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
   assert(fmt != NULL);
   assert(a09 != NULL);
   (void)a09;
-
+  
   fmt->backend    = BACKEND_TEST;  
   fmt->cmdline    = ftest_cmdline;
   fmt->pass_start = ftest_pass_start;
@@ -516,8 +534,9 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     fmt->data->dis.read  = ft_dis_read;
     fmt->data->dis.fault = ft_dis_fault;
     fmt->data->sp        = 0x8000;
+    fmt->data->fill      = 0x3F; // SWI instruction
     
-    memset(fmt->data->memory,0x3F,65536u);
+    memset(fmt->data->memory,fmt->data->fill,65536u);
     memset(fmt->data->prot,init.b,65536u);
     
     mc6809_reset(&fmt->data->cpu);
