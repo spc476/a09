@@ -32,7 +32,9 @@
 
 enum vmops
 {
-  VM_LIT = OP_MOD + 1,
+  VM_NEG = OP_MOD + 1,
+  VM_NOT,
+  VM_LIT,
   VM_MEM,
   VM_CPUCCc,
   VM_CPUCCv,
@@ -119,60 +121,194 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,uint16_t *prog)
   uint16_t result;
   size_t   sp = sizeof(stack) / sizeof(stack[0]);
   size_t   ip = 0;
-    
+  
+  /*--------------------------------------------------------------
+  ; I control the code generation, so I can skip checks that would
+  ; otherwise have to be made.
+  ;---------------------------------------------------------------*/
+  
   while(true)
   {
     switch(prog[ip++])
     {
       case OP_LOR:
+           result      = stack[sp + 1] || stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case OP_LAND:
+           result      = stack[sp + 1] && stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case OP_GT:
+           result      = stack[sp + 1] > stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case OP_GE:
+           result      = stack[sp + 1] >= stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case OP_EQ:
-           result = stack[sp + 1] == stack[sp];
-           sp++;
-           stack[sp] = result;
+           result      = stack[sp + 1] == stack[sp];
+           stack[++sp] = result;
            break;
            
       case OP_LE:
+           result      = stack[sp + 1] <= stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case OP_LT:
+           result      = stack[sp + 1] < stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case OP_NE:
-           result = stack[sp + 1] != stack[sp];
-           sp++;
-           stack[sp] = result;
+           result      = stack[sp + 1] != stack[sp];
+           stack[++sp] = result;
            break;
            
       case OP_BOR:
+           result      = stack[sp + 1] | stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case OP_BEOR:
+           result      = stack[sp + 1] ^ stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case OP_BAND:
+           result      = stack[sp + 1] & stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case OP_SHR:
+           result      = stack[sp + 1] >> stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case OP_SHL:
+           result      = stack[sp + 1] << stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case OP_SUB:
+           result      = stack[sp + 1] - stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case OP_ADD:
+           result      = stack[sp + 1] + stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case OP_MUL:
+           result      = stack[sp + 1] * stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case OP_DIV:
+           if (stack[sp] == 0)
+             return message(a09,MSG_ERROR,"E0008: divide by 0 error");
+           result      = stack[sp + 1] / stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case OP_MOD:
-      case VM_LIT:    stack[--sp] = prog[ip++]; break;
+           if (stack[sp] == 0)
+             return message(a09,MSG_ERROR,"E0008: divide by 0 error");
+           result      = stack[sp + 1] % stack[sp];
+           stack[++sp] = result;
+           break;
+           
+      case VM_NEG:
+           stack[sp] = -stack[sp];
+           break;
+           
+      case VM_NOT:
+           stack[sp] = ~stack[sp];
+           break;
+           
+      case VM_LIT:
+           stack[--sp] = prog[ip++];
+           break;
+           
       case VM_MEM:
+           assert(false);
+           break;
+           
       case VM_CPUCCc:
+           stack[--sp] = cpu->cc.c;
+           break;
+           
       case VM_CPUCCv:
-      case VM_CPUCCz: stack[--sp] = cpu->cc.z; break;
+           stack[--sp] = cpu->cc.v;
+           break;
+           
+      case VM_CPUCCz:
+           stack[--sp] = cpu->cc.z;
+           break;
+           
       case VM_CPUCCn:
+           stack[--sp] = cpu->cc.n;
+           break;
+           
       case VM_CPUCCi:
+           stack[--sp] = cpu->cc.i;
+           break;
+           
       case VM_CPUCCh:
+           stack[--sp] = cpu->cc.h;
+           break;
+           
       case VM_CPUCCf:
+           stack[--sp] = cpu->cc.f;
+           break;
+           
       case VM_CPUCCe:
+           stack[--sp] = cpu->cc.e;
+           break;
+           
       case VM_CPUA:
+           stack[--sp] = cpu->A;
+           break;
+           
       case VM_CPUB:
            stack[--sp] = cpu->B;
            break;
+           
       case VM_CPDP:
+           stack[--sp] = cpu->dp;
+           break;
+           
       case VM_CPUD:
+           stack[--sp] = cpu->d.w;
+           break;
+           
       case VM_CPUX:
+           stack[--sp] = cpu->X.w;
+           break;
+           
       case VM_CPUY:
+           stack[--sp] = cpu->Y.w;
+           break;
+           
       case VM_CPUU:
+           stack[--sp] = cpu->U.w;
+           break;
+           
       case VM_CPUS:
+           stack[--sp] = cpu->S.w;
+           break;
+           
       case VM_CPUPC:
+           stack[--sp] = cpu->pc.w;
+           break;
+           
       case VM_EXIT:
            assert(sp == (sizeof(stack) / sizeof(stack[0]) - 1));
            return stack[sp] != 0;
@@ -218,10 +354,6 @@ static void ft_cpu_write(mc6809__t *cpu,mc6809addr__t addr,mc6809byte__t byte)
     message(data->a09,MSG_WARNING,"W9996: possible self-modifying code");
   if (data->prot[addr].tron)
     message(data->a09,MSG_WARNING,"W9995: memory write of %02X to %04X",byte,addr);
-  if (data->prot[addr].check)
-  {
-  }
-  
   data->memory[addr] = byte;
 }
 
