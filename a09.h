@@ -136,7 +136,7 @@ struct format_default
   bool (*test)      (union format *,struct opcdata *);
   bool (*tron)      (union format *,struct opcdata *);
   bool (*troff)     (union format *,struct opcdata *);
-  bool (*assert)    (union format *,struct opcdata *);
+  bool (*trigger)   (union format *,struct opcdata *);
   bool (*endtst)    (union format *,struct opcdata *);
   bool (*fini)      (union format *,struct a09 *);
 };
@@ -159,7 +159,7 @@ struct format_bin
   bool (*test)      (union format *,struct opcdata *);
   bool (*tron)      (union format *,struct opcdata *);
   bool (*troff)     (union format *,struct opcdata *);
-  bool (*assert)    (union format *,struct opcdata *);
+  bool (*trigger)   (union format *,struct opcdata *);
   bool (*endtst)    (union format *,struct opcdata *);
   bool (*fini)      (union format *,struct a09 *);
   bool   first;
@@ -183,7 +183,7 @@ struct format_rsdos
   bool (*test)      (union format *,struct opcdata *);
   bool (*tron)      (union format *,struct opcdata *);
   bool (*troff)     (union format *,struct opcdata *);
-  bool (*assert)    (union format *,struct opcdata *);
+  bool (*trigger)   (union format *,struct opcdata *);
   bool (*endtst)    (union format *,struct opcdata *);
   bool (*fini)      (union format *,struct a09 *);
   long     section_hdr;
@@ -210,7 +210,7 @@ struct format_srec
   bool (*test)      (union format *,struct opcdata *);
   bool (*tron)      (union format *,struct opcdata *);
   bool (*troff)     (union format *,struct opcdata *);
-  bool (*assert)    (union format *,struct opcdata *);
+  bool (*trigger)   (union format *,struct opcdata *);
   bool (*endtst)    (union format *,struct opcdata *);
   bool (*fini)      (union format *,struct a09 *);
   char const    *S0file;
@@ -244,7 +244,7 @@ struct format_test
   bool (*test)      (union format *,struct opcdata *);
   bool (*tron)      (union format *,struct opcdata *);
   bool (*troff)     (union format *,struct opcdata *);
-  bool (*assert)    (union format *,struct opcdata *);
+  bool (*trigger)   (union format *,struct opcdata *);
   bool (*endtst)    (union format *,struct opcdata *);
   bool (*fini)      (union format *,struct a09 *);
   bool   intest;

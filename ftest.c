@@ -629,7 +629,7 @@ static bool ftest_troff(union format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool ftest_assert(union format *fmt,struct opcdata *opd)
+static bool ftest_trigger(union format *fmt,struct opcdata *opd)
 {
   assert(fmt != NULL);
   assert(opd != NULL);
@@ -799,7 +799,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
   fmt->test       = ftest_test;
   fmt->tron       = ftest_tron;
   fmt->troff      = ftest_troff;
-  fmt->assert     = ftest_assert;
+  fmt->trigger    = ftest_trigger;
   fmt->endtst     = ftest_endtst;
   fmt->fini       = ftest_fini;
   fmt->intest     = false;
@@ -854,9 +854,6 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     
     fmt->data->numtrig = sizeof(vmcode) / sizeof(vmcode[0]);
     fmt->data->triggers = vmcode;
-    
-    for (size_t i = 0 ; i < fmt->data->numtrig ; i++)
-      fmt->data->prot[vmcode[i].here].check = true;
     
     mc6809_reset(&fmt->data->cpu);
     return true;
