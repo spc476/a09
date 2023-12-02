@@ -32,11 +32,29 @@
 
 enum vmops
 {
-  VM_NEG = OP_MOD + 1,
+  VM_LOR,
+  VM_LAND,
+  VM_GT,
+  VM_GE,
+  VM_EQ,
+  VM_LE,
+  VM_LT,
+  VM_NE,
+  VM_BOR,
+  VM_BEOR,
+  VM_BAND,
+  VM_SHR,
+  VM_SHL,
+  VM_SUB,
+  VM_ADD,
+  VM_MUL,
+  VM_DIV,
+  VM_MOD,
+  VM_NEG,
   VM_NOT,
   VM_LIT,
-  VM_MEM8,
-  VM_MEM16,
+  VM_AT8,
+  VM_AT16,
   VM_CPUCCc,
   VM_CPUCCv,
   VM_CPUCCz,
@@ -70,7 +88,7 @@ struct vmcode
 {
   mc6809addr__t  here;
   char const    *tag;
-  uint16_t      *prog;
+  enum vmops    *prog;
 };
 
 struct testdata
@@ -113,7 +131,7 @@ char const format_test_usage[] =
 
 /**************************************************************************/
 
-static bool runvm(struct a09 *a09,mc6809__t *cpu,uint16_t *prog)
+static bool runvm(struct a09 *a09,mc6809__t *cpu,enum vmops *prog)
 {
   assert(a09  != NULL);
   assert(cpu  != NULL);
@@ -133,94 +151,94 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,uint16_t *prog)
   {
     switch(prog[ip++])
     {
-      case OP_LOR:
+      case VM_LOR:
            result      = stack[sp + 1] || stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_LAND:
+      case VM_LAND:
            result      = stack[sp + 1] && stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_GT:
+      case VM_GT:
            result      = stack[sp + 1] > stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_GE:
+      case VM_GE:
            result      = stack[sp + 1] >= stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_EQ:
+      case VM_EQ:
            result      = stack[sp + 1] == stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_LE:
+      case VM_LE:
            result      = stack[sp + 1] <= stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_LT:
+      case VM_LT:
            result      = stack[sp + 1] < stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_NE:
+      case VM_NE:
            result      = stack[sp + 1] != stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_BOR:
+      case VM_BOR:
            result      = stack[sp + 1] | stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_BEOR:
+      case VM_BEOR:
            result      = stack[sp + 1] ^ stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_BAND:
+      case VM_BAND:
            result      = stack[sp + 1] & stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_SHR:
+      case VM_SHR:
            result      = stack[sp + 1] >> stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_SHL:
+      case VM_SHL:
            result      = stack[sp + 1] << stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_SUB:
+      case VM_SUB:
            result      = stack[sp + 1] - stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_ADD:
+      case VM_ADD:
            result      = stack[sp + 1] + stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_MUL:
+      case VM_MUL:
            result      = stack[sp + 1] * stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_DIV:
+      case VM_DIV:
            if (stack[sp] == 0)
              return message(a09,MSG_ERROR,"E0008: divide by 0 error");
            result      = stack[sp + 1] / stack[sp];
            stack[++sp] = result;
            break;
            
-      case OP_MOD:
+      case VM_MOD:
            if (stack[sp] == 0)
              return message(a09,MSG_ERROR,"E0008: divide by 0 error");
            result      = stack[sp + 1] % stack[sp];
@@ -239,21 +257,21 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,uint16_t *prog)
            stack[--sp] = prog[ip++];
            break;
            
-      case VM_MEM8:
+      case VM_AT8:
            {
              struct format_test *test = cpu->user;
              struct testdata    *data = test->data;
-             uint16_t            addr = prog[ip++];
-             stack[--sp]              = data->memory[addr];
+             uint16_t            addr = stack[sp];
+             stack[sp]                = data->memory[addr];
            }
            break;
            
-      case VM_MEM16:
+      case VM_AT16:
            {
              struct format_test *test = cpu->user;
              struct testdata    *data = test->data;
-             uint16_t            addr = prog[ip++];
-             stack[--sp]              = (data->memory[addr] << 8)
+             uint16_t            addr = stack[sp];
+             stack[sp]                = (data->memory[addr] << 8)
                                       |  data->memory[addr+1]
                                       ;
            }
@@ -812,12 +830,12 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     fmt->data->sp        = 0x8000;
     fmt->data->fill      = 0x3F; // SWI instruction
     
-    static uint16_t p1[5] = { VM_CPUB   , VM_LIT , 0 , OP_NE , VM_EXIT };
-    static uint16_t p2[5] = { VM_CPUCCz , VM_LIT , 0 , OP_NE , VM_EXIT };
-    static uint16_t p3[]  = {
-        VM_MEM8  , 0x4003 , VM_LIT ,   0x55 , OP_EQ ,
-        VM_MEM16 , 0x4004 , VM_LIT , 0xAAAA , OP_EQ ,
-        OP_LAND  , VM_EXIT
+    static enum vmops p1[5] = { VM_CPUB   , VM_LIT , 0 , VM_NE , VM_EXIT };
+    static enum vmops p2[5] = { VM_CPUCCz , VM_LIT , 0 , VM_NE , VM_EXIT };
+    static enum vmops p3[]  = {
+        VM_LIT , 0x4003 , VM_AT8  , VM_LIT ,   0x55 , VM_EQ ,
+        VM_LIT , 0x4004 , VM_AT16 , VM_LIT , 0xAAAA , VM_EQ ,
+        VM_LAND  , VM_EXIT
     };
     
     fmt->data->triggers[0].here = 0x402C;
