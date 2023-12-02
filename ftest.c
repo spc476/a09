@@ -103,7 +103,8 @@ struct testdata
   uint16_t        sp;
   mc6809byte__t   fill;
   bool            tron;
-  struct vmcode   triggers[4];
+  size_t          numtrig;
+  struct vmcode  *triggers;
   mc6809byte__t   memory[65536u];
   struct memprot  prot  [65536u];
 };
@@ -667,17 +668,15 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
     
     struct format_test *test = &fmt->test;
     struct testdata    *data = test->data;
+    char const         *tag  = "";
     int                 rc;
     
     data->cpu.pc.w = data->pc;
     data->cpu.S.w  = data->sp - 2;
-    data->prot[0x402C].check = true;
-    data->prot[0x402E].check = true;
-    data->prot[0x4033].check = true;
     
     do
     {
-      if (data->memory[data->cpu.pc.w] == data->fill) // SWI
+      if (data->memory[data->cpu.pc.w] == data->fill)
       {
         message(opd->a09,MSG_WARNING,"W9994: code went into the weeds\n");
         break;
@@ -701,13 +700,19 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
       {
         bool okay;
         
-        if (data->cpu.pc.w == 0x402C)
-          okay = runvm(data->a09,&data->cpu,data->triggers[0].prog);
-        else if (data->cpu.pc.w == 0x402E)
-          okay = runvm(data->a09,&data->cpu,data->triggers[1].prog);
-        else if (data->cpu.pc.w == 0x4033)
-          okay = runvm(data->a09,&data->cpu,data->triggers[2].prog);
-          
+        for (size_t i = 0 ; i < data->numtrig ; i++)
+        {
+          if (data->triggers[i].here == data->cpu.pc.w)
+          {
+            okay = runvm(data->a09,&data->cpu,data->triggers[i].prog);
+            if (!okay)
+            {
+              tag = data->triggers[i].tag;
+              break;
+            }
+          }
+        }
+        
         if (!okay)
         {
           rc = MC6809_FAULT_user;
@@ -724,7 +729,7 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
       if (rc < MC6809_FAULT_user)
         return message(opd->a09,MSG_ERROR,"E9999: Internal error---%s",mfaults[rc]);
       else // XXX
-        return message(opd->a09,MSG_ERROR,"E9999: test failed---%s","tis a silly test");
+        return message(opd->a09,MSG_ERROR,"E9999: test failed---%s",tag);
     }
   }
   return true;
@@ -830,6 +835,9 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     fmt->data->sp        = 0x8000;
     fmt->data->fill      = 0x3F; // SWI instruction
     
+    memset(fmt->data->memory,fmt->data->fill,65536u);
+    memset(fmt->data->prot,init.b,65536u);
+    
     static enum vmops p1[5] = { VM_CPUB   , VM_LIT , 0 , VM_NE , VM_EXIT };
     static enum vmops p2[5] = { VM_CPUCCz , VM_LIT , 0 , VM_NE , VM_EXIT };
     static enum vmops p3[]  = {
@@ -837,22 +845,20 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
         VM_LIT , 0x4004 , VM_AT16 , VM_LIT , 0xAAAA , VM_EQ ,
         VM_LAND  , VM_EXIT
     };
+    static struct vmcode vmcode[] =
+    {
+      { .here = 0x402C , .prog = p1 , .tag = "degenerate LFSR" },
+      { .here = 0x402E , .prog = p2 , .tag = "non-repeating" },
+      { .here = 0x4033 , .prog = p3 , .tag = "tis a silly test" },
+    };
     
-    fmt->data->triggers[0].here = 0x402C;
-    fmt->data->triggers[0].tag  = "degenerate LFSR";
-    fmt->data->triggers[0].prog = p1;
-    fmt->data->triggers[1].here = 0x402E;
-    fmt->data->triggers[1].tag  = "non-repeating";
-    fmt->data->triggers[1].prog = p2;
-    fmt->data->triggers[2].here = 0x4033;
-    fmt->data->triggers[2].tag  = "tis a silly test";
-    fmt->data->triggers[2].prog = p3;
+    fmt->data->numtrig = sizeof(vmcode) / sizeof(vmcode[0]);
+    fmt->data->triggers = vmcode;
     
-    memset(fmt->data->memory,fmt->data->fill,65536u);
-    memset(fmt->data->prot,init.b,65536u);
+    for (size_t i = 0 ; i < fmt->data->numtrig ; i++)
+      fmt->data->prot[vmcode[i].here].check = true;
     
     mc6809_reset(&fmt->data->cpu);
-    
     return true;
   }
   else
