@@ -35,7 +35,8 @@ enum vmops
   VM_NEG = OP_MOD + 1,
   VM_NOT,
   VM_LIT,
-  VM_MEM,
+  VM_MEM8,
+  VM_MEM16,
   VM_CPUCCc,
   VM_CPUCCv,
   VM_CPUCCz,
@@ -67,7 +68,8 @@ struct memprot
 
 struct vmcode
 {
-  mc6809addr__t here;
+  mc6809addr__t  here;
+  char const    *tag;
   uint16_t      *prog;
 };
 
@@ -83,7 +85,7 @@ struct testdata
   uint16_t        sp;
   mc6809byte__t   fill;
   bool            tron;
-  struct vmcode   triggers[2];
+  struct vmcode   triggers[4];
   mc6809byte__t   memory[65536u];
   struct memprot  prot  [65536u];
 };
@@ -237,8 +239,24 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,uint16_t *prog)
            stack[--sp] = prog[ip++];
            break;
            
-      case VM_MEM:
-           assert(false);
+      case VM_MEM8:
+           {
+             struct format_test *test = cpu->user;
+             struct testdata    *data = test->data;
+             uint16_t            addr = prog[ip++];
+             stack[--sp]              = data->memory[addr];
+           }
+           break;
+           
+      case VM_MEM16:
+           {
+             struct format_test *test = cpu->user;
+             struct testdata    *data = test->data;
+             uint16_t            addr = prog[ip++];
+             stack[--sp]              = (data->memory[addr] << 8)
+                                      |  data->memory[addr+1]
+                                      ;
+           }
            break;
            
       case VM_CPUCCc:
@@ -635,8 +653,9 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
     
     data->cpu.pc.w = data->pc;
     data->cpu.S.w  = data->sp - 2;
-    data->prot[0x4029].check = true;
-    data->prot[0x402B].check = true;
+    data->prot[0x402C].check = true;
+    data->prot[0x402E].check = true;
+    data->prot[0x4033].check = true;
     
     do
     {
@@ -664,10 +683,13 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
       {
         bool okay;
         
-        if (data->cpu.pc.w == 0x4029)
+        if (data->cpu.pc.w == 0x402C)
           okay = runvm(data->a09,&data->cpu,data->triggers[0].prog);
-        else
+        else if (data->cpu.pc.w == 0x402E)
           okay = runvm(data->a09,&data->cpu,data->triggers[1].prog);
+        else if (data->cpu.pc.w == 0x4033)
+          okay = runvm(data->a09,&data->cpu,data->triggers[2].prog);
+          
         if (!okay)
         {
           rc = MC6809_FAULT_user;
@@ -684,7 +706,7 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
       if (rc < MC6809_FAULT_user)
         return message(opd->a09,MSG_ERROR,"E9999: Internal error---%s",mfaults[rc]);
       else // XXX
-        return message(opd->a09,MSG_ERROR,"E9999: Internal error---fault %d",rc);
+        return message(opd->a09,MSG_ERROR,"E9999: test failed---%s","tis a silly test");
     }
   }
   return true;
@@ -792,11 +814,21 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     
     static uint16_t p1[5] = { VM_CPUB   , VM_LIT , 0 , OP_NE , VM_EXIT };
     static uint16_t p2[5] = { VM_CPUCCz , VM_LIT , 0 , OP_NE , VM_EXIT };
+    static uint16_t p3[]  = {
+        VM_MEM8  , 0x4003 , VM_LIT ,   0x55 , OP_EQ ,
+        VM_MEM16 , 0x4004 , VM_LIT , 0xAAAA , OP_EQ ,
+        OP_LAND  , VM_EXIT
+    };
     
-    fmt->data->triggers[0].here = 0x4029;
+    fmt->data->triggers[0].here = 0x402C;
+    fmt->data->triggers[0].tag  = "degenerate LFSR";
     fmt->data->triggers[0].prog = p1;
-    fmt->data->triggers[1].here = 0x402B;
+    fmt->data->triggers[1].here = 0x402E;
+    fmt->data->triggers[1].tag  = "non-repeating";
     fmt->data->triggers[1].prog = p2;
+    fmt->data->triggers[2].here = 0x4033;
+    fmt->data->triggers[2].tag  = "tis a silly test";
+    fmt->data->triggers[2].prog = p3;
     
     memset(fmt->data->memory,fmt->data->fill,65536u);
     memset(fmt->data->prot,init.b,65536u);
