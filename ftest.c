@@ -1169,6 +1169,9 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
       }
     };
     
+    memset(&fmt->data->cpu,0,sizeof(fmt->data->cpu));
+    memset(&fmt->data->dis,0,sizeof(fmt->data->dis));
+    
     fmt->data->a09         = a09;
     fmt->data->corefile    = NULL;
     fmt->data->triggers    = NULL;
