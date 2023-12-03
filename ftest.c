@@ -999,7 +999,6 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
         if (tree != NULL)
         {
           struct trigger *trigger = tree2trigger(tree);
-          bool            okay;
           
           assert(trigger->here == addr);
           for (size_t i = 0 ; i < trigger->cnt ; i++)
