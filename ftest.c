@@ -1039,7 +1039,7 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
         "writing to non-writable memory",
       };
       
-      if (rc >= TEST_max) rc = 0;
+      assert(rc < TEST_max);
       return message(opd->a09,MSG_ERROR,"E9900: %s: %s: %s\n",tag,mfaults[rc],data->errbuf);
     }
   }
