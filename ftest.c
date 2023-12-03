@@ -104,31 +104,44 @@ struct memprot
 
 struct vmcode
 {
-  mc6809addr__t  here;
-  char const    *tag;
+  size_t         line;
+  char           tag[132];
   enum vmops    *prog;
   char const    *str;
   size_t         len;
 };
 
+struct trigger
+{
+  tree__s        tree;
+  uint16_t       here;
+  size_t         cnt;
+  struct vmcode *triggers;
+};
+
 struct testdata
 {
-  struct a09     *a09;
-  const char     *corefile;
-  mc6809__t       cpu;
-  mc6809dis__t    dis;
-  struct buffer   name;
-  uint16_t        addr;
-  uint16_t        pc;
-  uint16_t        sp;
-  mc6809byte__t   fill;
-  bool            tron;
-  size_t          numtrig;
-  struct vmcode  *triggers;
-  char            errbuf[128];
-  mc6809byte__t   memory[65536u];
-  struct memprot  prot  [65536u];
+  struct a09      *a09;
+  const char      *corefile;
+  tree__s         *triggers;
+  mc6809__t        cpu;
+  mc6809dis__t     dis;
+  struct buffer    name;
+  uint16_t         addr;
+  uint16_t         pc;
+  uint16_t         sp;
+  mc6809byte__t    fill;
+  bool             tron;
+  char             errbuf[128];
+  mc6809byte__t    memory[65536u];
+  struct memprot   prot  [65536u];
 };
+
+static inline struct trigger *tree2trigger(tree__s *tree)
+{
+  assert(tree != NULL);
+  return (struct trigger *)((char *)tree - offsetof(struct trigger,tree));
+}
 
 /**************************************************************************/
 
@@ -151,6 +164,21 @@ char const format_test_usage[] =
         "\t.TRON directive.\n"
         ;
         
+/**************************************************************************/
+
+static int triggercmp(void const *restrict needle,void const *restrict haystack)
+{
+  uint16_t       const *key     = needle;
+  struct trigger const *trigger = haystack;
+  
+  if (*key < trigger->here)
+    return -1;
+  else if (*key > trigger->here)
+    return  1;
+  else
+    return  0;
+}
+
 /**************************************************************************/
 
 static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
@@ -420,18 +448,16 @@ static mc6809byte__t ft_cpu_read(mc6809__t *cpu,mc6809addr__t addr,bool inst)
   struct format_test *test = cpu->user;
   struct testdata    *data = test->data;
   
-  if (cpu->instpc == addr)      /* start of an instruction */
+  if (!data->prot[addr].read)
   {
-    if (!data->prot[addr].read)
-    {
-      snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X addr=%04X",cpu->pc.w,addr);
-      longjmp(cpu->err,TEST_NON_READ_MEM);
-    }
-    if (!data->prot[addr].exec)
-    {
-      snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X addr=%04X",cpu->pc.w,addr);
-      longjmp(cpu->err,TEST_WEEDS);
-    }
+    snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X addr=%04X",cpu->pc.w,addr);
+    longjmp(cpu->err,TEST_NON_READ_MEM);
+  }
+  
+  if (inst && !data->prot[addr].exec)
+  {
+    snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X addr=%04X",cpu->pc.w,addr);
+    longjmp(cpu->err,TEST_WEEDS);
   }
   
   return data->memory[addr];
@@ -490,9 +516,58 @@ static void ft_dis_fault(mc6809dis__t *dis,mc6809fault__t fault)
 
 /**************************************************************************/
 
-#if 0
 static bool ftcompile(
+        struct a09     *a09,
+        struct buffer  *restrict name,
+        struct trigger *trigger,
+        struct buffer  *restrict buffer
+)
 {
+  static enum vmops p1[] = { VM_CPUX , VM_LIT , 0x0815   , VM_EQ  , VM_EXIT };
+  static enum vmops p2[] = { VM_CPUY , VM_LIT , 0x0805   , VM_EQ  , VM_EXIT };
+//  static enum vmops p3[] = { VM_LIT  ,      0 , VM_IDX16 , VM_LIT , 0x081F , VM_EQ , VM_EXIT };
+//  static enum vmops p4[] = { VM_LIT  ,      2 , VM_IDX16 , VM_LIT , 0x0824 , VM_EQ , VM_EXIT };
+//  static enum vmops p5[] = { VM_LIT  ,      4 , VM_IDX16 , VM_LIT , 0x0829 , VM_EQ , VM_EXIT };
+//  static enum vmops p6[] = { VM_LIT  ,      6 , VM_IDX16 , VM_LIT , 0x0830 , VM_EQ , VM_EXIT };
+//  static enum vmops p7[] = { VM_LIT  ,      8 , VM_IDX16 , VM_LIT , 0x0839 , VM_EQ , VM_EXIT };
+//  static enum vmops pD[] = { VM_LIT  , 0x084C , VM_AT8   , VM_LIT ,   0x12 , VM_EQ , VM_EXIT };
+//  static enum vmops pE[] = { VM_LIT  , 0x7FCF , VM_AT8   , VM_LIT ,   0x3F , VM_EQ , VM_EXIT };
+//  static enum vmops p8[] = { VM_LIT  , 0x081F , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+//  static enum vmops p9[] = { VM_LIT  , 0x0824 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+//  static enum vmops pA[] = { VM_LIT  , 0x0829 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+//  static enum vmops pB[] = { VM_LIT  , 0x0830 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+//  static enum vmops pC[] = { VM_LIT  , 0x0839 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+
+  struct vmcode *new = realloc(trigger->triggers,(trigger->cnt + 1) * sizeof(struct vmcode));
+  if (new == NULL)
+    return message(a09,MSG_ERROR,"E0046: out of memory");
+  trigger->triggers = new;
+  new = &trigger->triggers[trigger->cnt++]; // now pointing to our new entry
+  
+  new->line = a09->lnum;
+  new->prog = calloc(16,sizeof(enum vmops)); // assume ok for now
+  snprintf(new->tag,sizeof(new->tag),"%s:%zu",name->buf,a09->lnum);
+  
+  skip_space(buffer);
+  buffer->ridx--;
+  if (strcmp(&buffer->buf[buffer->ridx],"/x        = .results") == 0)
+  {
+    new->str = NULL;
+    new->len = 0;
+    memcpy(new->prog,p1,sizeof(p1));
+  }
+  else if (strcmp(&buffer->buf[buffer->ridx],"/y        = .next") == 0)
+  {
+    new->str = NULL;
+    new->len = 0;
+    memcpy(new->prog,p2,sizeof(p2));
+  }
+  else
+    return message(a09,MSG_ERROR,"E9999: bad input");
+    
+  return true;
+}
+#if 0
   struct optable const *op;
   enum vmops            program[32];
   struct optable const *ostack[15];
@@ -749,6 +824,7 @@ static bool ftest_test(union format *fmt,struct opcdata *opd)
   test->intest = true;
   data->pc     = opd->a09->pc;
   parse_string(opd->a09,&data->name,opd->buffer);
+  
   return true;
 }
 
@@ -805,6 +881,27 @@ static bool ftest_trigger(union format *fmt,struct opcdata *opd)
     struct testdata    *data = test->data;
     
     data->prot[opd->a09->pc].check = true;
+    
+    struct trigger *trigger;
+    tree__s         *tree = tree_find(data->triggers,&opd->a09->pc,triggercmp);
+    
+    if (tree == NULL)
+    {
+      trigger = malloc(sizeof(struct trigger));
+      if (trigger == NULL)
+        return message(opd->a09,MSG_ERROR,"E0046: out of memory");
+      trigger->tree.left   = NULL;
+      trigger->tree.right  = NULL;
+      trigger->tree.height = 0;
+      trigger->here        = opd->a09->pc;
+      trigger->cnt         = 0;
+      trigger->triggers    = NULL;
+    }
+    else
+      trigger = tree2trigger(tree);
+      
+    if (!ftcompile(opd->a09,&data->name,trigger,opd->buffer))
+      return false;
   }
   
   return true;
@@ -854,16 +951,22 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
       
       if (data->prot[data->cpu.pc.w].check)
       {
-        bool okay;
+        bool     okay;
+        uint16_t addr = data->cpu.pc.w;
+        tree__s *tree = tree_find(data->triggers,&addr,triggercmp);
         
-        for (size_t i = 0 ; i < data->numtrig ; i++)
+        if (tree != NULL)
         {
-          if (data->triggers[i].here == data->cpu.pc.w)
+          struct trigger *trigger = tree2trigger(tree);
+          bool            okay;
+          
+          assert(trigger->here == addr);
+          for (size_t i = 0 ; i < trigger->cnt ; i++)
           {
-            okay = runvm(data->a09,&data->cpu,&data->triggers[i]);
+            okay = runvm(data->a09,&data->cpu,&trigger->triggers[i]);
             if (!okay)
             {
-              tag = data->triggers[i].tag;
+              tag = trigger->triggers[i].tag;
               break;
             }
           }
@@ -905,6 +1008,23 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
+static void free_triggers(tree__s *tree)
+{
+  if (tree != NULL)
+  {
+    if (tree->left)
+      free_triggers(tree->left);
+    if (tree->right)
+      free_triggers(tree->right);
+    struct trigger *trigger = tree2trigger(tree);
+    for (size_t i = 0 ; i < trigger->cnt ; i++)
+      free(trigger->triggers[i].prog);
+    free(tree);
+  }
+}
+
+/**************************************************************************/
+
 static bool ftest_fini(union format *fmt,struct a09 *a09)
 {
   assert(fmt          != NULL);
@@ -940,6 +1060,8 @@ static bool ftest_fini(union format *fmt,struct a09 *a09)
     else
       fprintf(stderr,"%s: %s: %s\n",MSG_ERROR,test->data->corefile,strerror(errno));
   }
+  
+  free_triggers(test->data->triggers);
   free(test->data);
   return true;
 }
@@ -994,6 +1116,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     
     fmt->data->a09       = a09;
     fmt->data->corefile  = NULL;
+    fmt->data->triggers  = NULL;
     fmt->data->cpu.user  = fmt;
     fmt->data->cpu.read  = ft_cpu_read;
     fmt->data->cpu.write = ft_cpu_write;
@@ -1003,11 +1126,11 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     fmt->data->dis.fault = ft_dis_fault;
     fmt->data->sp        = 0x8000;
     fmt->data->fill      = 0x3F; // SWI instruction
-    fmt->data->errbuf[0] = '\0';
     
     memset(fmt->data->memory,fmt->data->fill,65536u);
     memset(fmt->data->prot,init.b,65536u);
     
+#if 0
 #if 0
     /* misc/test.asm */
     static enum vmops p1[5] = { VM_CPUB   , VM_LIT , 0 , VM_NE , VM_EXIT };
@@ -1027,20 +1150,6 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
 
 #if 1
     /* misc/test-disasm.asm */
-    static enum vmops p1[] = { VM_CPUX , VM_LIT , 0x0815   , VM_EQ  , VM_EXIT };
-    static enum vmops p2[] = { VM_CPUY , VM_LIT , 0x0805   , VM_EQ  , VM_EXIT };
-    static enum vmops p3[] = { VM_LIT  ,      0 , VM_IDX16 , VM_LIT , 0x081F , VM_EQ , VM_EXIT };
-    static enum vmops p4[] = { VM_LIT  ,      2 , VM_IDX16 , VM_LIT , 0x0824 , VM_EQ , VM_EXIT };
-    static enum vmops p5[] = { VM_LIT  ,      4 , VM_IDX16 , VM_LIT , 0x0829 , VM_EQ , VM_EXIT };
-    static enum vmops p6[] = { VM_LIT  ,      6 , VM_IDX16 , VM_LIT , 0x0830 , VM_EQ , VM_EXIT };
-    static enum vmops p7[] = { VM_LIT  ,      8 , VM_IDX16 , VM_LIT , 0x0839 , VM_EQ , VM_EXIT };
-    static enum vmops pD[] = { VM_LIT  , 0x084C , VM_AT8   , VM_LIT ,   0x12 , VM_EQ , VM_EXIT };
-    static enum vmops pE[] = { VM_LIT  , 0x7FCF , VM_AT8   , VM_LIT ,   0x3F , VM_EQ , VM_EXIT };
-    static enum vmops p8[] = { VM_LIT  , 0x081F , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
-    static enum vmops p9[] = { VM_LIT  , 0x0824 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
-    static enum vmops pA[] = { VM_LIT  , 0x0829 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
-    static enum vmops pB[] = { VM_LIT  , 0x0830 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
-    static enum vmops pC[] = { VM_LIT  , 0x0839 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
     static struct vmcode vmcode[] =
     {
       { .here = 0x0810 , .prog = p1 , .tag = "DISASM:13" , .str = NULL , .len = 0 },
@@ -1058,11 +1167,20 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
       { .here = 0x0810 , .prog = pB , .tag = "DISASM:25" , .str = "STS"      , .len = 4 },
       { .here = 0x0810 , .prog = pC , .tag = "DISASM:26" , .str = "[3333,X]" , .len = 9 },
     };
+    static struct unittest tests[] =
+    {
+      {
+        .name     = { .buf = "DISASM" , .ridx = 0 , .widx = 6 },
+        .numtrig  = sizeof(vmcode) / sizeof(vmcode[0]);
+        .triggers = vmcode;
+      }
+    };
 #endif
 
-    fmt->data->numtrig = sizeof(vmcode) / sizeof(vmcode[0]);
-    fmt->data->triggers = vmcode;
-    
+    fmt->data->numtests = sizeof(tests) / sizeof(tests[0]);
+    fmt->data->tests    = tests;
+#endif
+
     mc6809_reset(&fmt->data->cpu);
     return true;
   }
