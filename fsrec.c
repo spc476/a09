@@ -78,6 +78,7 @@ static bool fsrec_cmdline(union format *fmt,int *pi,char *argv[])
   assert(pi   != NULL);
   assert(*pi  >  0);
   assert(argv != NULL);
+  assert(fmt->backend == BACKEND_SREC);
   
   struct format_srec *format = &fmt->srec;
   int                 i      = *pi;
@@ -157,6 +158,7 @@ static bool fsrec_pass_start(union format *fmt,struct a09 *a09,int pass)
   assert(fmt != NULL);
   assert(a09 != NULL);
   assert((pass == 1) || (pass == 2));
+  assert(fmt->backend == BACKEND_SREC);
   
   if (pass == 2)
   {
@@ -190,6 +192,7 @@ static bool fsrec_pass_end(union format *fmt,struct a09 *a09,int pass)
   assert(fmt != NULL);
   assert(a09 != NULL);
   assert((pass == 1) || (pass == 2));
+  assert(fmt->backend == BACKEND_SREC);
   
   if (pass == 2)
   {
@@ -218,6 +221,7 @@ static bool fsrec_end(
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_SREC);
   
   if (opd->pass == 2)
   {
@@ -251,6 +255,7 @@ static bool fsrec_org(
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_SREC);
   (void)last;
   
   if (opd->pass == 2)
@@ -282,6 +287,7 @@ static bool write_data(
   assert(format != NULL);
   assert(out    != NULL);
   assert(ptr    != NULL);
+  assert(format->backend == BACKEND_SREC);
   
   char const *buffer = ptr;
   
@@ -307,6 +313,7 @@ static bool fsrec_inst_write(union format *fmt,struct opcdata *opd)
   assert(opd       != NULL);
   assert(opd->pass == 2);
   assert(!opd->data);
+  assert(fmt->backend == BACKEND_SREC);
   
   return write_data(&fmt->srec,opd->a09->out,opd->bytes,opd->sz);
 }
@@ -325,6 +332,8 @@ static bool fsrec_data_write(
   assert(buffer    != NULL);
   assert(opd->pass == 2);
   assert(opd->data);
+  assert(fmt->backend == BACKEND_SREC);
+  
   return write_data(&fmt->srec,opd->a09->out,buffer,len);
 }
 
@@ -335,6 +344,7 @@ static bool fsrec_align(union format *fmt,struct opcdata *opd)
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_SREC);
   
   if (opd->pass == 2)
   {
@@ -362,6 +372,7 @@ static bool fsrec_rmb(union format *fmt,struct opcdata *opd)
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_SREC);
   
   if (opd->pass == 2)
   {

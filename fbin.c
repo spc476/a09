@@ -38,6 +38,7 @@ static bool fbin_align(union format *fmt,struct opcdata *opd)
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_BIN);
   (void)fmt;
   
   if (opd->pass == 2)
@@ -56,6 +57,7 @@ static bool fbin_org(union format *fmt,struct opcdata *opd,uint16_t start,uint16
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_BIN);
   
   struct format_bin *format = &fmt->bin;
   
@@ -80,6 +82,7 @@ static bool fbin_rmb(union format *fmt,struct opcdata *opd)
   (void)fmt;
   assert(opd != NULL);
   assert((opd->pass == 1 ) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_BIN);
   
   /*---------------------
   ; XXX - maybe if the file offset is 0, skip this, to become

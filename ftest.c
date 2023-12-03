@@ -425,12 +425,82 @@ static void ft_dis_fault(mc6809dis__t *dis,mc6809fault__t fault)
 
 /**************************************************************************/
 
+#if 0
+static bool ftcompile(
+{
+  struct optable const *op;
+  enum vmops            program[32];
+  struct optable const *ostack[15];
+  size_t                vip = 0;
+  size_t                osp = sizeof(ostack) / sizeof(ostack[0]);
+  
+  if (!ftfactor(&program[vip++],a09,buffer,pass))
+    return false;
+  
+  while(true)
+  {
+    if ((op = get_op(buffer)) == NULL)
+      break;
+    
+    while(osp < sizeof(ostack) / sizeof(ostack[0]))
+    {
+      if (
+              (ostack[osp]->pri >op->pri)
+           || ((ostack[osp]->pri == op->pri) && (op->pri == AS_LEFT))
+        )
+      {
+        if (vip == sizeof(program) / sizeof(program[0]))
+          return message(a09,MSG_ERROR,"E0066: expression too complex");
+        program[vip++] = ostack[osp++]->op;
+      }
+      else
+        break;
+    }
+    
+    if (osp == 0)
+      return message(a09,MSG_ERROR,"E0066: expression too complex");
+    ostack[--osp] = op;
+    if (vip == sizeof(program) / sizeof(program[0]))
+      return message(a09,MSG_ERROR,"E0066: expression too complex");
+    if (!factor(&program[vip++],a09,buffer,pass))
+      return false;
+  }
+  
+  while(osp < sizeof(ostack) / sizeof(ostack[0]))
+  {
+    if (vip == sizeof(program) / sizeof(program[0]))
+      return message(a09,MSG_ERROR,"E0065: Internal error---expression parser mismatch");
+    program[vip++] = ostack(osp++]->op;
+  }
+  
+  assert(osp == sizeof(ostack) / sizeof(ostack[0]));
+  
+  struct vmcode *new = realloc(data->triggers,(data->numtrig + 1) * sizeof(struct vmcode));
+
+  if (new == NULL)
+    return message(a09,MSG_ERROR,"E0046: out of memory");
+
+  data->triggers                = new;
+  data->triggers[data->numtrig] = malloc(vip * sizeof(enum vmops));
+
+  if (data->triggers[data->numtrig] == NULL)
+    return message(a09,MSG_ERROR,"E0046: out of memory");
+
+  memcpy(data->triggers[data->numtrig],program,vip * sizeof(enum vmops));
+  data->numtrig++;
+  return true;
+}
+#endif
+
+/**************************************************************************/
+
 static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
 {
   assert(fmt  != NULL);
   assert(pi   != NULL);
   assert(*pi  >  0);
   assert(argv != NULL);
+  assert(fmt->backend == BACKEND_TEST);
   
   struct format_test *test = &fmt->test;
   struct testdata    *data = test->data;
@@ -496,6 +566,7 @@ static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
 static bool ftest_pass_start(union format *fmt,struct a09 *a09,int pass)
 {
   assert(fmt != NULL);
+  assert(fmt->backend == BACKEND_TEST);
   (void)a09;
   (void)pass;
   
@@ -511,6 +582,7 @@ static bool ftest_inst_write(union format *fmt,struct opcdata *opd)
   assert(fmt       != NULL);
   assert(opd       != NULL);
   assert(opd->pass == 2);
+  assert(fmt->backend == BACKEND_TEST);
   
   struct format_test *test = &fmt->test;
   struct testdata    *data = test->data;
@@ -538,6 +610,7 @@ static bool ftest_data_write(
   assert(opd       != NULL);
   assert(buffer    != NULL);
   assert(opd->pass == 2);
+  assert(fmt->backend == BACKEND_TEST);
   
   struct format_test *test = &fmt->test;
   struct testdata    *data = test->data;
@@ -559,6 +632,7 @@ static bool ftest_org(
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_TEST);
   (void)last;
   
   if (opd->pass == 2)
@@ -579,6 +653,7 @@ static bool ftest_test(union format *fmt,struct opcdata *opd)
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_TEST);
   
   struct format_test *test = &fmt->test;
   struct testdata    *data = test->data;
@@ -598,6 +673,7 @@ static bool ftest_tron(union format *fmt,struct opcdata *opd)
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_TEST);
   
   if (opd->pass == 2)
   {
@@ -616,6 +692,7 @@ static bool ftest_troff(union format *fmt,struct opcdata *opd)
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_TEST);
   
   if (opd->pass == 2)
   {
@@ -634,6 +711,7 @@ static bool ftest_trigger(union format *fmt,struct opcdata *opd)
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_TEST);
   
   if (opd->pass == 2)
   {
@@ -653,6 +731,7 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_TEST);
   
   if (opd->pass == 2)
   {

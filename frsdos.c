@@ -117,6 +117,8 @@ static bool block_zero_write(
 
 static bool frsdos_align(union format *fmt,struct opcdata *opd)
 {
+  assert(fmt != NULL);
+  assert(fmt->backend == BACKEND_RSDOS);
   return block_zero_write(&fmt->rsdos,opd,opd->datasz);
 }
 
@@ -127,6 +129,7 @@ static bool frsdos_end(union format *fmt,struct opcdata *opd,struct symbol const
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_RSDOS);
   
   if (opd->pass == 2)
   {
@@ -169,6 +172,7 @@ static bool frsdos_org(union format *fmt,struct opcdata *opd,uint16_t start,uint
   assert(fmt != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_RSDOS);
   (void)last;
   
   if (opd->pass == 2)
@@ -203,6 +207,8 @@ static bool frsdos_org(union format *fmt,struct opcdata *opd,uint16_t start,uint
 
 static bool frsdos_rmb(union format *fmt,struct opcdata *opd)
 {
+  assert(fmt != NULL);
+  assert(fmt->backend == BACKEND_RSDOS);
   return block_zero_write(&fmt->rsdos,opd,opd->value.value);
 }
 
