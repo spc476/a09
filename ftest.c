@@ -523,6 +523,18 @@ static bool ftcompile(
         struct buffer  *restrict buffer
 )
 {
+#if 0
+
+  /* misc/test.asm */
+  static enum vmops p1[5] = { VM_CPUB   , VM_LIT , 0 , VM_NE , VM_EXIT };
+  static enum vmops p2[5] = { VM_CPUCCz , VM_LIT , 0 , VM_NE , VM_EXIT };
+  static enum vmops p3[]  = {
+      VM_LIT , 0x4003 , VM_AT8  , VM_LIT ,   0x55 , VM_EQ ,
+      VM_LIT , 0x4004 , VM_AT16 , VM_LIT , 0xAAAA , VM_EQ ,
+      VM_LAND  , VM_EXIT
+  };
+#else
+  /* misc/test-disasm.asm */
   static enum vmops p1[] = { VM_CPUX , VM_LIT , 0x0815   , VM_EQ  , VM_EXIT };
   static enum vmops p2[] = { VM_CPUY , VM_LIT , 0x0805   , VM_EQ  , VM_EXIT };
 //  static enum vmops p3[] = { VM_LIT  ,      0 , VM_IDX16 , VM_LIT , 0x081F , VM_EQ , VM_EXIT };
@@ -537,6 +549,7 @@ static bool ftcompile(
 //  static enum vmops pA[] = { VM_LIT  , 0x0829 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
 //  static enum vmops pB[] = { VM_LIT  , 0x0830 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
 //  static enum vmops pC[] = { VM_LIT  , 0x0839 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+#endif
 
   struct vmcode *new = realloc(trigger->triggers,(trigger->cnt + 1) * sizeof(struct vmcode));
   if (new == NULL)
@@ -1129,58 +1142,6 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     
     memset(fmt->data->memory,fmt->data->fill,65536u);
     memset(fmt->data->prot,init.b,65536u);
-    
-#if 0
-#if 0
-    /* misc/test.asm */
-    static enum vmops p1[5] = { VM_CPUB   , VM_LIT , 0 , VM_NE , VM_EXIT };
-    static enum vmops p2[5] = { VM_CPUCCz , VM_LIT , 0 , VM_NE , VM_EXIT };
-    static enum vmops p3[]  = {
-        VM_LIT , 0x4003 , VM_AT8  , VM_LIT ,   0x55 , VM_EQ ,
-        VM_LIT , 0x4004 , VM_AT16 , VM_LIT , 0xAAAA , VM_EQ ,
-        VM_LAND  , VM_EXIT
-    };
-    static struct vmcode vmcode[] =
-    {
-      { .here = 0x402C , .prog = p1 , .tag = "random:41 degenerate LFSR"  , .str = NULL , .len = 0 },
-      { .here = 0x402E , .prog = p2 , .tag = "ramdom:43 non-repeating"    , .str = NULL , .len = 0 },
-      { .here = 0x4033 , .prog = p3 , .tag = "random:48 tis a silly test" , .str = NULL , .len = 0 },
-    };
-#endif
-
-#if 1
-    /* misc/test-disasm.asm */
-    static struct vmcode vmcode[] =
-    {
-      { .here = 0x0810 , .prog = p1 , .tag = "DISASM:13" , .str = NULL , .len = 0 },
-      { .here = 0x0810 , .prog = p2 , .tag = "DISASM:14" , .str = NULL , .len = 0 },
-      { .here = 0x0810 , .prog = p3 , .tag = "DISASM:15" , .str = NULL , .len = 0 },
-      { .here = 0x0810 , .prog = p4 , .tag = "DISASM:16" , .str = NULL , .len = 0 },
-      { .here = 0x0810 , .prog = p5 , .tag = "DISASM:17" , .str = NULL , .len = 0 },
-      { .here = 0x0810 , .prog = p6 , .tag = "DISASM:18" , .str = NULL , .len = 0 },
-      { .here = 0x0810 , .prog = p7 , .tag = "DISASM:19" , .str = NULL , .len = 0 },
-      { .here = 0x0810 , .prog = pD , .tag = "DISASM:20" , .str = NULL , .len = 0 },
-      { .here = 0x0810 , .prog = pE , .tag = "DISASM:21" , .str = NULL , .len = 0 },
-      { .here = 0x0810 , .prog = p8 , .tag = "DISASM:22" , .str = "0800"     , .len = 5 },
-      { .here = 0x0810 , .prog = p9 , .tag = "DISASM:23" , .str = "10EF"     , .len = 5 },
-      { .here = 0x0810 , .prog = pA , .tag = "DISASM:24" , .str = "993333"   , .len = 7 },
-      { .here = 0x0810 , .prog = pB , .tag = "DISASM:25" , .str = "STS"      , .len = 4 },
-      { .here = 0x0810 , .prog = pC , .tag = "DISASM:26" , .str = "[3333,X]" , .len = 9 },
-    };
-    static struct unittest tests[] =
-    {
-      {
-        .name     = { .buf = "DISASM" , .ridx = 0 , .widx = 6 },
-        .numtrig  = sizeof(vmcode) / sizeof(vmcode[0]);
-        .triggers = vmcode;
-      }
-    };
-#endif
-
-    fmt->data->numtests = sizeof(tests) / sizeof(tests[0]);
-    fmt->data->tests    = tests;
-#endif
-
     mc6809_reset(&fmt->data->cpu);
     return true;
   }
