@@ -104,11 +104,11 @@ struct memprot
 
 struct vmcode
 {
-  size_t         line;
-  char           tag[132];
-  enum vmops    *prog;
-  char const    *str;
-  size_t         len;
+  size_t      line;
+  char        tag[132];
+  enum vmops  prog[16];
+  char const *str;
+  size_t      len;
 };
 
 struct trigger
@@ -640,7 +640,7 @@ static bool ftcompile(
 //  static enum vmops pB[] = { VM_LIT  , 0x0830 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
 //  static enum vmops pC[] = { VM_LIT  , 0x0839 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
 #endif
-
+  
   struct vmcode *new = realloc(trigger->triggers,(trigger->cnt + 1) * sizeof(struct vmcode));
   if (new == NULL)
     return message(a09,MSG_ERROR,"E0046: out of memory");
@@ -648,7 +648,6 @@ static bool ftcompile(
   new = &trigger->triggers[trigger->cnt++]; // now pointing to our new entry
   
   new->line = a09->lnum;
-  new->prog = calloc(16,sizeof(enum vmops)); // assume ok for now
   snprintf(new->tag,sizeof(new->tag),"%s:%zu",name->buf,a09->lnum);
   
   skip_space(buffer);
@@ -741,11 +740,28 @@ static bool ftest_pass_start(union format *fmt,struct a09 *a09,int pass)
 {
   assert(fmt != NULL);
   assert(fmt->backend == BACKEND_TEST);
+  assert((pass == 1) || (pass == 2));
   (void)a09;
   (void)pass;
   
   struct format_test *test = &fmt->test;
   test->intest = false;
+  return true;
+}
+
+/**************************************************************************/
+
+static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
+{
+  assert(fmt != NULL);
+  assert(a09 != NULL);
+  assert(fmt->backend == BACKEND_TEST);
+  assert((pass == 1) || (pass == 2));
+  (void)pass;
+  
+  struct format_test *test = &fmt->test;
+  if (test->intest)
+    return message(a09,MSG_ERROR,"E9999: missing .ENDTST directive");
   return true;
 }
 
@@ -1057,8 +1073,7 @@ static void free_triggers(tree__s *tree)
     if (tree->right)
       free_triggers(tree->right);
     struct trigger *trigger = tree2trigger(tree);
-    for (size_t i = 0 ; i < trigger->cnt ; i++)
-      free(trigger->triggers[i].prog);
+    free(trigger->triggers);
     free(tree);
   }
 }
@@ -1117,7 +1132,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
   fmt->backend    = BACKEND_TEST;
   fmt->cmdline    = ftest_cmdline;
   fmt->pass_start = ftest_pass_start;
-  fmt->pass_end   = fdefault_pass;
+  fmt->pass_end   = ftest_pass_end;
   fmt->inst_write = ftest_inst_write;
   fmt->data_write = ftest_data_write;
   fmt->dp         = fdefault;
