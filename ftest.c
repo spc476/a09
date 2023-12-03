@@ -32,7 +32,7 @@
 
 enum vmops
 {
-  VM_LOR,
+  VM_LOR,	/* why yes, these do match enum operator */
   VM_LAND,
   VM_GT,
   VM_GE,
@@ -50,7 +50,7 @@ enum vmops
   VM_MUL,
   VM_DIV,
   VM_MOD,
-  VM_NEG,
+  VM_NEG,	/* and now new operators */
   VM_NOT,
   VM_LIT,
   VM_AT8,
@@ -72,6 +72,15 @@ enum vmops
   VM_CPUU,
   VM_CPUS,
   VM_CPUPC,
+  VM_IDX8,
+  VM_IDY8,
+  VM_IDS8,
+  VM_IDU8,
+  VM_IDX16,
+  VM_IDY16,
+  VM_IDS16,
+  VM_IDU16,
+  VM_SCMP,
   VM_EXIT,
 };
 
@@ -89,6 +98,8 @@ struct vmcode
   mc6809addr__t  here;
   char const    *tag;
   enum vmops    *prog;
+  char const    *str;
+  size_t         len;
 };
 
 struct testdata
@@ -132,16 +143,19 @@ char const format_test_usage[] =
 
 /**************************************************************************/
 
-static bool runvm(struct a09 *a09,mc6809__t *cpu,enum vmops *prog)
+static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
 {
   assert(a09  != NULL);
   assert(cpu  != NULL);
-  assert(prog != NULL);
+  assert(test != NULL);
   
-  uint16_t stack[15];
-  uint16_t result;
-  size_t   sp = sizeof(stack) / sizeof(stack[0]);
-  size_t   ip = 0;
+  struct format_test *bend = cpu->user;
+  struct testdata    *data = bend->data;
+  uint16_t            stack[15];
+  uint16_t            result;
+  uint16_t            addr;
+  size_t              sp = sizeof(stack) / sizeof(stack[0]);
+  size_t              ip = 0;
   
   /*--------------------------------------------------------------
   ; I control the code generation, so I can skip checks that would
@@ -150,7 +164,7 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,enum vmops *prog)
   
   while(true)
   {
-    switch(prog[ip++])
+    switch(test->prog[ip++])
     {
       case VM_LOR:
            result      = stack[sp + 1] || stack[sp];
@@ -255,27 +269,19 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,enum vmops *prog)
            break;
            
       case VM_LIT:
-           stack[--sp] = prog[ip++];
+           stack[--sp] = test->prog[ip++];
            break;
            
       case VM_AT8:
-           {
-             struct format_test *test = cpu->user;
-             struct testdata    *data = test->data;
-             uint16_t            addr = stack[sp];
-             stack[sp]                = data->memory[addr];
-           }
+           addr      = stack[sp];
+           stack[sp] = data->memory[addr];
            break;
            
       case VM_AT16:
-           {
-             struct format_test *test = cpu->user;
-             struct testdata    *data = test->data;
-             uint16_t            addr = stack[sp];
-             stack[sp]                = (data->memory[addr] << 8)
-                                      |  data->memory[addr+1]
-                                      ;
-           }
+           addr      = stack[sp];
+           stack[sp] = (data->memory[addr] << 8)
+                     |  data->memory[addr+1]
+                     ;
            break;
            
       case VM_CPUCCc:
@@ -344,6 +350,46 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,enum vmops *prog)
            
       case VM_CPUPC:
            stack[--sp] = cpu->pc.w;
+           break;
+           
+      case VM_IDX8:
+           addr      = cpu->X.w + stack[sp];
+           stack[sp] = data->memory[addr];
+           break;
+           
+      case VM_IDY8:
+           addr      = cpu->Y.w + stack[sp];
+           stack[sp] = data->memory[addr];
+           break;
+           
+      case VM_IDS8:
+           addr      = cpu->S.w + stack[sp];
+           stack[sp] = data->memory[addr];
+           break;
+           
+      case VM_IDU8:
+           addr      = cpu->U.w + stack[sp];
+           stack[sp] = data->memory[addr];
+           break;
+           
+      case VM_IDX16:
+           addr      = (cpu->X.w + stack[sp]);
+           stack[sp] = (data->memory[addr] << 8)
+                     |  data->memory[addr+1]
+                     ;
+           break;
+           
+      case VM_IDY16:
+      case VM_IDS16:
+      case VM_IDU16:
+           break;
+           
+      case VM_SCMP:
+           stack[sp] = memcmp(
+                         &data->memory[stack[sp]],
+                         test->str,
+                         test->len
+                        );
            break;
            
       case VM_EXIT:
@@ -614,7 +660,7 @@ static bool ftest_data_write(
   
   struct format_test *test = &fmt->test;
   struct testdata    *data = test->data;
-  
+
   memcpy(&data->memory[data->addr],buffer,len);
   data->addr += len;
   return true;
@@ -803,7 +849,7 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
         {
           if (data->triggers[i].here == data->cpu.pc.w)
           {
-            okay = runvm(data->a09,&data->cpu,data->triggers[i].prog);
+            okay = runvm(data->a09,&data->cpu,&data->triggers[i]);
             if (!okay)
             {
               tag = data->triggers[i].tag;
@@ -938,6 +984,8 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     memset(fmt->data->memory,fmt->data->fill,65536u);
     memset(fmt->data->prot,init.b,65536u);
     
+#if 0
+    /* misc/test.asm */
     static enum vmops p1[5] = { VM_CPUB   , VM_LIT , 0 , VM_NE , VM_EXIT };
     static enum vmops p2[5] = { VM_CPUCCz , VM_LIT , 0 , VM_NE , VM_EXIT };
     static enum vmops p3[]  = {
@@ -947,11 +995,47 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     };
     static struct vmcode vmcode[] =
     {
-      { .here = 0x402C , .prog = p1 , .tag = "degenerate LFSR" },
-      { .here = 0x402E , .prog = p2 , .tag = "non-repeating" },
-      { .here = 0x4033 , .prog = p3 , .tag = "tis a silly test" },
+      { .here = 0x402C , .prog = p1 , .tag = "random:41 degenerate LFSR"  , .str = NULL , .len = 0 },
+      { .here = 0x402E , .prog = p2 , .tag = "ramdom:43 non-repeating"    , .str = NULL , .len = 0 },
+      { .here = 0x4033 , .prog = p3 , .tag = "random:48 tis a silly test" , .str = NULL , .len = 0 },
     };
-    
+#endif
+
+#if 1
+    /* misc/test-disasm.asm */
+    static enum vmops p1[] = { VM_CPUX , VM_LIT , 0x0813   , VM_EQ  , VM_EXIT };
+    static enum vmops p2[] = { VM_CPUY , VM_LIT , 0x0805   , VM_EQ  , VM_EXIT };
+    static enum vmops p3[] = { VM_LIT  ,      0 , VM_IDX16 , VM_LIT , 0x081D , VM_EQ , VM_EXIT };
+    static enum vmops p4[] = { VM_LIT  ,      2 , VM_IDX16 , VM_LIT , 0x0822 , VM_EQ , VM_EXIT };
+    static enum vmops p5[] = { VM_LIT  ,      4 , VM_IDX16 , VM_LIT , 0x0827 , VM_EQ , VM_EXIT };
+    static enum vmops p6[] = { VM_LIT  ,      6 , VM_IDX16 , VM_LIT , 0x082E , VM_EQ , VM_EXIT };
+    static enum vmops p7[] = { VM_LIT  ,      8 , VM_IDX16 , VM_LIT , 0x0837 , VM_EQ , VM_EXIT };
+    static enum vmops pD[] = { VM_LIT  , 0x084A , VM_AT8   , VM_LIT ,   0x12 , VM_EQ , VM_EXIT };
+    static enum vmops pE[] = { VM_LIT  , 0x7FCF , VM_AT8   , VM_LIT ,   0x3F , VM_EQ , VM_EXIT };
+    static enum vmops p8[] = { VM_LIT  , 0x081D , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+    static enum vmops p9[] = { VM_LIT  , 0x0822 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+    static enum vmops pA[] = { VM_LIT  , 0x0827 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+    static enum vmops pB[] = { VM_LIT  , 0x082E , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+    static enum vmops pC[] = { VM_LIT  , 0x0837 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+    static struct vmcode vmcode[] =
+    {
+      { .here = 0x0810 , .prog = p1 , .tag = "DISASM:13" , .str = NULL , .len = 0 },
+      { .here = 0x0810 , .prog = p2 , .tag = "DISASM:14" , .str = NULL , .len = 0 },
+      { .here = 0x0810 , .prog = p3 , .tag = "DISASM:15" , .str = NULL , .len = 0 },
+      { .here = 0x0810 , .prog = p4 , .tag = "DISASM:16" , .str = NULL , .len = 0 },
+      { .here = 0x0810 , .prog = p5 , .tag = "DISASM:17" , .str = NULL , .len = 0 },
+      { .here = 0x0810 , .prog = p6 , .tag = "DISASM:18" , .str = NULL , .len = 0 },
+      { .here = 0x0810 , .prog = p7 , .tag = "DISASM:19" , .str = NULL , .len = 0 },
+      { .here = 0x0810 , .prog = pD , .tag = "DISASM:20" , .str = NULL , .len = 0 },
+      { .here = 0x0810 , .prog = pE , .tag = "DISASM:21" , .str = NULL , .len = 0 },
+      { .here = 0x0810 , .prog = p8 , .tag = "DISASM:22" , .str = "0800"     , .len = 5 },
+      { .here = 0x0810 , .prog = p9 , .tag = "DISASM:23" , .str = "10EF"     , .len = 5 },
+      { .here = 0x0810 , .prog = pA , .tag = "DISASM:24" , .str = "993333"   , .len = 7 },
+      { .here = 0x0810 , .prog = pB , .tag = "DISASM:25" , .str = "STS"      , .len = 4 },
+      { .here = 0x0810 , .prog = pC , .tag = "DISASM:26" , .str = "[3333,X]" , .len = 9 },
+    };
+#endif
+
     fmt->data->numtrig = sizeof(vmcode) / sizeof(vmcode[0]);
     fmt->data->triggers = vmcode;
     
