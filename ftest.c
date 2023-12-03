@@ -556,7 +556,7 @@ static bool ftcompile(
   };
 #else
   /* misc/test-disasm.asm */
-  static enum vmops p1[] = { VM_CPUX , VM_LIT , 0x0815   , VM_EQ  , VM_EXIT };
+  static enum vmops p1[] = { VM_CPUX , VM_LIT , 0x0813   , VM_EQ  , VM_EXIT };
   static enum vmops p2[] = { VM_CPUY , VM_LIT , 0x0805   , VM_EQ  , VM_EXIT };
 //  static enum vmops p3[] = { VM_LIT  ,      0 , VM_IDX16 , VM_LIT , 0x081F , VM_EQ , VM_EXIT };
 //  static enum vmops p4[] = { VM_LIT  ,      2 , VM_IDX16 , VM_LIT , 0x0824 , VM_EQ , VM_EXIT };
