@@ -1030,7 +1030,7 @@ static bool pseudo_rmb(struct opcdata *opd)
     return false;
   opd->data   = true;
   opd->datasz = opd->value.value;
-  return opd->a09->format.def.align(&opd->a09->format,opd);
+  return opd->a09->format.def.rmb(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
