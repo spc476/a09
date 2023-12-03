@@ -961,10 +961,8 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
   
   if (opd->pass == 2)
   {
-    struct format_test *test = &fmt->test;
-    struct testdata    *data = test->data;
-    char const         *tag  = "";
-    int                 rc;
+    char const *tag  = "";
+    int         rc;
     
     data->cpu.pc.w = data->pc;
     data->cpu.S.w  = data->sp - 2;
