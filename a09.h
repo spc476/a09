@@ -247,7 +247,7 @@ struct format_test
   bool (*trigger)   (union format *,struct opcdata *);
   bool (*endtst)    (union format *,struct opcdata *);
   bool (*fini)      (union format *,struct a09 *);
-  bool   intest;
+  bool             intest;
   struct testdata *data;
 };
 
