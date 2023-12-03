@@ -181,6 +181,21 @@ static int triggeraddrcmp(void const *restrict needle,void const *restrict hayst
 
 /**************************************************************************/
 
+static int triggertreecmp(void const *restrict needle,void const *restrict haystack)
+{
+  struct trigger const *key   = needle;
+  struct trigger const *value = haystack;
+  
+  if (key->here < value->here)
+    return -1;
+  else if (key->here > value->here)
+    return  1;
+  else
+    return  0;
+}
+
+/**************************************************************************/
+
 static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
 {
   assert(a09  != NULL);
@@ -909,6 +924,7 @@ static bool ftest_trigger(union format *fmt,struct opcdata *opd)
       trigger->here        = opd->a09->pc;
       trigger->cnt         = 0;
       trigger->triggers    = NULL;
+      data->triggers       = tree_insert(data->triggers,&trigger->tree,triggertreecmp);
     }
     else
       trigger = tree2trigger(tree);
