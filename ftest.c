@@ -1027,7 +1027,7 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
     {
       static char const *const mfaults[] =
       {
-        "internal error---you should never see this one",
+        NULL,
         "an internal error inside the MC6809 emulator",
         "an illegal instruction was encountered",
         "an illegal addressing mode was encountered",
