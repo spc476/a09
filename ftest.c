@@ -1134,7 +1134,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
   fmt->endtst     = ftest_endtst;
   fmt->fini       = ftest_fini;
   fmt->intest     = false;
-  fmt->data       = calloc(1,sizeof(struct testdata));
+  fmt->data       = malloc(sizeof(struct testdata));
   
   if (fmt->data != NULL)
   {
@@ -1154,18 +1154,25 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
       }
     };
     
-    fmt->data->a09       = a09;
-    fmt->data->corefile  = NULL;
-    fmt->data->triggers  = NULL;
-    fmt->data->cpu.user  = fmt;
-    fmt->data->cpu.read  = ft_cpu_read;
-    fmt->data->cpu.write = ft_cpu_write;
-    fmt->data->cpu.fault = ft_cpu_fault;
-    fmt->data->dis.user  = fmt;
-    fmt->data->dis.read  = ft_dis_read;
-    fmt->data->dis.fault = ft_dis_fault;
-    fmt->data->sp        = 0x8000;
-    fmt->data->fill      = 0x3F; // SWI instruction
+    fmt->data->a09         = a09;
+    fmt->data->corefile    = NULL;
+    fmt->data->triggers    = NULL;
+    fmt->data->cpu.user    = fmt;
+    fmt->data->cpu.read    = ft_cpu_read;
+    fmt->data->cpu.write   = ft_cpu_write;
+    fmt->data->cpu.fault   = ft_cpu_fault;
+    fmt->data->dis.user    = fmt;
+    fmt->data->dis.read    = ft_dis_read;
+    fmt->data->dis.fault   = ft_dis_fault;
+    fmt->data->name.buf[0] = '\0';
+    fmt->data->name.widx   = 0;
+    fmt->data->name.ridx   = 0;
+    fmt->data->addr        = 0;
+    fmt->data->pc          = 0;
+    fmt->data->sp          = 0x8000;
+    fmt->data->fill        = 0x3F; // SWI instruction
+    fmt->data->tron        = false;
+    fmt->data->errbuf[0]   = '\0';
     
     memset(fmt->data->memory,fmt->data->fill,65536u);
     memset(fmt->data->prot,init.b,65536u);
@@ -1173,7 +1180,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     return true;
   }
   else
-    return false;
+    return message(a09,MSG_ERROR,"E0046: out of memory");
 }
 
 /**************************************************************************/
