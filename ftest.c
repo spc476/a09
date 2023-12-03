@@ -166,6 +166,75 @@ char const format_test_usage[] =
         
 /**************************************************************************/
 
+static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
+{
+  assert(fmt  != NULL);
+  assert(pi   != NULL);
+  assert(*pi  >  0);
+  assert(argv != NULL);
+  assert(fmt->backend == BACKEND_TEST);
+  
+  struct format_test *test = &fmt->test;
+  struct testdata    *data = test->data;
+  int                 i    = *pi;
+  unsigned long int   value;
+  
+  switch(argv[i][1])
+  {
+    case 'S':
+         if (argv[i][2] == '\0')
+           value = strtoul(argv[++i],NULL,0);
+         else
+           value = strtoul(&argv[i][2],NULL,0);
+           
+         if (value > 65535u)
+         {
+           fprintf(stderr,"%s: E9999: address exceeds address space\n",MSG_ERROR);
+           exit(1);
+         }
+         
+         data->sp = value;
+         break;
+         
+    case 'D':
+         if (argv[i][2] == '\0')
+           data->corefile = argv[++i];
+         else
+           data->corefile = &argv[i][2];
+         break;
+         
+    case 'F':
+         if (argv[i][2] == '\0')
+           value = strtoul(argv[++i],NULL,0);
+         else
+           value = strtoul(&argv[i][2],NULL,0);
+           
+         if (value > 255)
+         {
+           fprintf(stderr,"%s: E9999: byte should be 0..255\n",MSG_ERROR);
+           exit(1);
+         }
+         
+         data->fill = value;
+         break;
+         
+    case 'R':
+    case 'W':
+    case 'E':
+    case 'T':
+         fprintf(stderr,"%s: E9999: '%c' not implemented\n",MSG_ERROR,argv[i][1]);
+         break;
+         
+    default:
+         return false;
+  }
+  
+  *pi = i;
+  return true;
+}
+
+/**************************************************************************/
+
 static int triggeraddrcmp(void const *restrict needle,void const *restrict haystack)
 {
   uint16_t       const *key     = needle;
@@ -665,75 +734,6 @@ static bool ftcompile(
   return true;
 }
 #endif
-
-/**************************************************************************/
-
-static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
-{
-  assert(fmt  != NULL);
-  assert(pi   != NULL);
-  assert(*pi  >  0);
-  assert(argv != NULL);
-  assert(fmt->backend == BACKEND_TEST);
-  
-  struct format_test *test = &fmt->test;
-  struct testdata    *data = test->data;
-  int                 i    = *pi;
-  unsigned long int   value;
-  
-  switch(argv[i][1])
-  {
-    case 'S':
-         if (argv[i][2] == '\0')
-           value = strtoul(argv[++i],NULL,0);
-         else
-           value = strtoul(&argv[i][2],NULL,0);
-           
-         if (value > 65535u)
-         {
-           fprintf(stderr,"%s: E9999: address exceeds address space\n",MSG_ERROR);
-           exit(1);
-         }
-         
-         data->sp = value;
-         break;
-         
-    case 'D':
-         if (argv[i][2] == '\0')
-           data->corefile = argv[++i];
-         else
-           data->corefile = &argv[i][2];
-         break;
-         
-    case 'F':
-         if (argv[i][2] == '\0')
-           value = strtoul(argv[++i],NULL,0);
-         else
-           value = strtoul(&argv[i][2],NULL,0);
-           
-         if (value > 255)
-         {
-           fprintf(stderr,"%s: E9999: byte should be 0..255\n",MSG_ERROR);
-           exit(1);
-         }
-         
-         data->fill = value;
-         break;
-         
-    case 'R':
-    case 'W':
-    case 'E':
-    case 'T':
-         fprintf(stderr,"%s: E9999: '%c' not implemented\n",MSG_ERROR,argv[i][1]);
-         break;
-         
-    default:
-         return false;
-  }
-  
-  *pi = i;
-  return true;
-}
 
 /**************************************************************************/
 
