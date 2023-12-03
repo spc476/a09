@@ -332,9 +332,7 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
            
       case VM_AT16:
            addr      = stack[sp];
-           stack[sp] = (data->memory[addr] << 8)
-                     |  data->memory[addr+1]
-                     ;
+           stack[sp] = (data->memory[addr] << 8) | data->memory[addr + 1];
            break;
            
       case VM_CPUCCc:
