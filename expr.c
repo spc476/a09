@@ -224,7 +224,7 @@ static bool eval(
            return message(a09,MSG_ERROR,"E0008: divide by 0 error");
          v1->value = v1->value / v2->value;
          break;
-      
+         
     case OP_MOD:
          if (v2->value == 0)
            return message(a09,MSG_ERROR,"E0008: divide by 0 error");
@@ -346,7 +346,7 @@ static struct optable const *get_op(struct buffer *buffer)
          }
          else
            return &cops[OP_BOR];
-         
+           
     case '<':
          if (buffer->buf[buffer->ridx] == '<')
          {
@@ -409,7 +409,7 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   {
     if ((op = get_op(buffer)) == NULL)
       break;
-
+      
     while(osp < sizeof(ostack) / sizeof(ostack[0]))
     {
       if (
@@ -433,7 +433,7 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
     ostack[--osp] = op;
     
     if (vsp == 0)
-      return message(a09,MSG_ERROR,"E0066: expression too complex");      
+      return message(a09,MSG_ERROR,"E0066: expression too complex");
     if (!factor(&vstack[--vsp],a09,buffer,pass))
       return false;
   }

@@ -134,7 +134,7 @@ static bool collect_esc_string(
     wbuf->buf[wbuf->widx++] = c;
     assert(wbuf->widx < sizeof(wbuf->buf));
   }
-    
+  
   return true;
 }
 
@@ -220,7 +220,7 @@ static bool parse_operand(struct opcdata *opd)
   {
     if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
       return false;
-    
+      
     c = skip_space(opd->buffer);
     if ((c != ';') && (c != '\0'))
     {
@@ -767,7 +767,7 @@ static bool op_br(struct opcdata *opd)
   
   if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
     return false;
-
+    
   if (opd->value.external)
   {
     opd->bytes[opd->sz++] = opd->op->opcode;
@@ -784,7 +784,7 @@ static bool op_br(struct opcdata *opd)
       else if ((delta > 0x007F) && (delta < 0xFF80))
         return message(opd->a09,MSG_ERROR,"E0029: target exceeds 8-bit range");
     }
-      
+    
     opd->bytes[opd->sz++] = opd->op->opcode;
     opd->bytes[opd->sz++] = delta & 255;
   }
@@ -804,7 +804,7 @@ static bool op_lbr(struct opcdata *opd)
   
   if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
     return false;
-  
+    
   if (opd->op->page)
     opd->bytes[opd->sz++] = opd->op->page;
     
@@ -825,7 +825,7 @@ static bool op_lbr(struct opcdata *opd)
       else if ((delta < 0x80) || (delta > 0xFF80))
         message(opd->a09,MSG_WARNING,"W0009: offset could be 8-bits, maybe use short branch?");
     }
-      
+    
     opd->bytes[opd->sz++] = opd->op->opcode;
     opd->bytes[opd->sz++] = delta >> 8;
     opd->bytes[opd->sz++] = delta & 255;
@@ -1006,9 +1006,9 @@ static bool pseudo_set(struct opcdata *opd)
   
   if (!parse_dirext(opd))
     return message(opd->a09,MSG_ERROR,"E0063: missing value for SET");
-  
+    
   if (opd->pass == 1)
-  {  
+  {
     struct symbol  *sym = symbol_find(opd->a09,&opd->label);
     if (sym == NULL)
       return message(opd->a09,MSG_ERROR,"E0037: missing label for SET");
@@ -1044,7 +1044,7 @@ static bool pseudo_org(struct opcdata *opd)
   
   if (!parse_dirext(opd))
     return message(opd->a09,MSG_ERROR,"E0039: missing value for ORG");
-  
+    
   last         = opd->a09->pc;
   opd->a09->pc = opd->value.value;
   return opd->a09->format.def.org(&opd->a09->format,opd,opd->value.value,last);
@@ -1134,7 +1134,7 @@ static bool pseudo_fdb(struct opcdata *opd)
   assert((opd->pass == 1) || (opd->pass == 2));
   
   opd->data = true;
-    
+  
   while(true)
   {
     char c = skip_space(opd->buffer);
@@ -1290,7 +1290,7 @@ static bool pseudo_include(struct opcdata *opd)
   
   if (!parse_string(opd->a09,&filename,opd->buffer))
     return false;
-  
+    
   assert(filename.widx < sizeof(filename.buf));
   filename.buf[filename.widx++] = '\0';
   
@@ -1505,14 +1505,14 @@ static bool pseudo_align(struct opcdata *opd)
     
   if (opd->value.unknownpass1)
     return message(opd->a09,MSG_ERROR,"E0051: value for ALIGN must be known in pass 1");
-  
+    
   if (opd->value.value == 0)
     return message(opd->a09,MSG_ERROR,"E0008: divide by 0 error");
-  
+    
   rem = opd->a09->pc % opd->value.value;
   if (rem == 0)
     return true;
-      
+    
   opd->data   = true;
   opd->datasz = opd->value.value - rem;
   

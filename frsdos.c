@@ -94,7 +94,7 @@ static bool block_zero_write(
       
       if (!update_section_size(format,opd))
         return false;
-      
+        
       pos    = ftell(opd->a09->out);
       addr   = opd->a09->pc + bsize;
       hdr[0] = 0;
@@ -141,7 +141,7 @@ static bool frsdos_end(union format *fmt,struct opcdata *opd,struct symbol const
       
     if (!update_section_size(format,opd))
       return false;
-    
+      
     hdr[0] = 0xFF;
     hdr[1] = 0;
     hdr[2] = 0;

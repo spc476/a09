@@ -359,7 +359,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     
     if ((pass == 1) && (opd.label.text[0] == '.') && (a09->label.s == 0))
       message(a09,MSG_WARNING,"W0010: missing initial label");
-    
+      
     /*-----------------------------------
     ; store the current global label
     ;------------------------------------*/
@@ -416,7 +416,7 @@ bool assemble_pass(struct a09 *a09,int pass)
   message(a09,MSG_DEBUG,"Pass %d",pass);
   if (!a09->format.def.pass_start(&a09->format,a09,pass))
     return false;
-  
+    
   while(!feof(a09->in))
   {
     if (!read_line(a09->in,&a09->inbuf))
@@ -531,7 +531,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
                format = argv[++i];
              else
                format = &argv[i][2];
-             
+               
              if (strcmp(format,"bin") == 0)
              {
                if (!format_bin_init(&a09->format.bin,a09))
@@ -696,10 +696,10 @@ int main(int argc,char *argv[])
   
   if (a09.mkdeps)
     a09.mkdlen = printf("%s: %s",a09.outfile,a09.infile);
-  
+    
   if (!assemble_pass(&a09,1))
     exit(1);
-  
+    
   if (a09.mkdeps)
   {
     fclose(a09.in);
@@ -751,7 +751,7 @@ int main(int argc,char *argv[])
   
   if (rc)
     warning_unused_symbols(&a09,a09.symtab);
-  
+    
   if (a09.list != NULL)
   {
     fprintf(a09.list,"\n");

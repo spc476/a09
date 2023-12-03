@@ -21,7 +21,7 @@
 ****************************************************************************/
 
 // XXX - the way the code is now, we can't call forward in the tests
-//	because the code isn't laid down yet.
+//      because the code isn't laid down yet.
 
 #include <stdlib.h>
 #include <string.h>
@@ -32,7 +32,7 @@
 
 enum vmops
 {
-  VM_LOR,	/* why yes, these do match enum operator */
+  VM_LOR,       /* why yes, these do match enum operator */
   VM_LAND,
   VM_GT,
   VM_GE,
@@ -50,7 +50,7 @@ enum vmops
   VM_MUL,
   VM_DIV,
   VM_MOD,
-  VM_NEG,	/* and now new operators */
+  VM_NEG,       /* and now new operators */
   VM_NOT,
   VM_LIT,
   VM_AT8,
@@ -150,7 +150,7 @@ char const format_test_usage[] =
         "\tbut not traced.  You can also enable tracing with the\n"
         "\t.TRON directive.\n"
         ;
-
+        
 /**************************************************************************/
 
 static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
@@ -420,7 +420,7 @@ static mc6809byte__t ft_cpu_read(mc6809__t *cpu,mc6809addr__t addr,bool inst)
   struct format_test *test = cpu->user;
   struct testdata    *data = test->data;
   
-  if (cpu->instpc == addr)	/* start of an instruction */
+  if (cpu->instpc == addr)      /* start of an instruction */
   {
     if (!data->prot[addr].read)
     {
@@ -501,12 +501,12 @@ static bool ftcompile(
   
   if (!ftfactor(&program[vip++],a09,buffer,pass))
     return false;
-  
+    
   while(true)
   {
     if ((op = get_op(buffer)) == NULL)
       break;
-    
+      
     while(osp < sizeof(ostack) / sizeof(ostack[0]))
     {
       if (
@@ -541,16 +541,16 @@ static bool ftcompile(
   assert(osp == sizeof(ostack) / sizeof(ostack[0]));
   
   struct vmcode *new = realloc(data->triggers,(data->numtrig + 1) * sizeof(struct vmcode));
-
+  
   if (new == NULL)
     return message(a09,MSG_ERROR,"E0046: out of memory");
-
+    
   data->triggers                = new;
   data->triggers[data->numtrig] = malloc(vip * sizeof(enum vmops));
-
+  
   if (data->triggers[data->numtrig] == NULL)
     return message(a09,MSG_ERROR,"E0046: out of memory");
-
+    
   memcpy(data->triggers[data->numtrig],program,vip * sizeof(enum vmops));
   data->numtrig++;
   return true;
@@ -579,7 +579,7 @@ static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
            value = strtoul(argv[++i],NULL,0);
          else
            value = strtoul(&argv[i][2],NULL,0);
-         
+           
          if (value > 65535u)
          {
            fprintf(stderr,"%s: E9999: address exceeds address space\n",MSG_ERROR);
@@ -601,7 +601,7 @@ static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
            value = strtoul(argv[++i],NULL,0);
          else
            value = strtoul(&argv[i][2],NULL,0);
-         
+           
          if (value > 255)
          {
            fprintf(stderr,"%s: E9999: byte should be 0..255\n",MSG_ERROR);
@@ -652,7 +652,7 @@ static bool ftest_inst_write(union format *fmt,struct opcdata *opd)
   struct format_test *test = &fmt->test;
   struct testdata    *data = test->data;
   memcpy(&data->memory[data->addr],opd->bytes,opd->sz);
-
+  
   for (size_t i = 0 ; i < opd->sz ; i++)
   {
     data->prot[data->addr].exec  = true;
@@ -680,7 +680,7 @@ static bool ftest_data_write(
   
   struct format_test *test = &fmt->test;
   struct testdata    *data = test->data;
-
+  
   memcpy(&data->memory[data->addr],buffer,len);
   data->addr += len;
   return true;
@@ -952,7 +952,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
   assert(a09 != NULL);
   (void)a09;
   
-  fmt->backend    = BACKEND_TEST;  
+  fmt->backend    = BACKEND_TEST;
   fmt->cmdline    = ftest_cmdline;
   fmt->pass_start = ftest_pass_start;
   fmt->pass_end   = fdefault_pass;

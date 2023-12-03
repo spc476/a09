@@ -41,7 +41,7 @@ char const format_srec_usage[] =
         "\t-O\t\tforce override of load and exec address\n"
         "\n"
         "NOTE:\tS0 record will be truncated to max record size\n";
-
+        
 /**************************************************************************/
 
 static void write_record(
@@ -181,7 +181,7 @@ static bool fsrec_pass_start(union format *fmt,struct a09 *a09,int pass)
       }
     }
   }
-    
+  
   return true;
 }
 
@@ -229,7 +229,7 @@ static bool fsrec_end(
     
     if (format->endf)
       return message(opd->a09,MSG_ERROR,"E0056: END section already written");
-    
+      
     if (format->idx > 0)
       write_record(opd->a09->out,'1',format->addr,format->buffer,format->idx);
     if (!format->override && (sym != NULL))
@@ -400,7 +400,7 @@ bool format_srec_init(struct format_srec *fmt,struct a09 *a09)
   assert(fmt != NULL);
   assert(a09 != NULL);
   (void)a09;
-
+  
   fmt->backend    = BACKEND_SREC;
   fmt->cmdline    = fsrec_cmdline;
   fmt->pass_start = fsrec_pass_start;

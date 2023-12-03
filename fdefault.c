@@ -133,7 +133,7 @@ bool fdefault_test(union format *fmt,struct opcdata *opd)
     
     if (!read_line(opd->a09->in,&opd->a09->inbuf))
       return true;
-    
+      
     opd->a09->lnum++;
     print_list(opd->a09,opd,false); // XXX extra line in list file
     
@@ -141,15 +141,15 @@ bool fdefault_test(union format *fmt,struct opcdata *opd)
     c = skip_space(&opd->a09->inbuf);
     if ((c == ';') || (c == '\0'))
       continue;
-  
+      
     opd->a09->inbuf.ridx--;
     if (!parse_op(&opd->a09->inbuf,&op))
       return message(opd->a09,MSG_ERROR,"E0003: unknown opcode");
     if (op->opcode == 1)
       return true;
-
+      
     //print_list(opd->a09,opd,false); // XXX missing line in list file
-
+    
   }
   
   return message(opd->a09,MSG_ERROR,"E0010: unexpected end of input");
