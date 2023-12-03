@@ -121,20 +121,20 @@ struct trigger
 
 struct testdata
 {
-  struct a09      *a09;
-  const char      *corefile;
-  tree__s         *triggers;
-  mc6809__t        cpu;
-  mc6809dis__t     dis;
-  struct buffer    name;
-  uint16_t         addr;
-  uint16_t         pc;
-  uint16_t         sp;
-  mc6809byte__t    fill;
-  bool             tron;
-  char             errbuf[128];
-  mc6809byte__t    memory[65536u];
-  struct memprot   prot  [65536u];
+  struct a09     *a09;
+  const char     *corefile;
+  tree__s        *triggers;
+  mc6809__t       cpu;
+  mc6809dis__t    dis;
+  struct buffer   name;
+  uint16_t        addr;
+  uint16_t        pc;
+  uint16_t        sp;
+  mc6809byte__t   fill;
+  bool            tron;
+  char            errbuf[128];
+  mc6809byte__t   memory[65536u];
+  struct memprot  prot  [65536u];
 };
 
 static inline struct trigger *tree2trigger(tree__s *tree)
