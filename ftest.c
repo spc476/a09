@@ -426,15 +426,23 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
            break;
            
       case VM_IDX16:
-           addr      = (cpu->X.w + stack[sp]);
-           stack[sp] = (data->memory[addr] << 8)
-                     |  data->memory[addr+1]
-                     ;
+           addr      = cpu->X.w + stack[sp];
+           stack[sp] = (data->memory[addr] << 8) | data->memory[addr + 1];
            break;
            
       case VM_IDY16:
+           addr      = cpu->Y.w + stack[sp];
+           stack[sp] = (data->memory[addr] << 8) | data->memory[addr + 1];
+           break;
+           
       case VM_IDS16:
+           addr      = cpu->S.w + stack[sp];
+           stack[sp] = (data->memory[addr] << 8) | data->memory[addr + 1];
+           break;
+           
       case VM_IDU16:
+           addr      = cpu->U.w + stack[sp];
+           stack[sp] = (data->memory[addr] << 8) | data->memory[addr + 1];
            break;
            
       case VM_SCMP:
