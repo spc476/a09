@@ -84,6 +84,15 @@ enum vmops
   VM_EXIT,
 };
 
+enum
+{
+  TEST_FAILED = MC6809_FAULT_user,
+  TEST_NON_READ_MEM,
+  TEST_WEEDS,
+  TEST_NON_WRITE_MEM,
+  TEST_max,
+};
+
 struct memprot
 {
   bool read  : 1;
@@ -116,6 +125,7 @@ struct testdata
   bool            tron;
   size_t          numtrig;
   struct vmcode  *triggers;
+  char            errbuf[128];
   mc6809byte__t   memory[65536u];
   struct memprot  prot  [65536u];
 };
@@ -413,9 +423,15 @@ static mc6809byte__t ft_cpu_read(mc6809__t *cpu,mc6809addr__t addr,bool inst)
   if (cpu->instpc == addr)	/* start of an instruction */
   {
     if (!data->prot[addr].read)
-      message(data->a09,MSG_WARNING,"W9999: reading from non-readable memory");
+    {
+      snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X addr=%04X",cpu->pc.w,addr);
+      longjmp(cpu->err,TEST_NON_READ_MEM);
+    }
     if (!data->prot[addr].exec)
-      message(data->a09,MSG_WARNING,"W9998: possible code execution in the weeds");
+    {
+      snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X addr=%04X",cpu->pc.w,addr);
+      longjmp(cpu->err,TEST_WEEDS);
+    }
   }
   
   return data->memory[addr];
@@ -432,7 +448,10 @@ static void ft_cpu_write(mc6809__t *cpu,mc6809addr__t addr,mc6809byte__t byte)
   struct testdata    *data = test->data;
   
   if (!data->prot[addr].write)
-    message(data->a09,MSG_WARNING,"W9997: writing to non-writable memory");
+  {
+    snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X addr=%04X",cpu->pc.w,addr);
+    longjmp(cpu->err,TEST_NON_WRITE_MEM);
+  }
   if (data->prot[addr].exec)
     message(data->a09,MSG_WARNING,"W9996: possible self-modifying code");
   if (data->prot[addr].tron)
@@ -633,6 +652,7 @@ static bool ftest_inst_write(union format *fmt,struct opcdata *opd)
   struct format_test *test = &fmt->test;
   struct testdata    *data = test->data;
   memcpy(&data->memory[data->addr],opd->bytes,opd->sz);
+
   for (size_t i = 0 ; i < opd->sz ; i++)
   {
     data->prot[data->addr].exec  = true;
@@ -801,16 +821,6 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
   
   if (opd->pass == 2)
   {
-    static char const *const mfaults[] =
-    {
-      "internal error---you should never see this one",
-      "MC6809_FAULT_INTERNAL_ERROR",
-      "MC6809_FAULT_INSTRUCTION",
-      "MC6809_FAULT_ADDRESS_MODE",
-      "MC6809_FAULT_EXG",
-      "MC6809_FAULT_TFR",
-    };
-    
     struct format_test *test = &fmt->test;
     struct testdata    *data = test->data;
     char const         *tag  = "";
@@ -823,7 +833,8 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
     {
       if (data->memory[data->cpu.pc.w] == data->fill)
       {
-        message(opd->a09,MSG_WARNING,"W9994: code went into the weeds\n");
+        snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X",data->cpu.pc.w);
+        rc = TEST_WEEDS;
         break;
       }
       
@@ -860,7 +871,7 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
         
         if (!okay)
         {
-          rc = MC6809_FAULT_user;
+          rc = TEST_FAILED;
           break;
         }
       }
@@ -871,10 +882,22 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
     
     if (rc != 0)
     {
-      if (rc < MC6809_FAULT_user)
-        return message(opd->a09,MSG_ERROR,"E9999: Internal error---%s",mfaults[rc]);
-      else // XXX
-        return message(opd->a09,MSG_ERROR,"E9999: test failed---%s",tag);
+      static char const *const mfaults[] =
+      {
+        "internal error---you should never see this one",
+        "an internal error inside the MC6809 emulator",
+        "an illegal instruction was encountered",
+        "an illegal addressing mode was encountered",
+        "an illegal combination of registers was being exchanged",
+        "an illegal combination of registers was being transfered",
+        "test failed",
+        "reading from non-readable memory",
+        "code went into the weeds",
+        "writing to non-writable memory",
+      };
+      
+      if (rc >= TEST_max) rc = 0;
+      return message(opd->a09,MSG_ERROR,"E9900: %s: %s: %s\n",tag,mfaults[rc],data->errbuf);
     }
   }
   return true;
@@ -980,6 +1003,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     fmt->data->dis.fault = ft_dis_fault;
     fmt->data->sp        = 0x8000;
     fmt->data->fill      = 0x3F; // SWI instruction
+    fmt->data->errbuf[0] = '\0';
     
     memset(fmt->data->memory,fmt->data->fill,65536u);
     memset(fmt->data->prot,init.b,65536u);
@@ -1003,20 +1027,20 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
 
 #if 1
     /* misc/test-disasm.asm */
-    static enum vmops p1[] = { VM_CPUX , VM_LIT , 0x0813   , VM_EQ  , VM_EXIT };
+    static enum vmops p1[] = { VM_CPUX , VM_LIT , 0x0815   , VM_EQ  , VM_EXIT };
     static enum vmops p2[] = { VM_CPUY , VM_LIT , 0x0805   , VM_EQ  , VM_EXIT };
-    static enum vmops p3[] = { VM_LIT  ,      0 , VM_IDX16 , VM_LIT , 0x081D , VM_EQ , VM_EXIT };
-    static enum vmops p4[] = { VM_LIT  ,      2 , VM_IDX16 , VM_LIT , 0x0822 , VM_EQ , VM_EXIT };
-    static enum vmops p5[] = { VM_LIT  ,      4 , VM_IDX16 , VM_LIT , 0x0827 , VM_EQ , VM_EXIT };
-    static enum vmops p6[] = { VM_LIT  ,      6 , VM_IDX16 , VM_LIT , 0x082E , VM_EQ , VM_EXIT };
-    static enum vmops p7[] = { VM_LIT  ,      8 , VM_IDX16 , VM_LIT , 0x0837 , VM_EQ , VM_EXIT };
-    static enum vmops pD[] = { VM_LIT  , 0x084A , VM_AT8   , VM_LIT ,   0x12 , VM_EQ , VM_EXIT };
+    static enum vmops p3[] = { VM_LIT  ,      0 , VM_IDX16 , VM_LIT , 0x081F , VM_EQ , VM_EXIT };
+    static enum vmops p4[] = { VM_LIT  ,      2 , VM_IDX16 , VM_LIT , 0x0824 , VM_EQ , VM_EXIT };
+    static enum vmops p5[] = { VM_LIT  ,      4 , VM_IDX16 , VM_LIT , 0x0829 , VM_EQ , VM_EXIT };
+    static enum vmops p6[] = { VM_LIT  ,      6 , VM_IDX16 , VM_LIT , 0x0830 , VM_EQ , VM_EXIT };
+    static enum vmops p7[] = { VM_LIT  ,      8 , VM_IDX16 , VM_LIT , 0x0839 , VM_EQ , VM_EXIT };
+    static enum vmops pD[] = { VM_LIT  , 0x084C , VM_AT8   , VM_LIT ,   0x12 , VM_EQ , VM_EXIT };
     static enum vmops pE[] = { VM_LIT  , 0x7FCF , VM_AT8   , VM_LIT ,   0x3F , VM_EQ , VM_EXIT };
-    static enum vmops p8[] = { VM_LIT  , 0x081D , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
-    static enum vmops p9[] = { VM_LIT  , 0x0822 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
-    static enum vmops pA[] = { VM_LIT  , 0x0827 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
-    static enum vmops pB[] = { VM_LIT  , 0x082E , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
-    static enum vmops pC[] = { VM_LIT  , 0x0837 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+    static enum vmops p8[] = { VM_LIT  , 0x081F , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+    static enum vmops p9[] = { VM_LIT  , 0x0824 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+    static enum vmops pA[] = { VM_LIT  , 0x0829 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+    static enum vmops pB[] = { VM_LIT  , 0x0830 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
+    static enum vmops pC[] = { VM_LIT  , 0x0839 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
     static struct vmcode vmcode[] =
     {
       { .here = 0x0810 , .prog = p1 , .tag = "DISASM:13" , .str = NULL , .len = 0 },
