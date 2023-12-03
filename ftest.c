@@ -166,7 +166,7 @@ char const format_test_usage[] =
         
 /**************************************************************************/
 
-static int triggercmp(void const *restrict needle,void const *restrict haystack)
+static int triggeraddrcmp(void const *restrict needle,void const *restrict haystack)
 {
   uint16_t       const *key     = needle;
   struct trigger const *trigger = haystack;
@@ -896,7 +896,7 @@ static bool ftest_trigger(union format *fmt,struct opcdata *opd)
     data->prot[opd->a09->pc].check = true;
     
     struct trigger *trigger;
-    tree__s         *tree = tree_find(data->triggers,&opd->a09->pc,triggercmp);
+    tree__s         *tree = tree_find(data->triggers,&opd->a09->pc,triggeraddrcmp);
     
     if (tree == NULL)
     {
@@ -966,7 +966,7 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
       {
         bool     okay;
         uint16_t addr = data->cpu.pc.w;
-        tree__s *tree = tree_find(data->triggers,&addr,triggercmp);
+        tree__s *tree = tree_find(data->triggers,&addr,triggeraddrcmp);
         
         if (tree != NULL)
         {
