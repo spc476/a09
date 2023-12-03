@@ -951,6 +951,14 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
   assert((opd->pass == 1) || (opd->pass == 2));
   assert(fmt->backend == BACKEND_TEST);
   
+  struct format_test *test = &fmt->test;
+  struct testdata    *data = test->data;
+  
+  if (!test->intest)
+    return message(opd->a09,MSG_ERROR,"E9999: no matching .TEST");
+    
+  test->intest = false;
+  
   if (opd->pass == 2)
   {
     struct format_test *test = &fmt->test;
