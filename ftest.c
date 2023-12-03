@@ -648,6 +648,26 @@ static bool ftest_org(
 
 /**************************************************************************/
 
+static bool ftest_rmb(union format *fmt,struct opcdata *opd)
+{
+  assert(fmt != NULL);
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_TEST);
+  
+  if (opd->pass == 2)
+  {
+    struct format_test *test = &fmt->test;
+    struct testdata    *data = test->data;
+    
+    data->addr += opd->value.value;
+  }
+  
+  return true;
+}
+
+/**************************************************************************/
+
 static bool ftest_test(union format *fmt,struct opcdata *opd)
 {
   assert(fmt != NULL);
@@ -874,6 +894,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
   fmt->align      = fdefault;
   fmt->end        = fdefault_end;
   fmt->org        = ftest_org;
+  fmt->rmb        = ftest_rmb;
   fmt->setdp      = fdefault;
   fmt->test       = ftest_test;
   fmt->tron       = ftest_tron;
