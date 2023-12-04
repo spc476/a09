@@ -1152,6 +1152,7 @@ static bool ftest_fini(union format *fmt,struct a09 *a09)
   }
   
   free_triggers(test->data->triggers);
+  free(test->data->units);
   free(test->data);
   return true;
 }
