@@ -20,6 +20,7 @@
 *
 ****************************************************************************/
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
@@ -64,21 +65,17 @@ enum vmops
   VM_CPUCCe,
   VM_CPUA,
   VM_CPUB,
-  VM_CPDP,
+  VM_CPUDP,
   VM_CPUD,
   VM_CPUX,
   VM_CPUY,
   VM_CPUU,
   VM_CPUS,
   VM_CPUPC,
-  VM_IDX8,
-  VM_IDY8,
-  VM_IDS8,
-  VM_IDU8,
-  VM_IDX16,
-  VM_IDY16,
-  VM_IDS16,
-  VM_IDU16,
+  VM_IDX,       /* "/offset,x" == "(/x + offset)" */
+  VM_IDY,
+  VM_IDS,
+  VM_IDU,
   VM_SCMP,
   VM_EXIT,
 };
@@ -144,12 +141,21 @@ struct testdata
   struct memprot  prot  [65536u];
 };
 
+static bool ft_expr(enum vmops *,size_t,size_t *,struct a09 *,struct buffer *,int);
+
 /**************************************************************************/
 
 static inline struct trigger *tree2trigger(tree__s *tree)
 {
   assert(tree != NULL);
+#if defined(__clang__)
+#  pragma clang diagnostic push "-Wcast-align"
+#  pragma clang diasnostic ignored "-Wcast-align"
+#endif
   return (struct trigger *)((char *)tree - offsetof(struct trigger,tree));
+#if defined(__clang__)
+#  pragma clang diagnostic pop "-Wcast-align"
+#endif
 }
 
 /**************************************************************************/
@@ -453,7 +459,7 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
            stack[--sp] = cpu->B;
            break;
            
-      case VM_CPDP:
+      case VM_CPUDP:
            stack[--sp] = cpu->dp;
            break;
            
@@ -481,44 +487,20 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
            stack[--sp] = cpu->pc.w;
            break;
            
-      case VM_IDX8:
-           addr      = cpu->X.w + stack[sp];
-           stack[sp] = data->memory[addr];
+      case VM_IDX:
+           stack[sp] += cpu->X.w;
            break;
            
-      case VM_IDY8:
-           addr      = cpu->Y.w + stack[sp];
-           stack[sp] = data->memory[addr];
+      case VM_IDY:
+           stack[sp] += cpu->Y.w;
            break;
            
-      case VM_IDS8:
-           addr      = cpu->S.w + stack[sp];
-           stack[sp] = data->memory[addr];
+      case VM_IDS:
+           stack[sp] += cpu->S.w;
            break;
            
-      case VM_IDU8:
-           addr      = cpu->U.w + stack[sp];
-           stack[sp] = data->memory[addr];
-           break;
-           
-      case VM_IDX16:
-           addr      = cpu->X.w + stack[sp];
-           stack[sp] = (data->memory[addr] << 8) | data->memory[addr + 1];
-           break;
-           
-      case VM_IDY16:
-           addr      = cpu->Y.w + stack[sp];
-           stack[sp] = (data->memory[addr] << 8) | data->memory[addr + 1];
-           break;
-           
-      case VM_IDS16:
-           addr      = cpu->S.w + stack[sp];
-           stack[sp] = (data->memory[addr] << 8) | data->memory[addr + 1];
-           break;
-           
-      case VM_IDU16:
-           addr      = cpu->U.w + stack[sp];
-           stack[sp] = (data->memory[addr] << 8) | data->memory[addr + 1];
+      case VM_IDU:
+           stack[sp] += cpu->U.w;
            break;
            
       case VM_SCMP:
@@ -615,77 +597,199 @@ static void ft_dis_fault(mc6809dis__t *dis,mc6809fault__t fault)
 
 /**************************************************************************/
 
-static bool ftcompile(
-        struct a09     *a09,
-        struct buffer  *restrict name,
-        struct trigger *trigger,
-        struct buffer  *restrict buffer
+static bool ft_register(
+        enum vmops    *prog,
+        size_t         max,
+        size_t        *pvip,
+        struct a09    *a09,
+        struct buffer *buffer,
+        int            pass
 )
 {
-#if 0
+  (void)prog;
+  (void)max;
+  (void)pvip;
+  assert(a09 != NULL);
+  (void)buffer;
+  assert(pass == 2);
+  
+  return message(a09,MSG_ERROR,"E9999: not implemented");
+}
 
-  /* misc/test.asm */
-  static enum vmops p1[5] = { VM_CPUB   , VM_LIT , 0 , VM_NE , VM_EXIT };
-  static enum vmops p2[5] = { VM_CPUCCz , VM_LIT , 0 , VM_NE , VM_EXIT };
-  static enum vmops p3[]  = {
-      VM_LIT , 0x4003 , VM_AT8  , VM_LIT ,   0x55 , VM_EQ ,
-      VM_LIT , 0x4004 , VM_AT16 , VM_LIT , 0xAAAA , VM_EQ ,
-      VM_LAND  , VM_EXIT
-  };
-#else
-  /* misc/test-disasm.asm */
-  static enum vmops p1[] = { VM_CPUX , VM_LIT , 0x0813   , VM_EQ  , VM_EXIT };
-  static enum vmops p2[] = { VM_CPUY , VM_LIT , 0x0805   , VM_EQ  , VM_EXIT };
-//  static enum vmops p3[] = { VM_LIT  ,      0 , VM_IDX16 , VM_LIT , 0x081F , VM_EQ , VM_EXIT };
-//  static enum vmops p4[] = { VM_LIT  ,      2 , VM_IDX16 , VM_LIT , 0x0824 , VM_EQ , VM_EXIT };
-//  static enum vmops p5[] = { VM_LIT  ,      4 , VM_IDX16 , VM_LIT , 0x0829 , VM_EQ , VM_EXIT };
-//  static enum vmops p6[] = { VM_LIT  ,      6 , VM_IDX16 , VM_LIT , 0x0830 , VM_EQ , VM_EXIT };
-//  static enum vmops p7[] = { VM_LIT  ,      8 , VM_IDX16 , VM_LIT , 0x0839 , VM_EQ , VM_EXIT };
-//  static enum vmops pD[] = { VM_LIT  , 0x084C , VM_AT8   , VM_LIT ,   0x12 , VM_EQ , VM_EXIT };
-//  static enum vmops pE[] = { VM_LIT  , 0x7FCF , VM_AT8   , VM_LIT ,   0x3F , VM_EQ , VM_EXIT };
-//  static enum vmops p8[] = { VM_LIT  , 0x081F , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
-//  static enum vmops p9[] = { VM_LIT  , 0x0824 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
-//  static enum vmops pA[] = { VM_LIT  , 0x0829 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
-//  static enum vmops pB[] = { VM_LIT  , 0x0830 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
-//  static enum vmops pC[] = { VM_LIT  , 0x0839 , VM_SCMP  , VM_LIT ,      0 , VM_EQ , VM_EXIT };
-#endif
+/**************************************************************************/
+
+static bool ft_value(
+        enum vmops    *prog,
+        size_t         max,
+        size_t        *pvip,
+        struct a09    *a09,
+        struct buffer *buffer,
+        int            pass
+)
+{
+  assert(prog   != NULL);
+  assert(max    == 32);
+  assert(pvip   != NULL);
+  assert(*pvip  <  max);
+  assert(a09    != NULL);
+  assert(buffer != NULL);
+  assert(pass   == 2);
   
-  struct vmcode *new = realloc(trigger->triggers,(trigger->cnt + 1) * sizeof(struct vmcode));
-  if (new == NULL)
-    return message(a09,MSG_ERROR,"E0046: out of memory");
-  trigger->triggers = new;
-  new = &trigger->triggers[trigger->cnt++]; // now pointing to our new entry
+  uint16_t v;
+  bool     neg = false;
+  bool     not = false;
+  bool     rc  = true;
+  char     c   = skip_space(buffer);
   
-  new->line = a09->lnum;
-  snprintf(new->tag,sizeof(new->tag),"%s:%zu",name->buf,a09->lnum);
-  
-  skip_space(buffer);
-  buffer->ridx--;
-  if (strcmp(&buffer->buf[buffer->ridx],"/x        = .results") == 0)
+  if (c == '/')
+    return ft_register(prog,max,pvip,a09,buffer,pass);
+  else if (c == '(')
   {
-    new->str = NULL;
-    new->len = 0;
-    memcpy(new->prog,p1,sizeof(p1));
+    c = skip_space(buffer);
+    if (c == '\0')
+      return message(a09,MSG_ERROR,"E0010: unexpected end of input");
+    buffer->ridx--;
+    if (!ft_expr(prog,max,pvip,a09,buffer,pass))
+      return false;
+    c = skip_space(buffer);
+    if (c != ')')
+      return message(a09,MSG_ERROR,"E0011: missing right parenthesis");
+    return true;
   }
-  else if (strcmp(&buffer->buf[buffer->ridx],"/y        = .next") == 0)
+  
+  if (*pvip >= max - 2)
+    return message(a09,MSG_ERROR,"E9999: not enough space for expression");
+    
+  if (c == '-')
   {
-    new->str = NULL;
-    new->len = 0;
-    memcpy(new->prog,p2,sizeof(p2));
+    neg = true;
+    c = buffer->buf[buffer->ridx++];
+  }
+  else if (c == '~')
+  {
+    not = true;
+    c = buffer->buf[buffer->ridx++];
+  }
+  else if (c == '+')
+   c = buffer->buf[buffer->ridx++];
+   
+  if (c == '$')
+    rc = s2num(a09,&v,buffer,16);
+  else if (c == '&')
+    rc = s2num(a09,&v,buffer,8);
+  else if (c == '%')
+    rc = s2num(a09,&v,buffer,2);
+  else if (isdigit(c))
+  {
+    buffer->ridx--;
+    rc = s2num(a09,&v,buffer,10);
+  }
+  else if ((c == '.') || (c == '.') || isalpha(c))
+  {
+    struct symbol *sym;
+    label          label;
+    
+    buffer->ridx--;
+    if (!parse_label(&label,buffer,a09,pass))
+      return false;
+    sym = symbol_find(a09,&label);
+    if (sym == NULL)
+      return message(a09,MSG_ERROR,"E0004: unknown symbol '%.*s'",label.s,label.text);
+    v = sym->value;
+    sym->refs++;
+  }
+  else if ((c == '"') || (c == '\''))
+    return message(a09,MSG_ERROR,"E9999: not implemented");
+  else
+    return message(a09,MSG_ERROR,"E0006: not a value");
+    
+  if (neg)
+    v = -v;
+  else if (not)
+    v = ~v;
+    
+  prog[(*pvip)++] = VM_LIT;
+  prog[(*pvip)++] = v;
+  
+  return rc;
+}
+
+/**************************************************************************/
+
+static bool ft_factor(
+        enum vmops    *prog,
+        size_t         max,
+        size_t        *pvip,
+        struct a09    *a09,
+        struct buffer *buffer,
+        int            pass
+)
+{
+  bool fetchbyte = false;
+  bool fetchword = false;
+  
+  char c = skip_space(buffer);
+  if ((c == '\0') || (c == ';'))
+    return message(a09,MSG_ERROR,"E0010: unexpected end of input");
+    
+  if (c == '@')
+  {
+    if (buffer->buf[buffer->ridx] == '@')
+    {
+      buffer->ridx++;
+      fetchword = true;
+    }
+    else
+      fetchbyte = true;
+    skip_space(buffer);
+    buffer->ridx--;
   }
   else
-    return message(a09,MSG_ERROR,"E9999: bad input");
+    buffer->ridx--;
     
+  if (!ft_value(prog,max,pvip,a09,buffer,pass))
+    return false;
+    
+  if (fetchbyte)
+  {
+    if (*pvip == max)
+      return message(a09,MSG_ERROR,"E0066: expression too complex");
+    prog[(*pvip)++] = VM_AT8;
+  }
+  else if (fetchword)
+  {
+    if (*pvip == max)
+      return message(a09,MSG_ERROR,"E0066: expression too complex");
+    prog[(*pvip)++] = VM_AT16;
+  }
+  
   return true;
 }
-#if 0
+
+/**************************************************************************/
+
+static bool ft_expr(
+        enum vmops    *prog,
+        size_t         max,
+        size_t        *pvip,
+        struct a09    *a09,
+        struct buffer *buffer,
+        int            pass
+)
+{
+  assert(prog   != NULL);
+  assert(max    == 32);
+  assert(pvip   != NULL);
+  assert(*pvip  <  max);
+  assert(a09    != NULL);
+  assert(buffer != NULL);
+  assert((pass == 1) || (pass == 2));
+  
   struct optable const *op;
-  enum vmops            program[32];
   struct optable const *ostack[15];
-  size_t                vip = 0;
   size_t                osp = sizeof(ostack) / sizeof(ostack[0]);
   
-  if (!ftfactor(&program[vip++],a09,buffer,pass))
+  if (!ft_factor(prog,max,pvip,a09,buffer,pass))
     return false;
     
   while(true)
@@ -696,13 +800,13 @@ static bool ftcompile(
     while(osp < sizeof(ostack) / sizeof(ostack[0]))
     {
       if (
-              (ostack[osp]->pri >op->pri)
+               (ostack[osp]->pri >  op->pri)
            || ((ostack[osp]->pri == op->pri) && (op->pri == AS_LEFT))
-        )
+         )
       {
-        if (vip == sizeof(program) / sizeof(program[0]))
+        if (*pvip == max)
           return message(a09,MSG_ERROR,"E0066: expression too complex");
-        program[vip++] = ostack[osp++]->op;
+        prog[(*pvip)++] = ostack[osp++]->op;
       }
       else
         break;
@@ -711,37 +815,57 @@ static bool ftcompile(
     if (osp == 0)
       return message(a09,MSG_ERROR,"E0066: expression too complex");
     ostack[--osp] = op;
-    if (vip == sizeof(program) / sizeof(program[0]))
+    if (*pvip == max)
       return message(a09,MSG_ERROR,"E0066: expression too complex");
-    if (!factor(&program[vip++],a09,buffer,pass))
+    if (!ft_factor(prog,max,pvip,a09,buffer,pass))
       return false;
   }
   
   while(osp < sizeof(ostack) / sizeof(ostack[0]))
   {
-    if (vip == sizeof(program) / sizeof(program[0]))
+    if (*pvip == max)
       return message(a09,MSG_ERROR,"E0065: Internal error---expression parser mismatch");
-    program[vip++] = ostack(osp++]->op;
+    prog[(*pvip)++] = ostack[osp++]->op;
   }
   
   assert(osp == sizeof(ostack) / sizeof(ostack[0]));
+  return true;
+}
+
+/**************************************************************************/
+
+static bool ft_compile(
+        struct a09      *a09,
+        struct buffer   *restrict name,
+        struct trigger  *trigger,
+        struct buffer   *restrict buffer,
+        struct testdata *data,
+        int              pass
+)
+{
+  enum vmops program[32];
+  size_t     vip = 0;
   
-  struct vmcode *new = realloc(data->triggers,(data->numtrig + 1) * sizeof(struct vmcode));
+  if (!ft_expr(program,sizeof(program)/sizeof(program[0]),&vip,a09,buffer,pass))
+    return false;
+    
+  if (vip == sizeof(program) / sizeof(program[0]))
+    return message(a09,MSG_ERROR,"E0066: expression too complex");
+    
+  program[vip++] = VM_EXIT;
+  
+  struct vmcode *new = realloc(trigger->triggers,(trigger->cnt + 1) * sizeof(struct vmcode));
   
   if (new == NULL)
     return message(a09,MSG_ERROR,"E0046: out of memory");
     
-  data->triggers                = new;
-  data->triggers[data->numtrig] = malloc(vip * sizeof(enum vmops));
+  trigger->triggers = new;
   
-  if (data->triggers[data->numtrig] == NULL)
-    return message(a09,MSG_ERROR,"E0046: out of memory");
-    
-  memcpy(data->triggers[data->numtrig],program,vip * sizeof(enum vmops));
-  data->numtrig++;
+  memcpy(trigger->triggers[trigger->cnt].prog,program,vip * sizeof(enum vmops));
+  snprintf(trigger->triggers[trigger->cnt].tag,sizeof(trigger->triggers[trigger->cnt].tag),"%s:%zu",name->buf,a09->lnum);
+  trigger->cnt++;
   return true;
 }
-#endif
 
 /**************************************************************************/
 
@@ -1011,7 +1135,7 @@ static bool ftest_test(union format *fmt,struct opcdata *opd)
     data->units[data->nunits].addr     = opd->a09->pc;
     data->units[data->nunits].filename = opd->a09->infile;
     data->units[data->nunits].line     = opd->a09->lnum;
-    parse_string(opd->a09,&data->units[data->nunits].name,opd->buffer);  
+    parse_string(opd->a09,&data->units[data->nunits].name,opd->buffer);
     data->nunits++;
   }
   return true;
@@ -1090,7 +1214,15 @@ static bool ftest_trigger(union format *fmt,struct opcdata *opd)
     else
       trigger = tree2trigger(tree);
       
-    if (!ftcompile(opd->a09,&data->units[data->nunits].name,trigger,opd->buffer))
+    if (!ft_compile(
+  opd->a09,
+  &data->units[data->nunits].name,
+  trigger,
+  opd->buffer,
+  data,
+  opd->pass
+  
+  ))
       return false;
   }
   

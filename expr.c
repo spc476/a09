@@ -43,7 +43,7 @@
 
 /**************************************************************************/
 
-static bool s2num(struct a09 *a09,uint16_t *pv,struct buffer *buffer,uint16_t base)
+bool s2num(struct a09 *a09,uint16_t *pv,struct buffer *buffer,uint16_t base)
 {
   assert(pv     != NULL);
   assert(buffer != NULL);
@@ -143,10 +143,8 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
     if (sym == NULL)
     {
       if (pass == 2)
-      {
-        message(a09,MSG_ERROR,"E0004: unknown symbol '%.*s'",label.s,label.text);
-        return false;
-      }
+        return message(a09,MSG_ERROR,"E0004: unknown symbol '%.*s'",label.s,label.text);
+        
       pv->defined      = false;
       pv->external     = false;
       pv->unknownpass1 = true;
@@ -291,7 +289,7 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
 
 /**************************************************************************/
 
-static struct optable const *get_op(struct buffer *buffer)
+struct optable const *get_op(struct buffer *buffer)
 {
   assert(buffer != NULL);
   
