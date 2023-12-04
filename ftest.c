@@ -924,6 +924,25 @@ static bool ftest_data_write(
 
 /**************************************************************************/
 
+static bool ftest_align(union format *fmt,struct opcdata *opd)
+{
+  assert(fmt != NULL);
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_TEST);
+  
+  if (opd->pass == 2)
+  {
+    struct format_test *test = &fmt->test;
+    struct testdata    *data = test->data;
+    data->addr += opd->datasz;
+  }
+  
+  return true;
+}
+
+/**************************************************************************/
+
 static bool ftest_org(
         union format   *fmt,
         struct opcdata *opd,
@@ -941,7 +960,6 @@ static bool ftest_org(
   {
     struct format_test *test = &fmt->test;
     struct testdata    *data = test->data;
-    
     data->addr = start;
   }
   
@@ -1173,7 +1191,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
   fmt->data_write = ftest_data_write;
   fmt->dp         = fdefault;
   fmt->code       = fdefault;
-  fmt->align      = fdefault;
+  fmt->align      = ftest_align;
   fmt->end        = fdefault_end;
   fmt->org        = ftest_org;
   fmt->rmb        = ftest_rmb;
