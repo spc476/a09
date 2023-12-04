@@ -26,6 +26,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <limits.h>
 #include <ctype.h>
 
 #include "a09.h"
@@ -97,7 +98,7 @@ static bool collect_esc_string(
 {
   char c;
   
-  assert(a09  != NULL);
+  assert(a09 != NULL);
   assert(wbuf != NULL);
   assert(rbuf != NULL);
   assert((delim == '"') || (delim == '\''));
@@ -115,17 +116,17 @@ static bool collect_esc_string(
       c = rbuf->buf[rbuf->ridx++];
       switch(c)
       {
-        case 'a':  c = '\a'; break;
-        case 'b':  c = '\b'; break;
-        case 't':  c = '\t'; break;
-        case 'n':  c = '\n'; break;
-        case 'v':  c = '\v'; break;
-        case 'f':  c = '\f'; break;
-        case 'r':  c = '\r'; break;
+        case '"':  c = '"';    break;
+        case '\'': c = '\'';   break;
+        case '\\': c = '\\';   break;
+        case 'a':  c = '\a';   break;
+        case 'b':  c = '\b';   break;
         case 'e':  c = '\033'; break;
-        case '"':  c = '"';  break;
-        case '\'': c = '\''; break;
-        case '\\': c = '\\'; break;
+        case 'f':  c = '\f';   break;
+        case 'n':  c = '\n';   break;
+        case 'r':  c = '\r';   break;
+        case 't':  c = '\t';   break;
+        case 'v':  c = '\v';   break;
         case '\0': return message(a09,MSG_ERROR,"E0013: unexpected end of string");
         default:   return message(a09,MSG_ERROR,"E0014: invalid escape character");
       }
@@ -133,6 +134,31 @@ static bool collect_esc_string(
     
     wbuf->buf[wbuf->widx++] = c;
     assert(wbuf->widx < sizeof(wbuf->buf));
+  }
+  
+  c = toupper(rbuf->buf[rbuf->ridx]);
+  switch(c)
+  {
+    case 'C':
+         assert(wbuf->widx < sizeof(wbuf->buf));
+         if (wbuf->widx > UCHAR_MAX)
+           return message(a09,MSG_ERROR,"E9999: string too long");
+         memmove(&wbuf->buf[1],&wbuf->buf[0],wbuf->widx);
+         wbuf->buf[0] = (char)wbuf->widx;
+         wbuf->widx++;
+         break;
+         
+    case 'H':
+         wbuf->buf[wbuf->widx-1] |= 0x80;
+         break;
+         
+    case 'Z':
+         assert(wbuf->widx < sizeof(wbuf->buf));
+         wbuf->buf[wbuf->widx++] = '\0';
+         break;
+         
+    default:
+         break;
   }
   
   return true;
@@ -1225,60 +1251,6 @@ static bool pseudo_ascii(struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool pseudo_asciih(struct opcdata *opd)
-{
-  assert(opd      != NULL);
-  assert(opd->a09 != NULL);
-  
-  struct buffer textstring;
-  
-  if (!parse_string(opd->a09,&textstring,opd->buffer))
-    return false;
-    
-  opd->data   = true;
-  opd->datasz = textstring.widx;
-  
-  if (opd->pass == 2)
-  {
-    textstring.buf[textstring.widx - 1] |= 0x80;
-    opd->sz = min(textstring.widx,sizeof(opd->bytes));
-    memcpy(opd->bytes,textstring.buf,opd->sz);
-    if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
-      return false;
-  }
-  
-  return true;
-}
-
-/**************************************************************************/
-
-static bool pseudo_asciiz(struct opcdata *opd)
-{
-  assert(opd      != NULL);
-  assert(opd->a09 != NULL);
-  
-  struct buffer textstring;
-  
-  if (!parse_string(opd->a09,&textstring,opd->buffer))
-    return false;
-    
-  opd->data   = true;
-  opd->datasz = textstring.widx + 1;
-  
-  if (opd->pass == 2)
-  {
-    textstring.widx++;
-    opd->sz = min(textstring.widx,sizeof(opd->bytes));
-    memcpy(opd->bytes,textstring.buf,opd->sz);
-    if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
-      return false;
-  }
-  
-  return true;
-}
-
-/**************************************************************************/
-
 static bool pseudo_include(struct opcdata *opd)
 {
   assert(opd      != NULL);
@@ -1650,8 +1622,6 @@ struct opcode const *op_find(char const *name)
     { "ANDB"    , op_idie        , 0xC4 , 0x00 , false } ,
     { "ANDCC"   , op_imm         , 0x1C , 0x00 , false } ,
     { "ASCII"   , pseudo_ascii   , 0x00 , 0x00 , false } ,
-    { "ASCIIH"  , pseudo_asciih  , 0x00 , 0x00 , false } ,
-    { "ASCIIZ"  , pseudo_asciiz  , 0x00 , 0x00 , false } ,
     { "ASL"     , op_die         , 0x08 , 0x00 , false } ,
     { "ASLA"    , op_inh         , 0x48 , 0x00 , false } ,
     { "ASLB"    , op_inh         , 0x58 , 0x00 , false } ,
