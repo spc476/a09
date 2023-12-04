@@ -20,15 +20,14 @@
 *
 ****************************************************************************/
 
-// XXX - the way the code is now, we can't call forward in the tests
-//      because the code isn't laid down yet.
-
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
 #include <errno.h>
 
 #include "a09.h"
+
+/**************************************************************************/
 
 enum vmops
 {
@@ -119,16 +118,24 @@ struct trigger
   struct vmcode *triggers;
 };
 
+struct test
+{
+  uint16_t       addr;
+  struct buffer  name;
+  char const    *filename;
+  size_t         line;
+};
+
 struct testdata
 {
   struct a09     *a09;
   const char     *corefile;
   tree__s        *triggers;
+  struct test    *units;
+  size_t          nunits;
   mc6809__t       cpu;
   mc6809dis__t    dis;
-  struct buffer   name;
   uint16_t        addr;
-  uint16_t        pc;
   uint16_t        sp;
   mc6809byte__t   fill;
   bool            tron;
@@ -136,6 +143,8 @@ struct testdata
   mc6809byte__t   memory[65536u];
   struct memprot  prot  [65536u];
 };
+
+/**************************************************************************/
 
 static inline struct trigger *tree2trigger(tree__s *tree)
 {
@@ -760,8 +769,110 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
   (void)pass;
   
   struct format_test *test = &fmt->test;
+  struct testdata    *data = test->data;
+  
   if (test->intest)
     return message(a09,MSG_ERROR,"E9999: missing .ENDTST directive");
+    
+  if (pass == 2)
+  {
+    for (size_t i = 0 ; i < data->nunits ; i++)
+    {
+      struct test *unit = &data->units[i];
+      char const  *tag  = "";
+      int          rc;
+      
+      /*--------------------------------------------------------------------
+      ; only run tests in this file.  We could get prematurely triggered if
+      ; we INCLUDEd a file.
+      ;---------------------------------------------------------------------*/
+      
+      if (unit->filename != a09->infile)
+        return true;
+        
+      data->cpu.pc.w = unit->addr;
+      data->cpu.S.w  = data->sp - 2;
+      a09->lnum      = unit->line;
+      message(a09,MSG_DEBUG,"Running test %s",unit->name.buf);
+      
+      do
+      {
+        if (data->memory[data->cpu.pc.w] == data->fill)
+        {
+          snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X",data->cpu.pc.w);
+          rc = TEST_WEEDS;
+          break;
+        }
+        
+        if (data->prot[data->cpu.pc.w].tron)
+        {
+          char inst[128];
+          char regs[128];
+          
+          data->dis.pc = data->cpu.pc.w;
+          rc = mc6809dis_step(&data->dis,&data->cpu);
+          if (rc != 0)
+            break;
+          mc6809dis_format(&data->dis,inst,sizeof(inst));
+          mc6809dis_registers(&data->cpu,regs,sizeof(regs));
+          printf("%s | %s\n",regs,inst);
+        }
+        
+        if (data->prot[data->cpu.pc.w].check)
+        {
+          bool     okay;
+          uint16_t addr = data->cpu.pc.w;
+          tree__s *tree = tree_find(data->triggers,&addr,triggeraddrcmp);
+          
+          if (tree != NULL)
+          {
+            struct trigger *trigger = tree2trigger(tree);
+            
+            assert(trigger->here == addr);
+            for (size_t i = 0 ; i < trigger->cnt ; i++)
+            {
+              okay = runvm(data->a09,&data->cpu,&trigger->triggers[i]);
+              if (!okay)
+              {
+                tag = trigger->triggers[i].tag;
+                break;
+              }
+            }
+          }
+          
+          if (!okay)
+          {
+            rc = TEST_FAILED;
+            break;
+          }
+        }
+        
+        rc = mc6809_step(&data->cpu);
+      }
+      while((rc == 0) && (data->cpu.S.w != data->sp));
+      
+      if (rc != 0)
+      {
+        static char const *const mfaults[] =
+        {
+          NULL,
+          "an internal error inside the MC6809 emulator",
+          "an illegal instruction was encountered",
+          "an illegal addressing mode was encountered",
+          "an illegal combination of registers was being exchanged",
+          "an illegal combination of registers was being transfered",
+          "test failed",
+          "reading from non-readable memory",
+          "code went into the weeds",
+          "writing to non-writable memory",
+        };
+        
+        assert(rc < TEST_max);
+        return message(a09,MSG_ERROR,"E9900: %s: %s: %s\n",tag,mfaults[rc],data->errbuf);
+      }
+    }
+  }
+  
   return true;
 }
 
@@ -872,9 +983,19 @@ static bool ftest_test(union format *fmt,struct opcdata *opd)
   if (test->intest)
     return message(opd->a09,MSG_ERROR,"E9999: cannot nest .TEST");
   test->intest = true;
-  data->pc     = opd->a09->pc;
-  parse_string(opd->a09,&data->name,opd->buffer);
   
+  if (opd->pass == 2)
+  {
+    struct test *new = realloc(data->units,(data->nunits + 1) * sizeof(struct test));
+    if (new == NULL)
+      return message(opd->a09,MSG_ERROR,"E0046: out of memory");
+    data->units                        = new;
+    data->units[data->nunits].addr     = opd->a09->pc;
+    data->units[data->nunits].filename = opd->a09->infile;
+    data->units[data->nunits].line     = opd->a09->lnum;
+    parse_string(opd->a09,&data->units[data->nunits].name,opd->buffer);  
+    data->nunits++;
+  }
   return true;
 }
 
@@ -951,7 +1072,7 @@ static bool ftest_trigger(union format *fmt,struct opcdata *opd)
     else
       trigger = tree2trigger(tree);
       
-    if (!ftcompile(opd->a09,&data->name,trigger,opd->buffer))
+    if (!ftcompile(opd->a09,&data->units[data->nunits].name,trigger,opd->buffer))
       return false;
   }
   
@@ -968,97 +1089,11 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
   assert(fmt->backend == BACKEND_TEST);
   
   struct format_test *test = &fmt->test;
-  struct testdata    *data = test->data;
   
   if (!test->intest)
     return message(opd->a09,MSG_ERROR,"E9999: no matching .TEST");
     
   test->intest = false;
-  
-  if (opd->pass == 2)
-  {
-    char const *tag  = "";
-    int         rc;
-    
-    data->cpu.pc.w = data->pc;
-    data->cpu.S.w  = data->sp - 2;
-    
-    do
-    {
-      if (data->memory[data->cpu.pc.w] == data->fill)
-      {
-        snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X",data->cpu.pc.w);
-        rc = TEST_WEEDS;
-        break;
-      }
-      
-      if (data->prot[data->cpu.pc.w].tron)
-      {
-        char inst[128];
-        char regs[128];
-        
-        data->dis.pc = data->cpu.pc.w;
-        rc = mc6809dis_step(&data->dis,&data->cpu);
-        if (rc != 0)
-          break;
-        mc6809dis_format(&data->dis,inst,sizeof(inst));
-        mc6809dis_registers(&data->cpu,regs,sizeof(regs));
-        printf("%s | %s\n",regs,inst);
-      }
-      
-      if (data->prot[data->cpu.pc.w].check)
-      {
-        bool     okay;
-        uint16_t addr = data->cpu.pc.w;
-        tree__s *tree = tree_find(data->triggers,&addr,triggeraddrcmp);
-        
-        if (tree != NULL)
-        {
-          struct trigger *trigger = tree2trigger(tree);
-          
-          assert(trigger->here == addr);
-          for (size_t i = 0 ; i < trigger->cnt ; i++)
-          {
-            okay = runvm(data->a09,&data->cpu,&trigger->triggers[i]);
-            if (!okay)
-            {
-              tag = trigger->triggers[i].tag;
-              break;
-            }
-          }
-        }
-        
-        if (!okay)
-        {
-          rc = TEST_FAILED;
-          break;
-        }
-      }
-      
-      rc = mc6809_step(&data->cpu);
-    }
-    while((rc == 0) && (data->cpu.S.w != data->sp));
-    
-    if (rc != 0)
-    {
-      static char const *const mfaults[] =
-      {
-        NULL,
-        "an internal error inside the MC6809 emulator",
-        "an illegal instruction was encountered",
-        "an illegal addressing mode was encountered",
-        "an illegal combination of registers was being exchanged",
-        "an illegal combination of registers was being transfered",
-        "test failed",
-        "reading from non-readable memory",
-        "code went into the weeds",
-        "writing to non-writable memory",
-      };
-      
-      assert(rc < TEST_max);
-      return message(opd->a09,MSG_ERROR,"E9900: %s: %s: %s\n",tag,mfaults[rc],data->errbuf);
-    }
-  }
   return true;
 }
 
@@ -1172,25 +1207,23 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     memset(&fmt->data->cpu,0,sizeof(fmt->data->cpu));
     memset(&fmt->data->dis,0,sizeof(fmt->data->dis));
     
-    fmt->data->a09         = a09;
-    fmt->data->corefile    = NULL;
-    fmt->data->triggers    = NULL;
-    fmt->data->cpu.user    = fmt;
-    fmt->data->cpu.read    = ft_cpu_read;
-    fmt->data->cpu.write   = ft_cpu_write;
-    fmt->data->cpu.fault   = ft_cpu_fault;
-    fmt->data->dis.user    = fmt;
-    fmt->data->dis.read    = ft_dis_read;
-    fmt->data->dis.fault   = ft_dis_fault;
-    fmt->data->name.buf[0] = '\0';
-    fmt->data->name.widx   = 0;
-    fmt->data->name.ridx   = 0;
-    fmt->data->addr        = 0;
-    fmt->data->pc          = 0;
-    fmt->data->sp          = 0x8000;
-    fmt->data->fill        = 0x3F; // SWI instruction
-    fmt->data->tron        = false;
-    fmt->data->errbuf[0]   = '\0';
+    fmt->data->a09       = a09;
+    fmt->data->corefile  = NULL;
+    fmt->data->triggers  = NULL;
+    fmt->data->units     = NULL;
+    fmt->data->nunits    = 0;
+    fmt->data->cpu.user  = fmt;
+    fmt->data->cpu.read  = ft_cpu_read;
+    fmt->data->cpu.write = ft_cpu_write;
+    fmt->data->cpu.fault = ft_cpu_fault;
+    fmt->data->dis.user  = fmt;
+    fmt->data->dis.read  = ft_dis_read;
+    fmt->data->dis.fault = ft_dis_fault;
+    fmt->data->addr      = 0;
+    fmt->data->sp        = 0x8000;
+    fmt->data->fill      = 0x3F; // SWI instruction
+    fmt->data->tron      = false;
+    fmt->data->errbuf[0] = '\0';
     
     memset(fmt->data->memory,fmt->data->fill,65536u);
     memset(fmt->data->prot,init.b,65536u);
