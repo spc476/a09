@@ -115,19 +115,19 @@ struct vmcode
   char        tag[133];
 };
 
-struct trigger
+struct Assert
 {
   tree__s        tree;
   uint16_t       here;
   size_t         cnt;
-  struct vmcode *triggers;
+  struct vmcode *Asserts;
 };
 
 struct testdata
 {
   struct a09      *a09;
   const char      *corefile;
-  tree__s         *triggers;
+  tree__s         *Asserts;
   struct unittest *units;
   size_t           nunits;
   mc6809__t        cpu;
@@ -145,14 +145,14 @@ static bool ft_expr(enum vmops *,size_t,size_t *,struct a09 *,struct buffer *,in
 
 /**************************************************************************/
 
-static inline struct trigger *tree2trigger(tree__s *tree)
+static inline struct Assert *tree2Assert(tree__s *tree)
 {
   assert(tree != NULL);
 #if defined(__clang__)
 #  pragma clang diagnostic push "-Wcast-align"
 #  pragma clang diasnostic ignored "-Wcast-align"
 #endif
-  return (struct trigger *)((char *)tree - offsetof(struct trigger,tree));
+  return (struct Assert *)((char *)tree - offsetof(struct Assert,tree));
 #if defined(__clang__)
 #  pragma clang diagnostic pop "-Wcast-align"
 #endif
@@ -250,14 +250,14 @@ static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
 
 /**************************************************************************/
 
-static int triggeraddrcmp(void const *restrict needle,void const *restrict haystack)
+static int Assertaddrcmp(void const *restrict needle,void const *restrict haystack)
 {
-  uint16_t       const *key     = needle;
-  struct trigger const *trigger = haystack;
+  uint16_t      const *key   = needle;
+  struct Assert const *value = haystack;
   
-  if (*key < trigger->here)
+  if (*key < value->here)
     return -1;
-  else if (*key > trigger->here)
+  else if (*key > value->here)
     return  1;
   else
     return  0;
@@ -265,10 +265,10 @@ static int triggeraddrcmp(void const *restrict needle,void const *restrict hayst
 
 /**************************************************************************/
 
-static int triggertreecmp(void const *restrict needle,void const *restrict haystack)
+static int Asserttreecmp(void const *restrict needle,void const *restrict haystack)
 {
-  struct trigger const *key   = needle;
-  struct trigger const *value = haystack;
+  struct Assert const *key   = needle;
+  struct Assert const *value = haystack;
   
   if (key->here < value->here)
     return -1;
@@ -836,10 +836,10 @@ static bool ft_expr(
 
 static bool ft_compile(
         struct a09    *a09,
-        struct buffer *restrict name,
-        struct trigger*trigger,
-        struct buffer *restrict buffer,
-        int            pass
+        struct buffer  *restrict name,
+        struct Assert  *Assert,
+        struct buffer  *restrict buffer,
+        int             pass
 )
 {
   enum vmops    program[64];
@@ -854,13 +854,13 @@ static bool ft_compile(
     return message(a09,MSG_ERROR,"E0066: expression too complex");
     
   program[vip++]     = VM_EXIT;
-  struct vmcode *new = realloc(trigger->triggers,(trigger->cnt + 1) * sizeof(struct vmcode));
+  struct vmcode *new = realloc(Assert->Asserts,(Assert->cnt + 1) * sizeof(struct vmcode));
   
   if (new == NULL)
     return message(a09,MSG_ERROR,"E0046: out of memory");
     
-  trigger->triggers = new;
-  memcpy(trigger->triggers[trigger->cnt].prog,program,vip * sizeof(enum vmops));
+  Assert->Asserts = new;
+  memcpy(Assert->Asserts[Assert->cnt].prog,program,vip * sizeof(enum vmops));
   
   tmp.widx = 0;
   c        = skip_space(buffer);
@@ -876,14 +876,14 @@ static bool ft_compile(
   }
   
   snprintf(
-       trigger->triggers[trigger->cnt].tag,
-       sizeof(trigger->triggers[trigger->cnt].tag),
+       Assert->Asserts[Assert->cnt].tag,
+       sizeof(Assert->Asserts[Assert->cnt].tag),
        "%.*s:%zu %.*s",
        (int)name->widx,name->buf,
        a09->lnum,
        (int)tmp.widx,tmp.buf
     );
-  trigger->cnt++;
+  Assert->cnt++;
   return true;
 }
 
@@ -970,19 +970,19 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
         {
           bool     okay;
           uint16_t addr = data->cpu.pc.w;
-          tree__s *tree = tree_find(data->triggers,&addr,triggeraddrcmp);
+          tree__s *tree = tree_find(data->Asserts,&addr,Assertaddrcmp);
           
           if (tree != NULL)
           {
-            struct trigger *trigger = tree2trigger(tree);
+            struct Assert *Assert = tree2Assert(tree);
             
-            assert(trigger->here == addr);
-            for (size_t i = 0 ; i < trigger->cnt ; i++)
+            assert(Assert->here == addr);
+            for (size_t i = 0 ; i < Assert->cnt ; i++)
             {
-              okay = runvm(data->a09,&data->cpu,&trigger->triggers[i]);
+              okay = runvm(data->a09,&data->cpu,&Assert->Asserts[i]);
               if (!okay)
               {
-                tag = trigger->triggers[i].tag;
+                tag = Assert->Asserts[i].tag;
                 break;
               }
             }
@@ -1205,7 +1205,7 @@ static bool ftest_troff(union format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool ftest_trigger(union format *fmt,struct opcdata *opd)
+static bool ftest_Assert(union format *fmt,struct opcdata *opd)
 {
   assert(fmt != NULL);
   assert(opd != NULL);
@@ -1219,27 +1219,27 @@ static bool ftest_trigger(union format *fmt,struct opcdata *opd)
     
     data->prot[opd->a09->pc].check = true;
     
-    struct trigger *trigger;
-    tree__s         *tree = tree_find(data->triggers,&opd->a09->pc,triggeraddrcmp);
+    struct Assert *Assert;
+    tree__s       *tree = tree_find(data->Asserts,&opd->a09->pc,Assertaddrcmp);
     
     if (tree == NULL)
     {
-      trigger = malloc(sizeof(struct trigger));
-      if (trigger == NULL)
+      Assert = malloc(sizeof(struct Assert));
+      if (Assert == NULL)
         return message(opd->a09,MSG_ERROR,"E0046: out of memory");
-      trigger->tree.left   = NULL;
-      trigger->tree.right  = NULL;
-      trigger->tree.height = 0;
-      trigger->here        = opd->a09->pc;
-      trigger->cnt         = 0;
-      trigger->triggers    = NULL;
-      data->triggers       = tree_insert(data->triggers,&trigger->tree,triggertreecmp);
+      Assert->tree.left   = NULL;
+      Assert->tree.right  = NULL;
+      Assert->tree.height = 0;
+      Assert->here        = opd->a09->pc;
+      Assert->cnt         = 0;
+      Assert->Asserts     = NULL;
+      data->Asserts        = tree_insert(data->Asserts,&Assert->tree,Asserttreecmp);
     }
     else
-      trigger = tree2trigger(tree);
+      Assert = tree2Assert(tree);
       
     assert(data->nunits > 0);
-    if (!ft_compile(opd->a09,&data->units[data->nunits-1].name,trigger,opd->buffer,opd->pass))
+    if (!ft_compile(opd->a09,&data->units[data->nunits-1].name,Assert,opd->buffer,opd->pass))
       return false;
   }
   
@@ -1266,16 +1266,16 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static void free_triggers(tree__s *tree)
+static void free_Asserts(tree__s *tree)
 {
   if (tree != NULL)
   {
     if (tree->left)
-      free_triggers(tree->left);
+      free_Asserts(tree->left);
     if (tree->right)
-      free_triggers(tree->right);
-    struct trigger *trigger = tree2trigger(tree);
-    free(trigger->triggers);
+      free_Asserts(tree->right);
+    struct Assert *Assert = tree2Assert(tree);
+    free(Assert->Asserts);
     free(tree);
   }
 }
@@ -1318,7 +1318,7 @@ static bool ftest_fini(union format *fmt,struct a09 *a09)
       fprintf(stderr,"%s: %s: %s\n",MSG_ERROR,test->data->corefile,strerror(errno));
   }
   
-  free_triggers(test->data->triggers);
+  free_Asserts(test->data->Asserts);
   free(test->data->units);
   free(test->data);
   return true;
@@ -1348,7 +1348,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
   fmt->test       = ftest_test;
   fmt->tron       = ftest_tron;
   fmt->troff      = ftest_troff;
-  fmt->trigger    = ftest_trigger;
+  fmt->Assert     = ftest_Assert;
   fmt->endtst     = ftest_endtst;
   fmt->fini       = ftest_fini;
   fmt->intest     = false;
@@ -1376,7 +1376,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     
     fmt->data->a09       = a09;
     fmt->data->corefile  = NULL;
-    fmt->data->triggers  = NULL;
+    fmt->data->Asserts   = NULL;
     fmt->data->units     = NULL;
     fmt->data->nunits    = 0;
     fmt->data->cpu.user  = fmt;

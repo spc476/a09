@@ -1529,7 +1529,7 @@ static bool pseudo__assert(struct opcdata *opd)
   assert(opd->a09 != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  return opd->a09->format.def.trigger(&opd->a09->format,opd);
+  return opd->a09->format.def.Assert(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
