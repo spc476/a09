@@ -39,6 +39,15 @@ char const MSG_ERROR[]   = "error";
 
 bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,...)
 {
+  assert(a09 != NULL);
+  assert(tag != NULL);
+  assert(fmt != NULL);
+  assert(
+             ((tag == MSG_WARNING) && (fmt[0] == 'W'))
+          || ((tag == MSG_ERROR)   && (fmt[0] == 'E'))
+          || ((tag == MSG_DEBUG))
+        );
+  
   va_list ap;
   
   if ((tag == MSG_DEBUG) && !a09->debug)
