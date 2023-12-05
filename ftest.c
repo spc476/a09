@@ -915,6 +915,10 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
         
       data->cpu.pc.w = unit->addr;
       data->cpu.S.w  = data->sp - 2;
+      data->cpu.U.w  = data->cpu.pc.w ^ data->cpu.S.w;
+      data->cpu.Y.w  = data->cpu.U.w;
+      data->cpu.X.w  = data->cpu.Y.w;
+      data->cpu.d.w  = data->cpu.X.w;
       a09->lnum      = unit->line;
       message(a09,MSG_DEBUG,"Running test %s",unit->name.buf);
       
@@ -1346,7 +1350,6 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
       }
     };
     
-    memset(&fmt->data->cpu,0,sizeof(fmt->data->cpu));
     memset(&fmt->data->dis,0,sizeof(fmt->data->dis));
     
     fmt->data->a09       = a09;
