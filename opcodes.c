@@ -146,15 +146,18 @@ static bool collect_esc_string(
          memmove(&wbuf->buf[1],&wbuf->buf[0],wbuf->widx);
          wbuf->buf[0] = (char)wbuf->widx;
          wbuf->widx++;
+         rbuf->ridx++;
          break;
          
     case 'H':
          wbuf->buf[wbuf->widx-1] |= 0x80;
+         rbuf->ridx++;
          break;
          
     case 'Z':
          assert(wbuf->widx < sizeof(wbuf->buf));
          wbuf->buf[wbuf->widx++] = '\0';
+         rbuf->ridx++;
          break;
          
     default:
