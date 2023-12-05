@@ -125,20 +125,20 @@ struct trigger
 
 struct testdata
 {
-  struct a09     *a09;
-  const char     *corefile;
-  tree__s        *triggers;
+  struct a09      *a09;
+  const char      *corefile;
+  tree__s         *triggers;
   struct unittest *units;
-  size_t          nunits;
-  mc6809__t       cpu;
-  mc6809dis__t    dis;
-  uint16_t        addr;
-  uint16_t        sp;
-  mc6809byte__t   fill;
-  bool            tron;
-  char            errbuf[128];
-  mc6809byte__t   memory[65536u];
-  struct memprot  prot  [65536u];
+  size_t           nunits;
+  mc6809__t        cpu;
+  mc6809dis__t     dis;
+  uint16_t         addr;
+  uint16_t         sp;
+  mc6809byte__t    fill;
+  bool             tron;
+  char             errbuf[128];
+  mc6809byte__t    memory[65536u];
+  struct memprot   prot  [65536u];
 };
 
 static bool ft_expr(enum vmops *,size_t,size_t *,struct a09 *,struct buffer *,int);
@@ -902,8 +902,8 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
     for (size_t i = 0 ; i < data->nunits ; i++)
     {
       struct unittest *unit = &data->units[i];
-      char const  *tag  = "";
-      int          rc;
+      char const      *tag  = "";
+      int              rc;
       
       /*--------------------------------------------------------------------
       ; only run tests in this file.  We could get prematurely triggered if
