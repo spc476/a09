@@ -109,10 +109,10 @@ struct unittest
 struct vmcode
 {
   size_t      line;
-  char        tag[132];
   enum vmops  prog[64];
   char const *str;
   size_t      len;
+  char        tag[133];
 };
 
 struct trigger
@@ -842,8 +842,10 @@ static bool ft_compile(
         int            pass
 )
 {
-  enum vmops program[64];
-  size_t     vip = 0;
+  enum vmops    program[64];
+  struct buffer tmp;
+  size_t        vip = 0;
+  char          c;
   
   if (!ft_expr(program,sizeof(program)/sizeof(program[0]),&vip,a09,buffer,pass))
     return false;
@@ -851,17 +853,36 @@ static bool ft_compile(
   if (vip == sizeof(program) / sizeof(program[0]))
     return message(a09,MSG_ERROR,"E0066: expression too complex");
     
-  program[vip++] = VM_EXIT;
-  
+  program[vip++]     = VM_EXIT;
   struct vmcode *new = realloc(trigger->triggers,(trigger->cnt + 1) * sizeof(struct vmcode));
   
   if (new == NULL)
     return message(a09,MSG_ERROR,"E0046: out of memory");
     
   trigger->triggers = new;
-  
   memcpy(trigger->triggers[trigger->cnt].prog,program,vip * sizeof(enum vmops));
-  snprintf(trigger->triggers[trigger->cnt].tag,sizeof(trigger->triggers[trigger->cnt].tag),"%s:%zu",name->buf,a09->lnum);
+  
+  tmp.widx = 0;
+  c        = skip_space(buffer);
+  if (c == ',')
+  {
+    c = skip_space(buffer);
+    if ((c == '"') || (c == '\''))
+    {
+      buffer->ridx--;
+      if (!parse_string(a09,&tmp,buffer))
+        return false;
+    }
+  }
+  
+  snprintf(
+       trigger->triggers[trigger->cnt].tag,
+       sizeof(trigger->triggers[trigger->cnt].tag),
+       "%.*s:%zu %.*s",
+       (int)name->widx,name->buf,
+       a09->lnum,
+       (int)tmp.widx,tmp.buf
+    );
   trigger->cnt++;
   return true;
 }
@@ -1217,7 +1238,8 @@ static bool ftest_trigger(union format *fmt,struct opcdata *opd)
     else
       trigger = tree2trigger(tree);
       
-    if (!ft_compile(opd->a09,&data->units[data->nunits].name,trigger,opd->buffer,opd->pass))
+    assert(data->nunits > 0);
+    if (!ft_compile(opd->a09,&data->units[data->nunits-1].name,trigger,opd->buffer,opd->pass))
       return false;
   }
   
