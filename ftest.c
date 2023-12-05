@@ -110,7 +110,7 @@ struct vmcode
 {
   size_t      line;
   char        tag[132];
-  enum vmops  prog[16];
+  enum vmops  prog[64];
   char const *str;
   size_t      len;
 };
@@ -628,7 +628,7 @@ static bool ft_value(
 )
 {
   assert(prog   != NULL);
-  assert(max    == 32);
+  assert(max    == 64);
   assert(pvip   != NULL);
   assert(*pvip  <  max);
   assert(a09    != NULL);
@@ -778,7 +778,7 @@ static bool ft_expr(
 )
 {
   assert(prog   != NULL);
-  assert(max    == 32);
+  assert(max    == 64);
   assert(pvip   != NULL);
   assert(*pvip  <  max);
   assert(a09    != NULL);
@@ -843,7 +843,7 @@ static bool ft_compile(
         int              pass
 )
 {
-  enum vmops program[32];
+  enum vmops program[64];
   size_t     vip = 0;
   
   if (!ft_expr(program,sizeof(program)/sizeof(program[0]),&vip,a09,buffer,pass))
