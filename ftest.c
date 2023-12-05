@@ -835,12 +835,11 @@ static bool ft_expr(
 /**************************************************************************/
 
 static bool ft_compile(
-        struct a09      *a09,
-        struct buffer   *restrict name,
-        struct trigger  *trigger,
-        struct buffer   *restrict buffer,
-        struct testdata *data,
-        int              pass
+        struct a09    *a09,
+        struct buffer *restrict name,
+        struct trigger*trigger,
+        struct buffer *restrict buffer,
+        int            pass
 )
 {
   enum vmops program[64];
@@ -1214,15 +1213,7 @@ static bool ftest_trigger(union format *fmt,struct opcdata *opd)
     else
       trigger = tree2trigger(tree);
       
-    if (!ft_compile(
-  opd->a09,
-  &data->units[data->nunits].name,
-  trigger,
-  opd->buffer,
-  data,
-  opd->pass
-  
-  ))
+    if (!ft_compile(opd->a09,&data->units[data->nunits].name,trigger,opd->buffer,opd->pass))
       return false;
   }
   
