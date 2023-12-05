@@ -108,11 +108,11 @@ struct unittest
 
 struct vmcode
 {
-  size_t      line;
-  enum vmops  prog[64];
-  char const *str;
-  size_t      len;
-  char        tag[133];
+  size_t        line;
+  size_t        strlen;
+  enum vmops    prog[64];
+  char          tag[133];
+  struct buffer str;
 };
 
 struct Assert
@@ -141,7 +141,7 @@ struct testdata
   struct memprot   prot  [65536u];
 };
 
-static bool ft_expr(enum vmops *,size_t,size_t *,struct a09 *,struct buffer *,int);
+static bool ft_expr(enum vmops *,size_t,size_t *,struct buffer *,struct a09 *,struct buffer *,int);
 
 /**************************************************************************/
 
@@ -293,6 +293,7 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
   uint16_t            addr;
   size_t              sp = sizeof(stack) / sizeof(stack[0]);
   size_t              ip = 0;
+  int                 rc;
   
   /*--------------------------------------------------------------
   ; I control the code generation, so I can skip checks that would
@@ -504,11 +505,14 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
            break;
            
       case VM_SCMP:
-           stack[sp] = memcmp(
-                         &data->memory[stack[sp]],
-                         test->str,
-                         test->len
-                        );
+           rc = memcmp(&data->memory[stack[sp]],test->str.buf,test->str.widx);
+           stack[sp] = 0;
+           if (rc < 0)
+             stack[--sp] = -1;
+           else if (rc > 0)
+             stack[--sp] =  1;
+           else
+             stack[--sp] =  0;
            break;
            
       case VM_EXIT:
@@ -622,6 +626,7 @@ static bool ft_value(
         enum vmops    *prog,
         size_t         max,
         size_t        *pvip,
+        struct buffer *str,
         struct a09    *a09,
         struct buffer *buffer,
         int            pass
@@ -649,7 +654,7 @@ static bool ft_value(
     if (c == '\0')
       return message(a09,MSG_ERROR,"E0010: unexpected end of input");
     buffer->ridx--;
-    if (!ft_expr(prog,max,pvip,a09,buffer,pass))
+    if (!ft_expr(prog,max,pvip,str,a09,buffer,pass))
       return false;
     c = skip_space(buffer);
     if (c != ')')
@@ -699,7 +704,17 @@ static bool ft_value(
     sym->refs++;
   }
   else if ((c == '"') || (c == '\''))
-    return message(a09,MSG_ERROR,"E9999: not implemented");
+  {
+    if (neg || not)
+      return message(a09,MSG_ERROR,"E9999: can't negate or complement a string");
+    if (str->widx != 0)
+      return message(a09,MSG_ERROR,"E9999: string slot already filled");
+    buffer->ridx--;
+    if (!parse_string(a09,str,buffer))
+      return false;
+    prog[(*pvip)++] = VM_SCMP;
+    return true;
+  }
   else
     return message(a09,MSG_ERROR,"E0006: not a value");
     
@@ -720,6 +735,7 @@ static bool ft_factor(
         enum vmops    *prog,
         size_t         max,
         size_t        *pvip,
+        struct buffer *str,
         struct a09    *a09,
         struct buffer *buffer,
         int            pass
@@ -747,7 +763,7 @@ static bool ft_factor(
   else
     buffer->ridx--;
     
-  if (!ft_value(prog,max,pvip,a09,buffer,pass))
+  if (!ft_value(prog,max,pvip,str,a09,buffer,pass))
     return false;
     
   if (fetchbyte)
@@ -772,6 +788,7 @@ static bool ft_expr(
         enum vmops    *prog,
         size_t         max,
         size_t        *pvip,
+        struct buffer *str,
         struct a09    *a09,
         struct buffer *buffer,
         int            pass
@@ -789,7 +806,7 @@ static bool ft_expr(
   struct optable const *ostack[15];
   size_t                osp = sizeof(ostack) / sizeof(ostack[0]);
   
-  if (!ft_factor(prog,max,pvip,a09,buffer,pass))
+  if (!ft_factor(prog,max,pvip,str,a09,buffer,pass))
     return false;
     
   while(true)
@@ -817,7 +834,7 @@ static bool ft_expr(
     ostack[--osp] = op;
     if (*pvip == max)
       return message(a09,MSG_ERROR,"E0066: expression too complex");
-    if (!ft_factor(prog,max,pvip,a09,buffer,pass))
+    if (!ft_factor(prog,max,pvip,str,a09,buffer,pass))
       return false;
   }
   
@@ -843,11 +860,12 @@ static bool ft_compile(
 )
 {
   enum vmops    program[64];
-  struct buffer tmp;
+  struct buffer str = { .buf[0] = '\0' , .widx = 0 , .ridx = 0 };
+  struct buffer tmp = { .buf[0] = '\0' , .widx = 0 , .ridx = 0 };
   size_t        vip = 0;
   char          c;
   
-  if (!ft_expr(program,sizeof(program)/sizeof(program[0]),&vip,a09,buffer,pass))
+  if (!ft_expr(program,sizeof(program)/sizeof(program[0]),&vip,&str,a09,buffer,pass))
     return false;
     
   if (vip == sizeof(program) / sizeof(program[0]))
@@ -861,9 +879,9 @@ static bool ft_compile(
     
   Assert->Asserts = new;
   memcpy(Assert->Asserts[Assert->cnt].prog,program,vip * sizeof(enum vmops));
+  Assert->Asserts[Assert->cnt].str = str;
   
-  tmp.widx = 0;
-  c        = skip_space(buffer);
+  c = skip_space(buffer);
   if (c == ',')
   {
     c = skip_space(buffer);
