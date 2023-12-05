@@ -101,9 +101,9 @@ struct memprot
 struct unittest
 {
   uint16_t       addr;
-  struct buffer  name;
   char const    *filename;
   size_t         line;
+  struct buffer  name;
 };
 
 struct vmcode
