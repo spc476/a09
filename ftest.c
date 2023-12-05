@@ -98,6 +98,14 @@ struct memprot
   bool check : 1;
 };
 
+struct unittest
+{
+  uint16_t       addr;
+  struct buffer  name;
+  char const    *filename;
+  size_t         line;
+};
+
 struct vmcode
 {
   size_t      line;
@@ -115,20 +123,12 @@ struct trigger
   struct vmcode *triggers;
 };
 
-struct test
-{
-  uint16_t       addr;
-  struct buffer  name;
-  char const    *filename;
-  size_t         line;
-};
-
 struct testdata
 {
   struct a09     *a09;
   const char     *corefile;
   tree__s        *triggers;
-  struct test    *units;
+  struct unittest *units;
   size_t          nunits;
   mc6809__t       cpu;
   mc6809dis__t    dis;
@@ -902,7 +902,7 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
   {
     for (size_t i = 0 ; i < data->nunits ; i++)
     {
-      struct test *unit = &data->units[i];
+      struct unittest *unit = &data->units[i];
       char const  *tag  = "";
       int          rc;
       
@@ -1128,7 +1128,7 @@ static bool ftest_test(union format *fmt,struct opcdata *opd)
   
   if (opd->pass == 2)
   {
-    struct test *new = realloc(data->units,(data->nunits + 1) * sizeof(struct test));
+    struct unittest *new = realloc(data->units,(data->nunits + 1) * sizeof(struct unittest));
     if (new == NULL)
       return message(opd->a09,MSG_ERROR,"E0046: out of memory");
     data->units                        = new;
