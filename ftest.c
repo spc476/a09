@@ -1198,7 +1198,7 @@ static bool ft_compile(
   if (vip == sizeof(program) / sizeof(program[0]))
     return message(a09,MSG_ERROR,"E0066: expression too complex");
     
-  program[vip++]     = VM_EXIT;
+  program[vip++] = VM_EXIT;
   struct vmcode *new = realloc(Assert->Asserts,(Assert->cnt + 1) * sizeof(struct vmcode));
   
   if (new == NULL)
