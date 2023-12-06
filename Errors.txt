@@ -10,6 +10,7 @@ W0009: offset could be 8-bits, maybe use short branch?
 W0010: missing initial label
 W0011: 5-bit offset upped to 8-bit offset for indirect mode
 W0012: branch to next location, maybe remove?
+W0013: label '%.*s' could be mistaken for register in index
 W9999: FEATURE NOT FINISHED
 
 E0001: Internal error---'%.*s' should exist, but doesn't

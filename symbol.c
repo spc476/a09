@@ -20,6 +20,7 @@
 *
 ****************************************************************************/
 
+#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -80,6 +81,13 @@ struct symbol *symbol_add(struct a09 *a09,label const *name,uint16_t value)
   assert(a09  != NULL);
   assert(name != NULL);
   
+  if (
+          ((name->s == 1) && (toupper(name->text[0]) == 'A'))
+       || ((name->s == 1) && (toupper(name->text[0]) == 'B'))
+       || ((name->s == 1) && (toupper(name->text[0]) == 'D'))
+     )
+    message(a09,MSG_WARNING,"W0013: label '%.*s' could be mistaken for register in index",name->s,name->text);
+    
   struct symbol *sym = symbol_find(a09,name);
   
   if (sym == NULL)
