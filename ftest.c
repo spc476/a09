@@ -1161,6 +1161,11 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
         
       data->cpu.pc.w = unit->addr;
       data->cpu.S.w  = data->sp - 2;
+      
+      /*----------------------------------------------------
+      ; initialize other registers with semi-random data
+      ;-----------------------------------------------------*/
+      
       data->cpu.U.w  = data->cpu.pc.w ^ data->cpu.S.w;
       data->cpu.Y.w  = data->cpu.U.w;
       data->cpu.X.w  = data->cpu.Y.w;
