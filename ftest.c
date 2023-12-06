@@ -997,6 +997,7 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
             assert(Assert->here == addr);
             for (size_t i = 0 ; i < Assert->cnt ; i++)
             {
+              message(a09,MSG_DEBUG,"checking %s",Assert->Asserts[i].tag);
               okay = runvm(data->a09,&data->cpu,&Assert->Asserts[i]);
               if (!okay)
               {
