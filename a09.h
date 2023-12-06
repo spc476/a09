@@ -41,8 +41,6 @@
 
 #include <cgilib6/nodelist.h>
 #include <cgilib6/tree.h>
-#include <mc6809.h>
-#include <mc6809dis.h>
 
 enum backend
 {

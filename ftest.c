@@ -26,6 +26,9 @@
 #include <setjmp.h>
 #include <errno.h>
 
+#include <mc6809.h>
+#include <mc6809dis.h>
+
 #include "a09.h"
 
 /**************************************************************************/
