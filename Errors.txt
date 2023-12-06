@@ -95,3 +95,6 @@ E0076: string slot already filled
 E0077: missing .ENDTST directive
 E0078: cannot nest .TEST
 E0089: no matching .TEST
+E0080: not an index register
+E0081: missing A, B, or D register
+E0082: missing index register

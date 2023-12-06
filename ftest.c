@@ -77,6 +77,7 @@ enum vmops
   VM_IDS,
   VM_IDU,
   VM_SCMP,
+  VM_SEX,
   VM_EXIT,
 };
 
@@ -609,6 +610,11 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
              stack[--sp] =  0;
            break;
            
+      case VM_SEX:
+           if (stack[sp] >= 0x80)
+             stack[sp] |= 0xFF00;
+           break;
+           
       case VM_EXIT:
            assert(sp == (sizeof(stack) / sizeof(stack[0]) - 1));
            return stack[sp] != 0;
@@ -728,7 +734,30 @@ static int regsearch(void const *needle,void const *haystack)
 
 /**************************************************************************/
 
-static bool ft_register(
+static struct labeltable const mregisters[] =
+{
+  { .label = { .text = "A"    , .s = 1 } , .op = VM_CPUA   } ,
+  { .label = { .text = "B"    , .s = 1 } , .op = VM_CPUB   } ,
+  { .label = { .text = "CC.C" , .s = 4 } , .op = VM_CPUCCc } ,
+  { .label = { .text = "CC.E" , .s = 4 } , .op = VM_CPUCCe } ,
+  { .label = { .text = "CC.F" , .s = 4 } , .op = VM_CPUCCf } ,
+  { .label = { .text = "CC.H" , .s = 4 } , .op = VM_CPUCCh } ,
+  { .label = { .text = "CC.I" , .s = 4 } , .op = VM_CPUCCi } ,
+  { .label = { .text = "CC.N" , .s = 4 } , .op = VM_CPUCCn } ,
+  { .label = { .text = "CC.V" , .s = 4 } , .op = VM_CPUCCv } ,
+  { .label = { .text = "CC.Z" , .s = 4 } , .op = VM_CPUCCz } ,
+  { .label = { .text = "D"    , .s = 1 } , .op = VM_CPUD   } ,
+  { .label = { .text = "DP"   , .s = 1 } , .op = VM_CPUDP  } ,
+  { .label = { .text = "PC"   , .s = 1 } , .op = VM_CPUPC  } ,
+  { .label = { .text = "S"    , .s = 1 } , .op = VM_CPUS   } ,
+  { .label = { .text = "U"    , .s = 1 } , .op = VM_CPUU   } ,
+  { .label = { .text = "X"    , .s = 1 } , .op = VM_CPUX   } ,
+  { .label = { .text = "Y"    , .s = 1 } , .op = VM_CPUY   } ,
+};
+
+/**************************************************************************/
+
+static bool ft_index_register(
         enum vmops    *prog,
         size_t         max,
         size_t        *pvip,
@@ -737,27 +766,6 @@ static bool ft_register(
         int            pass
 )
 {
-  static struct labeltable const mregisters[] =
-  {
-    { .label = { .text = "A"    , .s = 1 } , .op = VM_CPUA   } ,
-    { .label = { .text = "B"    , .s = 1 } , .op = VM_CPUB   } ,
-    { .label = { .text = "CC.C" , .s = 4 } , .op = VM_CPUCCc } ,
-    { .label = { .text = "CC.E" , .s = 4 } , .op = VM_CPUCCe } ,
-    { .label = { .text = "CC.F" , .s = 4 } , .op = VM_CPUCCf } ,
-    { .label = { .text = "CC.H" , .s = 4 } , .op = VM_CPUCCh } ,
-    { .label = { .text = "CC.I" , .s = 4 } , .op = VM_CPUCCi } ,
-    { .label = { .text = "CC.N" , .s = 4 } , .op = VM_CPUCCn } ,
-    { .label = { .text = "CC.V" , .s = 4 } , .op = VM_CPUCCv } ,
-    { .label = { .text = "CC.Z" , .s = 4 } , .op = VM_CPUCCz } ,
-    { .label = { .text = "D"    , .s = 1 } , .op = VM_CPUD   } ,
-    { .label = { .text = "DP"   , .s = 1 } , .op = VM_CPUDP  } ,
-    { .label = { .text = "PC"   , .s = 1 } , .op = VM_CPUPC  } ,
-    { .label = { .text = "S"    , .s = 1 } , .op = VM_CPUS   } ,
-    { .label = { .text = "U"    , .s = 1 } , .op = VM_CPUU   } ,
-    { .label = { .text = "X"    , .s = 1 } , .op = VM_CPUX   } ,
-    { .label = { .text = "Y"    , .s = 1 } , .op = VM_CPUY   } ,
-  };
-  
   assert(prog   != NULL);
   assert(max    == 64);
   assert(pvip   != NULL);
@@ -767,22 +775,72 @@ static bool ft_register(
   assert(pass   == 2);
   
   struct labeltable const *vmreg;
-  size_t                   ridx;
+  label                    reg;
+  
+  skip_space(buffer);
+  buffer->ridx--;
+  if (!parse_label(&reg,buffer,a09,pass))
+    return false;
+    
+  upper_label(&reg);
+  vmreg = bsearch(
+            &reg,
+            mregisters,
+            sizeof(mregisters)/sizeof(mregisters[0]),
+            sizeof(mregisters[0]),
+            regsearch
+          );
+  if (vmreg == NULL)
+    return message(a09,MSG_ERROR,"E0073: bad register");
+    
+  switch(vmreg->op)
+  {
+    case VM_CPUX: prog[(*pvip)++] = VM_IDX; break;
+    case VM_CPUY: prog[(*pvip)++] = VM_IDY; break;
+    case VM_CPUS: prog[(*pvip)++] = VM_IDS; break;
+    case VM_CPUU: prog[(*pvip)++] = VM_IDU; break;
+    default: return message(a09,MSG_ERROR,"E0080: not an index register");
+  }
+  
+  return true;
+}
+
+/**************************************************************************/
+
+static bool ft_register(
+        enum vmops    *prog,
+        size_t         max,
+        size_t        *pvip,
+        struct a09    *a09,
+        struct buffer *buffer,
+        int            pass
+)
+{
+  assert(prog   != NULL);
+  assert(max    == 64);
+  assert(pvip   != NULL);
+  assert(*pvip  <  max);
+  assert(a09    != NULL);
+  assert(buffer != NULL);
+  assert(pass   == 2);
+  
+  struct labeltable const *vmreg;
   label                    reg;
   char                     c;
+  bool                     earlycomma;
+  
+  /*--------------------------------------------------
+  ; handle "/,x" as if it was "/x", because it is.
+  ;---------------------------------------------------*/
   
   if (buffer->buf[buffer->ridx] == ',')
-    return message(a09,MSG_ERROR,"E9999: /,reg not implemented");
-    
-  ridx = buffer->ridx;  /* save in case we need to back up */
-  if (parse_label(&reg,buffer,a09,pass))
   {
+    earlycomma = true;
+    buffer->ridx++;
+  }
   
-    c = skip_space(buffer);
-    if (c == ',')
-      return message(a09,MSG_ERROR,"E9999: /acc,reg not implemented");
-      
-    buffer->ridx--;
+  if (parse_label(&reg,buffer,a09,pass))
+  {  
     upper_label(&reg);
     vmreg = bsearch(
               &reg,
@@ -791,13 +849,70 @@ static bool ft_register(
               sizeof(mregisters[0]),
               regsearch
             );
+            
+    /*----------------------------------------------------------------
+    ; No register, so assume an expression, and then look for a comma,
+    ; and then an index register.
+    ;-----------------------------------------------------------------*/
+    
     if (vmreg == NULL)
-      return message(a09,MSG_ERROR,"E0073: bad register");
+    {
+      struct buffer str = { .buf[0] = '\0' , .widx = 0 , .ridx = 0 };
+      if (!ft_expr(prog,max,pvip,&str,a09,buffer,pass))
+        return false;
+      c = skip_space(buffer);
+      if (c != ',')
+      {
+        return earlycomma
+               ? message(a09,MSG_ERROR,"E0082: missing index register")
+               : message(a09,MSG_ERROR,"E0023: missing expected comma")
+               ;
+      }
+      return ft_index_register(prog,max,pvip,a09,buffer,pass);
+    }
+      
+    /*---------------------------------------------------------------------
+    ; We might have just a regiser, or the accum,index mode.  Choose here.
+    ; In either case, we compile a VM_CPUaccum op here.
+    ;---------------------------------------------------------------------*/
+    
     prog[(*pvip)++] = vmreg->op;
-    return true;
+    c               = skip_space(buffer);
+    
+    if (c == ',')
+    {
+      /*------------------------------------------------------------------
+      ; If the label didn't specify 'A', 'B', or 'D', here, it's an error.
+      ; If it's A or B, we need to sign extend it, so yet another VM op.
+      ;-------------------------------------------------------------------*/
+      
+      switch(vmreg->op)
+      {
+        case VM_CPUA:
+        case VM_CPUB: prog[(*pvip)++] = VM_SEX;
+        case VM_CPUD: break;
+        default: return message(a09,MSG_ERROR,"E0081: missing A, B, or D register");
+      }
+      return ft_index_register(prog,max,pvip,a09,buffer,pass);
+    }
+  }  
+  else
+  {
+    struct buffer str = { .buf[0] = '\0' , .widx = 0 , .ridx = 0 };
+    if (!ft_expr(prog,max,pvip,&str,a09,buffer,pass))
+      return false;
+    c = skip_space(buffer);
+    if (c != ',')
+    {
+      return earlycomma
+           ? message(a09,MSG_ERROR,"E0082: missing index register")
+           : message(a09,MSG_ERROR,"E0023: missing expected comma");
+           ;
+    }
+    return ft_index_register(prog,max,pvip,a09,buffer,pass);
   }
   
-  return message(a09,MSG_ERROR,"E9999: rest not implemented");
+  return true;
 }
 
 /**************************************************************************/
