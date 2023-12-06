@@ -89,6 +89,14 @@ enum
   TEST_max,
 };
 
+enum protection
+{
+  PROT_READ,
+  PROT_WRITE,
+  PROT_EXEC,
+  PROT_TRON,
+};
+
 struct memprot
 {
   bool read  : 1;
@@ -187,6 +195,77 @@ char const format_test_usage[] =
         
 /**************************************************************************/
 
+static void range(struct memprot *mem,int *pi,char *argv[],enum protection prot)
+{
+  assert(mem  != NULL);
+  assert(pi   != NULL);
+  assert(*pi  >  0);
+  assert(argv != NULL);
+  
+  unsigned long int  low;
+  unsigned long int  high;
+  char              *r;
+  
+  if (argv[*pi][2] == '\0')
+    r = argv[++(*pi)];
+  else
+    r = &argv[*pi][2];
+    
+  while(*r)
+  {
+    low = strtoul(r,&r,0);
+    if (*r == '-')
+    {
+      r++;
+      high = strtoul(r,&r,0);
+    }
+    else
+      high = low;
+      
+    if ((low > 65535u) || (high > 65535u))
+    {
+      fprintf(stderr,"%s: E0069: address exceeds address space\n",MSG_ERROR);
+      exit(1);
+    }
+    
+    switch(prot)
+    {
+      case PROT_READ:
+           for ( ; low <= high ; low++)
+           {
+             mem[low].read  = true;
+             mem[low].write = false;
+             mem[low].exec  = false;
+           }
+           break;
+           
+      case PROT_WRITE:
+           for ( ; low <= high ; low++)
+           {
+             mem[low].read  = false;
+             mem[low].write = true;
+             mem[low].exec  = false;
+           }
+           break;
+           
+      case PROT_EXEC:
+           for ( ; low <= high ; low++)
+             mem[low].exec = true;
+           break;
+           
+      case PROT_TRON:
+           for ( ; low <= high ; low++)
+             mem[low].tron = true;
+           break;
+    }
+    
+    if (*r == ',')
+      r++;
+  }
+}
+
+/**************************************************************************/
+
 static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
 {
   assert(fmt  != NULL);
@@ -240,10 +319,19 @@ static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
          break;
          
     case 'R':
+         range(data->prot,pi,argv,PROT_READ);
+         break;
+         
     case 'W':
+         range(data->prot,pi,argv,PROT_WRITE);
+         break;
+         
     case 'E':
+         range(data->prot,pi,argv,PROT_EXEC);
+         break;
+         
     case 'T':
-         fprintf(stderr,"%s: E9999: '%c' not implemented\n",MSG_ERROR,argv[i][1]);
+         range(data->prot,pi,argv,PROT_TRON);
          break;
          
     default:
