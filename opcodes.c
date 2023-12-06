@@ -142,7 +142,7 @@ static bool collect_esc_string(
     case 'C':
          assert(wbuf->widx < sizeof(wbuf->buf));
          if (wbuf->widx > UCHAR_MAX)
-           return message(a09,MSG_ERROR,"E9999: string too long");
+           return message(a09,MSG_ERROR,"E0071: string too long");
          memmove(&wbuf->buf[1],&wbuf->buf[0],wbuf->widx);
          wbuf->buf[0] = (char)wbuf->widx;
          wbuf->widx++;

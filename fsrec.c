@@ -94,12 +94,12 @@ static bool fsrec_cmdline(union format *fmt,int *pi,char *argv[])
            
          if (value == 0)
          {
-           fprintf(stderr,"%s: E9999: minimum record size: 1\n",MSG_ERROR);
+           fprintf(stderr,"%s: E0067: minimum record size: 1\n",MSG_ERROR);
            exit(1);
          }
          else if (value > 252)
          {
-           fprintf(stderr,"%s: E9999: maximum record size: 252\n",MSG_ERROR);
+           fprintf(stderr,"%s: E0068: maximum record size: 252\n",MSG_ERROR);
            exit(1);
          }
          format->recsize = value;
@@ -112,7 +112,7 @@ static bool fsrec_cmdline(union format *fmt,int *pi,char *argv[])
            value = strtoul(&argv[i][2],NULL,0);
          if (value > USHRT_MAX)
          {
-           fprintf(stderr,"%s: E9999: address exceeds address space\n",MSG_ERROR);
+           fprintf(stderr,"%s: E0069: address exceeds address space\n",MSG_ERROR);
            exit(1);
          }
          format->addr = value;
@@ -125,7 +125,7 @@ static bool fsrec_cmdline(union format *fmt,int *pi,char *argv[])
            value = strtoul(&argv[i][2],NULL,0);
          if (value > USHRT_MAX)
          {
-           fprintf(stderr,"%s: E9999: address exceeds address space\n",MSG_ERROR);
+           fprintf(stderr,"%s: E0069: address exceeds address space\n",MSG_ERROR);
            exit(1);
          }
          format->exec = value;
@@ -176,7 +176,7 @@ static bool fsrec_pass_start(union format *fmt,struct a09 *a09,int pass)
       }
       else
       {
-        fprintf(stderr,"%s: E9999: %s: %s\n",MSG_ERROR,format->S0file,strerror(errno));
+        fprintf(stderr,"%s: E0070: %s: %s\n",MSG_ERROR,format->S0file,strerror(errno));
         return false;
       }
     }

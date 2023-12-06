@@ -210,7 +210,7 @@ static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
            
          if (value > 65535u)
          {
-           fprintf(stderr,"%s: E9999: address exceeds address space\n",MSG_ERROR);
+           fprintf(stderr,"%s: E0069: address exceeds address space\n",MSG_ERROR);
            exit(1);
          }
          
@@ -232,7 +232,7 @@ static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
            
          if (value > 255)
          {
-           fprintf(stderr,"%s: E9999: byte should be 0..255\n",MSG_ERROR);
+           fprintf(stderr,"%s: E0072: byte should be 0..255\n",MSG_ERROR);
            exit(1);
          }
          
@@ -698,7 +698,7 @@ static bool ft_register(
               regsearch
             );
     if (vmreg == NULL)
-      return message(a09,MSG_ERROR,"E9999: bad register");
+      return message(a09,MSG_ERROR,"E0073: bad register");
     prog[(*pvip)++] = vmreg->op;
     return true;
   }
@@ -749,7 +749,7 @@ static bool ft_value(
   }
   
   if (*pvip >= max - 2)
-    return message(a09,MSG_ERROR,"E9999: not enough space for expression");
+    return message(a09,MSG_ERROR,"E0074: not enough space for expression");
     
   if (c == '-')
   {
@@ -792,9 +792,9 @@ static bool ft_value(
   else if ((c == '"') || (c == '\''))
   {
     if (neg || not)
-      return message(a09,MSG_ERROR,"E9999: can't negate or complement a string");
+      return message(a09,MSG_ERROR,"E0075: can't negate or complement a string");
     if (str->widx != 0)
-      return message(a09,MSG_ERROR,"E9999: string slot already filled");
+      return message(a09,MSG_ERROR,"E0076: string slot already filled");
     buffer->ridx--;
     if (!parse_string(a09,str,buffer))
       return false;
@@ -1047,7 +1047,7 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
   struct testdata    *data = test->data;
   
   if (test->intest)
-    return message(a09,MSG_ERROR,"E9999: missing .ENDTST directive");
+    return message(a09,MSG_ERROR,"E0077: missing .ENDTST directive");
     
   if (pass == 2)
   {
@@ -1148,7 +1148,7 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
         };
         
         assert(rc < TEST_max);
-        return message(a09,MSG_ERROR,"E9900: %s: %s: %s\n",
+        return message(a09,MSG_ERROR,"E0078: %s: %s: %s\n",
         tag,mfaults[rc],data->errbuf);
       }
     }
@@ -1280,7 +1280,7 @@ static bool ftest_test(union format *fmt,struct opcdata *opd)
   struct testdata    *data = test->data;
   
   if (test->intest)
-    return message(opd->a09,MSG_ERROR,"E9999: cannot nest .TEST");
+    return message(opd->a09,MSG_ERROR,"E0079: cannot nest .TEST");
   test->intest = true;
   
   if (opd->pass == 2)
@@ -1407,7 +1407,7 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
   struct format_test *test = &fmt->test;
   
   if (!test->intest)
-    return message(opd->a09,MSG_ERROR,"E9999: no matching .TEST");
+    return message(opd->a09,MSG_ERROR,"E0080: no matching .TEST");
     
   test->intest = false;
   return true;
