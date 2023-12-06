@@ -829,11 +829,25 @@ static bool ft_factor(
 {
   bool fetchbyte = false;
   bool fetchword = false;
+  bool neg       = false;
+  bool not       = false;
   
   char c = skip_space(buffer);
   if ((c == '\0') || (c == ';'))
     return message(a09,MSG_ERROR,"E0010: unexpected end of input");
     
+  if (c == '-')
+  {
+    neg = true;
+    c   = skip_space(buffer);
+    
+  }
+  else if (c == '~')
+  {
+    not = true;
+    c   = skip_space(buffer);
+  }
+  
   if (c == '@')
   {
     if (buffer->buf[buffer->ridx] == '@')
@@ -863,6 +877,19 @@ static bool ft_factor(
     if (*pvip == max)
       return message(a09,MSG_ERROR,"E0066: expression too complex");
     prog[(*pvip)++] = VM_AT16;
+  }
+  
+  if (neg)
+  {
+    if (*pvip == max)
+      return message(a09,MSG_ERROR,"E0066: expression too complex");
+    prog[(*pvip)++] = VM_NEG;
+  }
+  else if (not)
+  {
+    if (*pvip == max)
+      return message(a09,MSG_ERROR,"E0066: expression too complex");
+    prog[(*pvip)++] = VM_NOT;
   }
   
   return true;
