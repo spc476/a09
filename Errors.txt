@@ -11,6 +11,9 @@ W0010: missing initial label
 W0011: 5-bit offset upped to 8-bit offset for indirect mode
 W0012: branch to next location, maybe remove?
 W0013: label '%.*s' could be mistaken for register in index
+W0014: possible self-modifying code
+W0015:  %s: %s: %s
+W0016: W0016: memory write of %02X to %04X
 W9999: FEATURE NOT FINISHED
 
 E0001: Internal error---'%.*s' should exist, but doesn't
@@ -90,6 +93,5 @@ E0074: E0074: not enough space for expression
 E0075: can't negate or complement a string
 E0076: string slot already filled
 E0077: missing .ENDTST directive
-E0078: %s: %s: %s
-E0079: cannot nest .TEST
-E0080: no matching .TEST
+E0078: cannot nest .TEST
+E0089: no matching .TEST

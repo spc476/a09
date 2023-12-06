@@ -658,9 +658,9 @@ static void ft_cpu_write(mc6809__t *cpu,mc6809addr__t addr,mc6809byte__t byte)
     longjmp(cpu->err,TEST_NON_WRITE_MEM);
   }
   if (data->prot[addr].exec)
-    message(data->a09,MSG_WARNING,"W9996: possible self-modifying code");
+    message(data->a09,MSG_WARNING,"W0014: possible self-modifying code");
   if (data->prot[addr].tron)
-    message(data->a09,MSG_WARNING,"W9995: memory write of %02X to %04X",byte,addr);
+    message(data->a09,MSG_WARNING,"W0016: memory write of %02X to %04X",byte,addr);
   data->memory[addr] = byte;
 }
 
@@ -668,7 +668,13 @@ static void ft_cpu_write(mc6809__t *cpu,mc6809addr__t addr,mc6809byte__t byte)
 
 static void ft_cpu_fault(mc6809__t *cpu,mc6809fault__t fault)
 {
-  assert(cpu != NULL);
+  assert(cpu       != NULL);
+  assert(cpu->user != NULL);
+  
+  struct format_test *test = cpu->user;
+  struct testdata    *data = test->data;
+  
+  snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X",cpu->pc.w - 1);
   longjmp(cpu->err,fault);
 }
 
@@ -1236,8 +1242,7 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
         };
         
         assert(rc < TEST_max);
-        return message(a09,MSG_ERROR,"E0078: %s: %s: %s\n",
-        tag,mfaults[rc],data->errbuf);
+        message(a09,MSG_WARNING,"W0015: %s: %s: %s",tag,mfaults[rc],data->errbuf);
       }
     }
   }
@@ -1368,7 +1373,7 @@ static bool ftest_test(union format *fmt,struct opcdata *opd)
   struct testdata    *data = test->data;
   
   if (test->intest)
-    return message(opd->a09,MSG_ERROR,"E0079: cannot nest .TEST");
+    return message(opd->a09,MSG_ERROR,"E0078: cannot nest .TEST");
   test->intest = true;
   
   if (opd->pass == 2)
@@ -1495,7 +1500,7 @@ static bool ftest_endtst(union format *fmt,struct opcdata *opd)
   struct format_test *test = &fmt->test;
   
   if (!test->intest)
-    return message(opd->a09,MSG_ERROR,"E0080: no matching .TEST");
+    return message(opd->a09,MSG_ERROR,"E0079: no matching .TEST");
     
   test->intest = false;
   return true;
