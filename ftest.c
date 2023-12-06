@@ -679,11 +679,11 @@ static bool ft_register(
   
   if (buffer->buf[buffer->ridx] == ',')
     return message(a09,MSG_ERROR,"E9999: /,reg not implemented");
-  
-  ridx = buffer->ridx;	/* save in case we need to back up */
+    
+  ridx = buffer->ridx;  /* save in case we need to back up */
   if (parse_label(&reg,buffer,a09,pass))
   {
-    
+  
     c = skip_space(buffer);
     if (c == ',')
       return message(a09,MSG_ERROR,"E9999: /acc,reg not implemented");
@@ -1344,9 +1344,25 @@ static bool ftest_Assert(union format *fmt,struct opcdata *opd)
     else
       Assert = tree2Assert(tree);
       
-    assert(data->nunits > 0);
-    if (!ft_compile(opd->a09,&data->units[data->nunits-1].name,Assert,opd->buffer,opd->pass))
-      return false;
+    if (data->nunits == 0)
+    {
+      struct buffer name;
+      
+      /*-----------------------------------------------------------------
+      ; This .ASSERT directive was outside a .TEST directive, so use the
+      ; last non-local label as the "name".
+      ;------------------------------------------------------------------*/
+      
+      memcpy(name.buf,opd->a09->label.text,opd->a09->label.s);
+      name.widx = opd->a09->label.s;
+      if (!ft_compile(opd->a09,&name,Assert,opd->buffer,opd->pass))
+        return false;
+    }
+    else
+    {
+      if (!ft_compile(opd->a09,&data->units[data->nunits-1].name,Assert,opd->buffer,opd->pass))
+        return false;
+    }
   }
   
   return true;
