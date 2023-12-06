@@ -895,6 +895,8 @@ static bool ft_register(
       }
       return ft_index_register(prog,max,pvip,a09,buffer,pass);
     }
+    else
+      buffer->ridx--;
   }  
   else
   {
