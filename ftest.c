@@ -178,7 +178,7 @@ char const format_test_usage[] =
         "\n"
         "Test format options:\n"
         "\t-S addr\t\taddress of system stack (default=0x8000)\n"
-        "\t-F byte\t\tfill memory with value (default=0x3F, SWI inst)\n"
+        "\t-F byte\t\tfill memory with value (default=0x01, illegal inst)\n"
         "\t-R range\tmark memory read-only (see below)\n"
         "\t-W range\tmark memory write-only (see below)\n"
         "\t-E range\tmark memory as code (see below)\n"
@@ -1635,7 +1635,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     fmt->data->dis.fault = ft_dis_fault;
     fmt->data->addr      = 0;
     fmt->data->sp        = 0x8000;
-    fmt->data->fill      = 0x3F; // SWI instruction
+    fmt->data->fill      = 0x01; // illegal instruction
     fmt->data->tron      = false;
     fmt->data->errbuf[0] = '\0';
     
