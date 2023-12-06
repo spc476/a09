@@ -141,6 +141,12 @@ struct testdata
   struct memprot   prot  [65536u];
 };
 
+struct labeltable
+{
+  label      label;
+  enum vmops op;
+};
+
 static bool ft_expr(enum vmops *,size_t,size_t *,struct buffer *,struct a09 *,struct buffer *,int);
 
 /**************************************************************************/
@@ -601,6 +607,33 @@ static void ft_dis_fault(mc6809dis__t *dis,mc6809fault__t fault)
 
 /**************************************************************************/
 
+static void upper_label(label *res)
+{
+  assert(res != NULL);
+  for (size_t i = 0 ; i < res->s ; i++)
+    res->text[i] = toupper(res->text[i]);
+}
+
+/**************************************************************************/
+
+static int regsearch(void const *needle,void const *haystack)
+{
+  label             const *key   = needle;
+  struct labeltable const *value = haystack;
+  int                      rc    = memcmp(key->text,value->label.text,min(key->s,value->label.s));
+  
+  if (rc == 0)
+  {
+    if (key->s < value->label.s)
+      rc = -1;
+    else if (key->s > value->label.s)
+      rc =  1;
+  }
+  return rc;
+}
+
+/**************************************************************************/
+
 static bool ft_register(
         enum vmops    *prog,
         size_t         max,
@@ -610,14 +643,67 @@ static bool ft_register(
         int            pass
 )
 {
-  (void)prog;
-  (void)max;
-  (void)pvip;
-  assert(a09 != NULL);
-  (void)buffer;
-  assert(pass == 2);
+  static struct labeltable const mregisters[] =
+  {
+    { .label = { .text = "A"    , .s = 1 } , .op = VM_CPUA   } ,
+    { .label = { .text = "B"    , .s = 1 } , .op = VM_CPUB   } ,
+    { .label = { .text = "CC.C" , .s = 4 } , .op = VM_CPUCCc } ,
+    { .label = { .text = "CC.E" , .s = 4 } , .op = VM_CPUCCe } ,
+    { .label = { .text = "CC.F" , .s = 4 } , .op = VM_CPUCCf } ,
+    { .label = { .text = "CC.H" , .s = 4 } , .op = VM_CPUCCh } ,
+    { .label = { .text = "CC.I" , .s = 4 } , .op = VM_CPUCCi } ,
+    { .label = { .text = "CC.N" , .s = 4 } , .op = VM_CPUCCn } ,
+    { .label = { .text = "CC.V" , .s = 4 } , .op = VM_CPUCCv } ,
+    { .label = { .text = "CC.Z" , .s = 4 } , .op = VM_CPUCCz } ,
+    { .label = { .text = "D"    , .s = 1 } , .op = VM_CPUD   } ,
+    { .label = { .text = "DP"   , .s = 1 } , .op = VM_CPUDP  } ,
+    { .label = { .text = "PC"   , .s = 1 } , .op = VM_CPUPC  } ,
+    { .label = { .text = "S"    , .s = 1 } , .op = VM_CPUS   } ,
+    { .label = { .text = "U"    , .s = 1 } , .op = VM_CPUU   } ,
+    { .label = { .text = "X"    , .s = 1 } , .op = VM_CPUX   } ,
+    { .label = { .text = "Y"    , .s = 1 } , .op = VM_CPUY   } ,
+  };
   
-  return message(a09,MSG_ERROR,"E9999: not implemented");
+  assert(prog   != NULL);
+  assert(max    == 64);
+  assert(pvip   != NULL);
+  assert(*pvip  <  max);
+  assert(a09    != NULL);
+  assert(buffer != NULL);
+  assert(pass   == 2);
+  
+  struct labeltable const *vmreg;
+  size_t                   ridx;
+  label                    reg;
+  char                     c;
+  
+  if (buffer->buf[buffer->ridx] == ',')
+    return message(a09,MSG_ERROR,"E9999: /,reg not implemented");
+  
+  ridx = buffer->ridx;	/* save in case we need to back up */
+  if (parse_label(&reg,buffer,a09,pass))
+  {
+    
+    c = skip_space(buffer);
+    if (c == ',')
+      return message(a09,MSG_ERROR,"E9999: /acc,reg not implemented");
+      
+    buffer->ridx--;
+    upper_label(&reg);
+    vmreg = bsearch(
+              &reg,
+              mregisters,
+              sizeof(mregisters)/sizeof(mregisters[0]),
+              sizeof(mregisters[0]),
+              regsearch
+            );
+    if (vmreg == NULL)
+      return message(a09,MSG_ERROR,"E9999: bad register");
+    prog[(*pvip)++] = vmreg->op;
+    return true;
+  }
+  
+  return message(a09,MSG_ERROR,"E9999: rest not implemented");
 }
 
 /**************************************************************************/
@@ -1035,7 +1121,8 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
         };
         
         assert(rc < TEST_max);
-        return message(a09,MSG_ERROR,"E9900: %s: %s: %s\n",tag,mfaults[rc],data->errbuf);
+        return message(a09,MSG_ERROR,"E9900: %s: %s: %s\n",
+        tag,mfaults[rc],data->errbuf);
       }
     }
   }
