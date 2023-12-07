@@ -1417,7 +1417,8 @@ static bool ftest_data_write(
   struct testdata    *data = test->data;
   
   memcpy(&data->memory[data->addr],buffer,len);
-  data->addr += len;
+  for (size_t i = 0 ; i < len ; i++)
+    data->prot[data->addr++].tron |= data->tron;
   return true;
 }
 
