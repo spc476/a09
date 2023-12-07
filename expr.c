@@ -175,6 +175,9 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
   else
     return message(a09,MSG_ERROR,"E0006: not a value");
     
+  if (!rc)
+    return message(a09,MSG_ERROR,"E0006: not a value");
+    
   if (neg)
     pv->value = -pv->value;
   else if (not)
