@@ -830,7 +830,7 @@ static bool ft_register(
   struct labeltable const *vmreg;
   label                    reg;
   char                     c;
-  bool                     earlycomma;
+  bool                     earlycomma = false;
   
   /*--------------------------------------------------
   ; handle "/,x" as if it was "/x", because it is.
@@ -1318,7 +1318,7 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
         
         if (data->prot[data->cpu.pc.w].check)
         {
-          bool     okay;
+          bool     okay = false;
           uint16_t addr = data->cpu.pc.w;
           tree__s *tree = tree_find(data->Asserts,&addr,Assertaddrcmp);
           
@@ -1412,6 +1412,7 @@ static bool ftest_data_write(
   assert(buffer    != NULL);
   assert(opd->pass == 2);
   assert(fmt->backend == BACKEND_TEST);
+  (void)opd;
   
   struct format_test *test = &fmt->test;
   struct testdata    *data = test->data;
