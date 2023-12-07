@@ -27,7 +27,7 @@ E0008: divide by 0 error
 E0009: literal exceeds absolute allowable range of 0..65535
 E0010: unexpected end of input
 E0011: missing right parenthesis
-E0012: unexpected end of expression
+E0012:
 E0013: unexpected end of string
 E0014: invalid escape character
 E0015: not a string

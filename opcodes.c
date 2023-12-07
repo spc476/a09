@@ -411,7 +411,7 @@ static bool parse_operand(struct opcdata *opd)
   if ((c == ';') || (c == '\0'))
   {
     if (indexindirect)
-      return message(opd->a09,MSG_ERROR,"E019: missing end of indirection error");
+      return message(opd->a09,MSG_ERROR,"E0019: missing end of index indirect mode");
       
     if ((opd->value.bits == 5) || (opd->value.bits == 8))
     {
