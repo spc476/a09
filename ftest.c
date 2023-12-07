@@ -1503,6 +1503,8 @@ static bool ftest_test(union format *fmt,struct opcdata *opd)
   
   if (opd->pass == 2)
   {
+    char c;
+    
     struct unittest *new = realloc(data->units,(data->nunits + 1) * sizeof(struct unittest));
     if (new == NULL)
       return message(opd->a09,MSG_ERROR,"E0046: out of memory");
@@ -1510,7 +1512,21 @@ static bool ftest_test(union format *fmt,struct opcdata *opd)
     data->units[data->nunits].addr     = opd->a09->pc;
     data->units[data->nunits].filename = opd->a09->infile;
     data->units[data->nunits].line     = opd->a09->lnum;
-    parse_string(opd->a09,&data->units[data->nunits].name,opd->buffer);
+    
+    c = skip_space(opd->buffer);
+    if ((c == '"') || (c == '\''))
+    {
+      opd->buffer->ridx--;
+      if (!parse_string(opd->a09,&data->units[data->nunits].name,opd->buffer))
+        return false;
+    }
+    else if ((c == ';') || (c == '\0'))
+    {
+      memcpy(data->units[data->nunits].name.buf,opd->a09->label.text,opd->a09->label.s);
+      data->units[data->nunits].name.widx = opd->a09->label.s;
+    }
+    else
+      return message(opd->a09,MSG_ERROR,"E0060: syntax error");
     data->nunits++;
   }
   return true;
