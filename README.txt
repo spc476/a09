@@ -133,6 +133,46 @@ that would lead a more complex assembler.)
   The list of supported pseudo operations---if label "Non-standard", it's a
 non-standard pesudo operation for most 6809 assemblers.
 
+	.ASSERT expr [, "explanation" ]
+
+		Assert a condition when using the test backend, otherwise
+		ignored.  If the expression is true, nothing happens; if the
+		expression is false, the test fails, a dianostic message is
+		printed, and the assembly procedure stops.  This can appear
+		outside of a unit test.
+
+	.ENDTST
+
+		End a unit test; ignored by other backends.
+
+	.NOTEST
+
+		All text up to a .ENDTST directive is ignored.  This is
+		an easy way to disable a test when using the test backend. 
+
+	.TEST ["name"]
+
+		Define a unit test if using the test backend.  Any 6809 code
+		is executed at the end of pass 2 of the assembler, and must
+		end with a 'RTS' instruction.  All .ASSERT directives in the
+		code being executed will be run.  This, and all following
+		text until a .ENDTST directive, will be ignored by other
+		backends.
+
+	.TROFF
+
+		Turn off 6809 program tracing if using the test backend. 
+		Ignored by other backends.  Like the .ASSERT directive, this
+		can appear outside a unit test definition.
+
+	.TRON
+
+		Turn on 6809 program tracing if using the test backend. 
+		Each 6809 instruction is printed on stdout and includes the
+		contents of the registers at that point in execution, and
+		can appear outside of a unit test definition.  This is
+		ignored by other backends.
+
 	ALIGN expr
 
 		(Non-standard) Align the program counter to a multiple of
@@ -141,6 +181,9 @@ non-standard pesudo operation for most 6809 assemblers.
 		occur.
 
 	ASCII 'string'
+	ASCII 'string'c
+	ASCII 'string'h
+	ASCII 'string'z
 
 		(Non-standard) Place the ASCII string into the program. 
 		Unlike FCC, this understands the following escape sequences:
@@ -158,19 +201,17 @@ non-standard pesudo operation for most 6809 assemblers.
 			\\	ASCII character reversed solidus
 
 		The string can be delimited by the apostrophe or quotation
-		mark.
+		mark.  The suffix of 'C', 'H' or 'Z' can be used:
 
-	ASCIIH 'string'
+			'C'	Make a counted string, where the first
+				byte is the length of the rest of the
+				string.
 
-		(Non-standard) Place the ASCII string into the program,
-		with the last character's bit-7 set.  This, like ASCII,
-		understands escaped characters.
+			'H'	The last character of the string has bit
+				7 set to mark the end of the string.
 
-	ASCIIZ 'string'
-
-		(Non-standafd) Place the ASCII string into the program,
-		terminated by a NUL ('\0') character.  Like ASCII, this
-		supports escaped characters.
+			'Z'	A NUL byte is appended to the string to mark
+				the end of the string.
 
 	END [label]
 
@@ -248,6 +289,119 @@ non-standard pesudo operation for most 6809 assemblers.
 
 		Tells the assembler where the DP (direct page) is in memory.
 
+  Warnings are printed for conditions that aren't exactly errors, but can
+be potential problems.  The defined warnings are:
+
+	W0001
+
+		The label exceeds 63 characters and is thus, truncated
+		internally.
+
+	W0002
+
+	        The label wasn't referenced by any other code.  And if the
+	        label is not referenced, why have the label in the first
+	        place?  It could also mean an unused variable whose removal
+	        could save some space.
+
+	W0003
+
+		A value that is outside the range of -16 to 15 is being
+		forced to a 5-bit range by the use of '<<'.  
+
+	W0004
+
+		A value that is outside the range of -127 to 255 is being
+		forced to an 8-bit range by the use of '<'.
+
+	W0005
+
+		An address value can use the direct addressing mode but
+		is using the extended addressing mode.  The use '<' can
+		be used to force a direct addressing mode.
+
+	W0006
+
+		The default value of an index offset can fit in an 8-bit
+		range and the use of '<' might be warranted.
+
+	W0007
+
+		The default value of an index offset can fit in a 5-bit
+		range and the use of '<<' might be warranted.
+
+	W0008
+
+		The mixing of 8-bit and 16-bit registers in an EXG or TFR
+		instruction was found.  This is undefined by Motorola, but
+		is a warning instead of an error because of code in the wild
+		that might rely upon implementation behavior.
+
+	W0009
+
+		The offset for a 16-bit branch instruction is inside the
+		range for an 8-bit branch instruction.
+
+	W0010
+
+		A local label was found before a non-local label was used. 
+		The resulting label will be used, but there is no way to
+		reference it when the next non-local label is defined. 
+		Perhaps this could be an error.
+
+	W0011
+
+		The 6809 indirect indexing addressing mode does not support
+		5-bit offsets, and therefore, an 8-bit offset is being used.
+
+	W0012
+
+		A branch instruction other than BRN (or LBRN) is pointing to
+		the next instruction in the program.
+
+	W0013
+
+		A label named 'A', 'B' or 'D' was used.  This could be an
+		issue for the index addressing mode where the A, B or D
+		register can be used as an index.
+
+	W0014
+
+		Self-modifying code was possibly detected.  This is only
+		issued if using the test backend, and even then, only if
+		the code with the potential problem is actually run.
+
+	W0015
+
+		A failed unit test.  This is only issued if using the test
+		backend.
+
+	W0016
+
+		A write to memory that appears with a .TRON and .TROFF
+		directives.  This is only issued if using the test backend.
+
+  Individual warnings can be supressed by using the appropritate command
+line option.
+
+  There are four possible backends (or formats) the assembler supports. 
+They are:
+
+	bin	binary backend
+
+		The resulting output is a memory image.
+
+	rsdos	Radio Shack TRS-80 Color Computer format
+
+		The resulting output can be loaded by Color Basic using
+		the CLOADM or LOADM BASIC command.
+
+	srec	Motorola S-Record output
+
+		A text format.
+
+	test	The unit test backend.
+
   The following command line options are supported:
 
 	-n Wxxxx[,Wyyyy...]
@@ -273,6 +427,8 @@ non-standard pesudo operation for most 6809 assemblers.
 
 			bin	- binary output
 			rsdos	- executable format for Coco BASIC
+			srec	- Motorola SREC format
+			test	- unit test backend
 
 	-d
 
@@ -286,4 +442,71 @@ non-standard pesudo operation for most 6809 assemblers.
 	-h
 
 		Output a summary of the options supported.
+
+  Individual backends can have their own command line options that are
+activated after the '-f' option.  They are:
+
+The SREC backend
+
+	-R size
+
+		This specifies the number of data bytes per line.  Valid
+		values are 1 to 252, with 34 being the default.
+
+	-0 file
+
+		Use the given file to generate an S0 record.  Since there's
+		no standard format for the S0 record, this allows you to use
+		whatever format is required for your use.
+
+	-L address
+
+		Use the given address for the loading address if no ORG
+		directive appears in the source code.
+
+	-E address
+
+		Use the given address for the execute address if no END
+		directive appears in the source code.
+
+	-O
+
+		Force the use of the -L and -E options to override any
+		ORG or END directives that appear in the source code.
+
+The test backend
+
+	-S address
+
+		Use the address for the system stack in the emulated
+		6809.  The default value for this is $FFF0.
+
+	-F byte
+
+		Use the given value to fill the 6809 memory before running
+		the tests.  The default value is 1 (an illegal instruction).
+
+	-R lowaddress[-highaddress]
+
+		Mark the memory of the emulated 6809 as read-only.
+
+	-W lowaddress[-highaddress]
+
+		Mark the memory of the emulated 6809 as write-only.
+
+	-E lowaddress[-highaddress]
+
+		Mark the memory of the emulated 6809 as allowing execution.
+
+	-T lowaddress[-highaddress]
+
+		Mark the memory of the emulated 6809 as being traced.  For
+		instructions, this will print the instruction and do a
+		register dump.  For memory writes, this will print out the
+		address and the new value.
+
+	-D file
+
+		Write the 6809 memory to the given file at the end of
+		assembly and all tests have run.
 
