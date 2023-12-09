@@ -1009,8 +1009,7 @@ static bool ft_value(
       return message(a09,MSG_ERROR,"E0075: can't negate or complement a string");
     if (str->widx != 0)
       return message(a09,MSG_ERROR,"E0076: string slot already filled");
-    buffer->ridx--;
-    if (!parse_string(a09,str,buffer))
+    if (!collect_esc_string(a09,str,buffer,c))
       return false;
     prog[(*pvip)++] = VM_SCMP;
     return true;
@@ -1214,8 +1213,7 @@ static bool ft_compile(
     c = skip_space(buffer);
     if ((c == '"') || (c == '\''))
     {
-      buffer->ridx--;
-      if (!parse_string(a09,&tmp,buffer))
+      if (!collect_esc_string(a09,&tmp,buffer,c))
         return false;
     }
   }
@@ -1518,8 +1516,7 @@ static bool ftest_test(union format *fmt,struct opcdata *opd)
     c = skip_space(opd->buffer);
     if ((c == '"') || (c == '\''))
     {
-      opd->buffer->ridx--;
-      if (!parse_string(opd->a09,&data->units[data->nunits].name,opd->buffer))
+      if (!collect_esc_string(opd->a09,&data->units[data->nunits].name,opd->buffer,c))
         return false;
     }
     else if ((c == ';') || (c == '\0'))

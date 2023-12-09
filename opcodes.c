@@ -89,7 +89,7 @@ static bool collect_string(
 
 /**************************************************************************/
 
-static bool collect_esc_string(
+bool collect_esc_string(
         struct a09              *a09,
         struct buffer *restrict  wbuf,
         struct buffer *restrict  rbuf,

@@ -376,6 +376,7 @@ extern char const format_test_usage[];
 extern bool                  message            (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
 extern void                  add_file_dep       (struct a09 *,char const *);
 extern bool                  read_line          (FILE *,struct buffer *);
+extern bool                  collect_esc_string (struct a09 *,struct buffer *restirct,struct buffer *restrict,char);
 extern bool                  parse_string       (struct a09 *,struct buffer *restrict,struct buffer *restrict);
 extern bool                  parse_label        (label *,struct buffer *,struct a09 *,int);
 extern bool                  parse_op           (struct buffer *,struct opcode const **);
