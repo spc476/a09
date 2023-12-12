@@ -33,6 +33,8 @@
 
 /**************************************************************************/
 
+#define MAX_PROG 64
+
 enum vmops
 {
   VM_LOR,       /* why yes, these do match enum operator */
@@ -122,7 +124,7 @@ struct unittest
 struct vmcode
 {
   size_t        line;
-  enum vmops    prog[64];
+  enum vmops    prog[MAX_PROG];
   char          tag[133];
   struct buffer str;
 };
@@ -775,7 +777,7 @@ static bool ft_index_register(
 )
 {
   assert(prog   != NULL);
-  assert(max    == 64);
+  assert(max    == MAX_PROG);
   assert(pvip   != NULL);
   assert(*pvip  <  max);
   assert(a09    != NULL);
@@ -826,7 +828,7 @@ static bool ft_register(
 )
 {
   assert(prog   != NULL);
-  assert(max    == 64);
+  assert(max    == MAX_PROG);
   assert(pvip   != NULL);
   assert(*pvip  <  max);
   assert(a09    != NULL);
@@ -939,7 +941,7 @@ static bool ft_value(
 )
 {
   assert(prog   != NULL);
-  assert(max    == 64);
+  assert(max    == MAX_PROG);
   assert(pvip   != NULL);
   assert(*pvip  <  max);
   assert(a09    != NULL);
@@ -1052,7 +1054,7 @@ static bool ft_factor(
   bool not       = false;
   
   assert(prog   != NULL);
-  assert(max    == 64);
+  assert(max    == MAX_PROG);
   assert(pvip   != NULL);
   assert(*pvip  <  max);
   assert(a09    != NULL);
@@ -1135,7 +1137,7 @@ static bool ft_expr(
 )
 {
   assert(prog   != NULL);
-  assert(max    == 64);
+  assert(max    == MAX_PROG);
   assert(pvip   != NULL);
   assert(*pvip  <  max);
   assert(a09    != NULL);
@@ -1199,7 +1201,7 @@ static bool ft_compile(
         int             pass
 )
 {
-  enum vmops    program[64];
+  enum vmops    program[MAX_PROG];
   struct buffer str = { .buf[0] = '\0' , .widx = 0 , .ridx = 0 };
   struct buffer tmp = { .buf[0] = '\0' , .widx = 0 , .ridx = 0 };
   size_t        vip = 0;
