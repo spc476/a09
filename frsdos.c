@@ -40,6 +40,9 @@ static bool update_section_size(struct format_rsdos *format,struct opcdata *opd)
   long          pos;
   long          size;
   
+  assert(format != NULL);
+  assert(opd    != NULL);
+  
   pos = ftell(opd->a09->out);
   if (pos == -1)
     return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
@@ -118,6 +121,7 @@ static bool block_zero_write(
 static bool frsdos_align(union format *fmt,struct opcdata *opd)
 {
   assert(fmt != NULL);
+  assert(opd != NULL);
   assert(fmt->backend == BACKEND_RSDOS);
   return block_zero_write(&fmt->rsdos,opd,opd->datasz);
 }
@@ -208,6 +212,7 @@ static bool frsdos_org(union format *fmt,struct opcdata *opd,uint16_t start,uint
 static bool frsdos_rmb(union format *fmt,struct opcdata *opd)
 {
   assert(fmt != NULL);
+  assert(opd != NULL);
   assert(fmt->backend == BACKEND_RSDOS);
   return block_zero_write(&fmt->rsdos,opd,opd->value.value);
 }

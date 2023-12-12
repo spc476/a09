@@ -781,6 +781,7 @@ static bool ft_index_register(
   assert(a09    != NULL);
   assert(buffer != NULL);
   assert(pass   == 2);
+  (void)max;
   
   struct labeltable const *vmreg;
   label                    reg;
@@ -1050,6 +1051,14 @@ static bool ft_factor(
   bool neg       = false;
   bool not       = false;
   
+  assert(prog   != NULL);
+  assert(max    == 64);
+  assert(pvip   != NULL);
+  assert(*pvip  <  max);
+  assert(a09    != NULL);
+  assert(buffer != NULL);
+  assert(pass   == 2);
+  
   char c = skip_space(buffer);
   if ((c == '\0') || (c == ';'))
     return message(a09,MSG_ERROR,"E0010: unexpected end of input");
@@ -1131,7 +1140,7 @@ static bool ft_expr(
   assert(*pvip  <  max);
   assert(a09    != NULL);
   assert(buffer != NULL);
-  assert((pass == 1) || (pass == 2));
+  assert(pass   == 2);
   
   struct optable const *op;
   struct optable const *ostack[15];
@@ -1195,6 +1204,12 @@ static bool ft_compile(
   struct buffer tmp = { .buf[0] = '\0' , .widx = 0 , .ridx = 0 };
   size_t        vip = 0;
   char          c;
+  
+  assert(a09    != NULL);
+  assert(name   != NULL);
+  assert(Assert != NULL);
+  assert(buffer != NULL);
+  assert(pass   == 2);
   
   if (!ft_expr(program,sizeof(program)/sizeof(program[0]),&vip,&str,a09,buffer,pass))
     return false;

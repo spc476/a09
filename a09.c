@@ -231,6 +231,8 @@ bool parse_op(struct buffer *buffer,struct opcode const **pop)
 
 char skip_space(struct buffer *buffer)
 {
+  assert(buffer != NULL);
+  
   char c;
   
   do
@@ -628,6 +630,7 @@ static void warning_unused_symbols(struct a09 *a09,tree__s *tree)
 static void dump_symbols(FILE *out,tree__s *tree)
 {
   assert(out != NULL);
+  
   if (tree != NULL)
   {
     static char const *const symtypes[] =

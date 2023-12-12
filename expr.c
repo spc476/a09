@@ -45,6 +45,7 @@
 
 bool s2num(struct a09 *a09,uint16_t *pv,struct buffer *buffer,uint16_t base)
 {
+  assert(a09    != NULL);
   assert(pv     != NULL);
   assert(buffer != NULL);
   assert((base == 2) || (base == 8) || (base == 10) || (base == 16));

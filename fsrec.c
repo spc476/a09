@@ -220,6 +220,7 @@ static bool fsrec_end(
 {
   assert(fmt != NULL);
   assert(opd != NULL);
+  assert(sym != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   assert(fmt->backend == BACKEND_SREC);
   
