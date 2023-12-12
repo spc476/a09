@@ -159,7 +159,7 @@ struct labeltable
   enum vmops op;
 };
 
-static bool ft_expr(enum vmops *,size_t,size_t *,struct buffer *,struct a09 *,struct buffer *,int);
+static bool ft_expr(enum vmops [],size_t,size_t *,struct buffer *,struct a09 *,struct buffer *,int);
 
 /**************************************************************************/
 
@@ -766,7 +766,7 @@ static struct labeltable const mregisters[] =
 /**************************************************************************/
 
 static bool ft_index_register(
-        enum vmops    *prog,
+        enum vmops     prog[],
         size_t         max,
         size_t        *pvip,
         struct a09    *a09,
@@ -817,7 +817,7 @@ static bool ft_index_register(
 /**************************************************************************/
 
 static bool ft_register(
-        enum vmops    *prog,
+        enum vmops     prog[],
         size_t         max,
         size_t        *pvip,
         struct a09    *a09,
@@ -929,7 +929,7 @@ static bool ft_register(
 /**************************************************************************/
 
 static bool ft_value(
-        enum vmops    *prog,
+        enum vmops     prog[],
         size_t         max,
         size_t        *pvip,
         struct buffer *str,
@@ -1037,7 +1037,7 @@ static bool ft_value(
 /**************************************************************************/
 
 static bool ft_factor(
-        enum vmops    *prog,
+        enum vmops     prog[],
         size_t         max,
         size_t        *pvip,
         struct buffer *str,
@@ -1125,7 +1125,7 @@ static bool ft_factor(
 /**************************************************************************/
 
 static bool ft_expr(
-        enum vmops    *prog,
+        enum vmops     prog[],
         size_t         max,
         size_t        *pvip,
         struct buffer *str,
