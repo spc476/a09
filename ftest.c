@@ -121,7 +121,6 @@ struct unittest
 struct vmcode
 {
   size_t        line;
-  size_t        strlen;
   enum vmops    prog[64];
   char          tag[133];
   struct buffer str;
