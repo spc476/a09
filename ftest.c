@@ -58,6 +58,7 @@ enum vmops
   VM_LIT,
   VM_AT8,
   VM_AT16,
+  VM_CPUCC,
   VM_CPUCCc,
   VM_CPUCCv,
   VM_CPUCCz,
@@ -517,6 +518,10 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
            stack[sp] = (data->memory[addr] << 8) | data->memory[addr + 1];
            break;
            
+      case VM_CPUCC:
+           stack[--sp] = mc6809_cctobyte(cpu);
+           break;
+           
       case VM_CPUCCc:
            stack[--sp] = cpu->cc.c;
            break;
@@ -740,6 +745,7 @@ static struct labeltable const mregisters[] =
 {
   { .label = { .text = "A"    , .s = 1 } , .op = VM_CPUA   } ,
   { .label = { .text = "B"    , .s = 1 } , .op = VM_CPUB   } ,
+  { .label = { .text = "CC"   , .s = 2 } , .op = VM_CPUCC  } ,
   { .label = { .text = "CC.C" , .s = 4 } , .op = VM_CPUCCc } ,
   { .label = { .text = "CC.E" , .s = 4 } , .op = VM_CPUCCe } ,
   { .label = { .text = "CC.F" , .s = 4 } , .op = VM_CPUCCf } ,
