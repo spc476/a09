@@ -128,3 +128,15 @@ struct symbol *symbol_add(struct a09 *a09,label const *name,uint16_t value)
 }
 
 /**************************************************************************/
+
+void symbol_freetable(tree__s *tree)
+{
+  if (tree != NULL)
+  {
+    symbol_freetable(tree->left);
+    symbol_freetable(tree->right);
+    free(tree);
+  }
+}
+
+/**************************************************************************/

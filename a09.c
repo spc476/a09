@@ -709,17 +709,7 @@ int main(int argc,char *argv[])
   if (a09.mkdeps)
   {
     fclose(a09.in);
-    
-    for (
-          Node *node = ListRemTail(&a09.symbols);
-          NodeValid(node);
-          node = ListRemTail(&a09.symbols)
-        )
-    {
-      struct symbol *sym = node2sym(node);
-      free(sym);
-    }
-    
+    symbol_freetable(a09.symtab);
     free(a09.nowarn);
     putchar('\n');
     exit(0);
@@ -775,17 +765,7 @@ int main(int argc,char *argv[])
   }
   
   a09.format.def.fini(&a09.format,&a09);
-  
-  for(
-       Node *node = ListRemTail(&a09.symbols);
-       NodeValid(node);
-       node = ListRemTail(&a09.symbols)
-     )
-  {
-    struct symbol *sym = node2sym(node);
-    free(sym);
-  }
-  
+  symbol_freetable(a09.symtab);
   free(a09.nowarn);
   return rc ? 0 : 1;
 }

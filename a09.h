@@ -389,6 +389,7 @@ extern struct optable const *get_op             (struct buffer *);
 extern bool                  expr               (struct value *,struct a09 *,struct buffer *,int);
 extern struct symbol        *symbol_find        (struct a09 *,label const *);
 extern struct symbol        *symbol_add         (struct a09 *,label const *,uint16_t);
+extern void                  symbol_freetable   (tree__s *);
 extern bool                  format_bin_init    (struct format_bin   *,struct a09 *);
 extern bool                  format_rsdos_init  (struct format_rsdos *,struct a09 *);
 extern bool                  format_srec_init   (struct format_srec  *,struct a09 *);
