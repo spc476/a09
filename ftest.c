@@ -784,11 +784,13 @@ static bool ft_index_register(
   assert(a09    != NULL);
   assert(buffer != NULL);
   assert(pass   == 2);
-  (void)max;
   
   struct labeltable const *vmreg;
   label                    reg;
   
+  if (*pvip == max)
+    return message(a09,MSG_ERROR,"E0066: expresion too complex");
+    
   skip_space(buffer);
   buffer->ridx--;
   if (!parse_label(&reg,buffer,a09,pass))
@@ -888,6 +890,9 @@ static bool ft_register(
     ; In either case, we compile a VM_CPUaccum op here.
     ;---------------------------------------------------------------------*/
     
+    if (*pvip == max)
+      return message(a09,MSG_ERROR,"E0066: expression too complex");
+      
     prog[(*pvip)++] = vmreg->op;
     c               = skip_space(buffer);
     
@@ -901,8 +906,12 @@ static bool ft_register(
       switch(vmreg->op)
       {
         case VM_CPUA:
-        case VM_CPUB: prog[(*pvip)++] = VM_SEX;
-        case VM_CPUD: break;
+        case VM_CPUB:
+             if (*pvip == max)
+               return message(a09,MSG_ERROR,"E0066: expression too complex");
+             prog[(*pvip)++] = VM_SEX;
+        case VM_CPUD:
+             break;
         default: return message(a09,MSG_ERROR,"E0081: missing A, B, or D register");
       }
       return ft_index_register(prog,max,pvip,a09,buffer,pass);
@@ -1020,6 +1029,8 @@ static bool ft_value(
       return message(a09,MSG_ERROR,"E0076: string slot already filled");
     if (!collect_esc_string(a09,str,buffer,c))
       return false;
+    if (*pvip == max)
+      return message(a09,MSG_ERROR,"E0066: expression too complex");
     prog[(*pvip)++] = VM_SCMP;
     return true;
   }
@@ -1030,6 +1041,9 @@ static bool ft_value(
     v = -v;
   else if (not)
     v = ~v;
+    
+  if (*pvip >= max - 2)
+    return message(a09,MSG_ERROR,"E0066: expression too complex");
     
   prog[(*pvip)++] = VM_LIT;
   prog[(*pvip)++] = v;
