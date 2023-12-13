@@ -769,7 +769,7 @@ static struct labeltable const mregisters[] =
 /**************************************************************************/
 
 static bool ft_index_register(
-        enum vmops     prog[],
+        enum vmops     prog[static MAX_PROG],
         size_t         max,
         size_t        *pvip,
         struct a09    *a09,
@@ -820,7 +820,7 @@ static bool ft_index_register(
 /**************************************************************************/
 
 static bool ft_register(
-        enum vmops     prog[],
+        enum vmops     prog[static MAX_PROG],
         size_t         max,
         size_t        *pvip,
         struct a09    *a09,
@@ -932,7 +932,7 @@ static bool ft_register(
 /**************************************************************************/
 
 static bool ft_value(
-        enum vmops     prog[],
+        enum vmops     prog[static MAX_PROG],
         size_t         max,
         size_t        *pvip,
         struct buffer *str,
@@ -1040,7 +1040,7 @@ static bool ft_value(
 /**************************************************************************/
 
 static bool ft_factor(
-        enum vmops     prog[],
+        enum vmops     prog[static MAX_PROG],
         size_t         max,
         size_t        *pvip,
         struct buffer *str,
@@ -1128,7 +1128,7 @@ static bool ft_factor(
 /**************************************************************************/
 
 static bool ft_expr(
-        enum vmops     prog[],
+        enum vmops     prog[static MAX_PROG],
         size_t         max,
         size_t        *pvip,
         struct buffer *str,
