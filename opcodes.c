@@ -98,7 +98,7 @@ bool collect_esc_string(
 {
   char c;
   
-  assert(a09 != NULL);
+  assert(a09  != NULL);
   assert(wbuf != NULL);
   assert(rbuf != NULL);
   assert((delim == '"') || (delim == '\''));
