@@ -98,3 +98,4 @@ E0089: no matching .TEST
 E0080: not an index register
 E0081: missing A, B, or D register
 E0082: missing index register
+E0083: no input file specified

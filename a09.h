@@ -119,7 +119,7 @@ union format;
 struct format_default
 {
   enum backend backend;
-  bool (*cmdline)   (union format *,int *,char *[]);
+  bool (*cmdline)   (union format *,struct a09 *,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
@@ -142,7 +142,7 @@ struct format_default
 struct format_bin
 {
   enum backend backend;
-  bool (*cmdline)   (union format *,int *,char *[]);
+  bool (*cmdline)   (union format *,struct a09 *,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
@@ -166,7 +166,7 @@ struct format_bin
 struct format_rsdos
 {
   enum backend backend;
-  bool (*cmdline)   (union format *,int *,char *[]);
+  bool (*cmdline)   (union format *,struct a09 *,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
@@ -193,7 +193,7 @@ struct format_rsdos
 struct format_srec
 {
   enum backend backend;
-  bool (*cmdline)   (union format *,int *,char *[]);
+  bool (*cmdline)   (union format *,struct a09 *,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
@@ -227,7 +227,7 @@ struct testdata;
 struct format_test
 {
   enum backend backend;
-  bool (*cmdline)   (union format *,int *,char *[]);
+  bool (*cmdline)   (union format *,struct a09 *,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
@@ -396,7 +396,7 @@ extern bool                  format_test_init   (struct format_test  *,struct a0
 extern bool                  fdefault           (union format *,struct opcdata *);
 extern bool                  fdefault_end       (union format *,struct opcdata *,struct symbol const *);
 extern bool                  fdefault_org       (union format *,struct opcdata *,uint16_t,uint16_t);
-extern bool                  fdefault_cmdline   (union format *,int *,char *[]);
+extern bool                  fdefault_cmdline   (union format *,struct a09 *,int *,char *[]);
 extern bool                  fdefault_pass      (union format *,struct a09 *,int);
 extern bool                  fdefault_inst_write(union format *,struct opcdata *);
 extern bool                  fdefault_data_write(union format *,struct opcdata *,char const *,size_t);

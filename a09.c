@@ -59,7 +59,10 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
       return true;
   }
   
-  fprintf(stderr,"%s:%zu: %s: ",a09->infile,a09->lnum,tag);
+  if (a09->lnum > 0)
+    fprintf(stderr,"%s:%zu: %s: ",a09->infile,a09->lnum,tag);
+  else
+    fprintf(stderr,"%s: %s: ",a09->infile,tag);
   va_start(ap,fmt);
 #if defined(__clang__)
 #  pragma clang diagnostic push "-Wformat-nonliteral"
@@ -457,10 +460,7 @@ static bool nowarnlist(struct a09 *a09,char const *warnings)
     {
       struct nowarn *new = realloc(a09->nowarn,(a09->nowsize + 1) * sizeof(struct nowarn));
       if (new == NULL)
-      {
-        fprintf(stderr,"%s: E0046: out of memory\n",MSG_ERROR);
-        return false;
-      }
+        return message(a09,MSG_ERROR,"E0046: out of memory");
       a09->nowarn = new;
       memcpy(a09->nowarn[a09->nowsize].tag,warnings,5);
       warnings += 5;
@@ -469,16 +469,10 @@ static bool nowarnlist(struct a09 *a09,char const *warnings)
       if (*warnings == '\0')
         break;
       if (*warnings++ != ',')
-      {
-        fprintf(stderr,"%s: E0023: missing expected comma\n",MSG_ERROR);
-        return false;
-      }
+        return message(a09,MSG_ERROR,"E0023: missing expected comma");
     }
     else
-    {
-      fprintf(stderr,"%s: E0058: improper warning tag '%.4s\n",MSG_ERROR,warnings);
-      return false;
-    }
+      return message(a09,MSG_ERROR,"E0058: improper warning tag '%.4s\n",warnings);
   }
   
   return true;
@@ -565,14 +559,14 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              }
              else
              {
-               fprintf(stderr,"%s: E0053: format '%s' not supported\n",MSG_ERROR,format);
+               message(a09,MSG_ERROR,"E0053: format '%s' not supported",format);
                exit(1);
              }
              break;
              
         case 'h':
         default:
-             if (a09->format.def.cmdline(&a09->format,&i,argv))
+             if (a09->format.def.cmdline(&a09->format,a09,&i,argv))
                break;
              fprintf(
                       stderr,
@@ -669,7 +663,7 @@ int main(int argc,char *argv[])
   bool        rc;
   struct a09  a09 =
   {
-    .infile    = NULL,
+    .infile    = argv[0],
     .outfile   = "a09.obj",
     .listfile  = NULL,
     .in        = NULL,
@@ -694,7 +688,7 @@ int main(int argc,char *argv[])
   
   if (fi == argc)
   {
-    fprintf(stderr,"no input file specified\n");
+    message(&a09,MSG_ERROR,"E0083: no input file specified");
     exit(1);
   }
   

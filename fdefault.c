@@ -24,9 +24,10 @@
 
 /**************************************************************************/
 
-bool fdefault_cmdline(union format *fmt,int *pi,char *argv[])
+bool fdefault_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[])
 {
   (void)fmt;
+  (void)a09;
   (void)pi;
   (void)argv;
   return false;

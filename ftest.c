@@ -201,7 +201,7 @@ char const format_test_usage[] =
         
 /**************************************************************************/
 
-static void range(struct memprot *mem,int *pi,char *argv[],enum protection prot)
+static void range(struct a09 *a09,struct memprot *mem,int *pi,char *argv[],enum protection prot)
 {
   assert(mem  != NULL);
   assert(pi   != NULL);
@@ -230,7 +230,7 @@ static void range(struct memprot *mem,int *pi,char *argv[],enum protection prot)
       
     if ((low > 65535u) || (high > 65535u))
     {
-      fprintf(stderr,"%s: E0069: address exceeds address space\n",MSG_ERROR);
+      message(a09,MSG_ERROR,"E0069: address exceeds address space");
       exit(1);
     }
     
@@ -272,9 +272,10 @@ static void range(struct memprot *mem,int *pi,char *argv[],enum protection prot)
 
 /**************************************************************************/
 
-static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
+static bool ftest_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[])
 {
   assert(fmt  != NULL);
+  assert(a09  != NULL);
   assert(pi   != NULL);
   assert(*pi  >  0);
   assert(argv != NULL);
@@ -295,7 +296,7 @@ static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
            
          if (value > 65535u)
          {
-           fprintf(stderr,"%s: E0069: address exceeds address space\n",MSG_ERROR);
+           message(a09,MSG_ERROR,"E0069: address exceeds address space");
            exit(1);
          }
          
@@ -317,7 +318,7 @@ static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
            
          if (value > 255)
          {
-           fprintf(stderr,"%s: E0072: byte should be 0..255\n",MSG_ERROR);
+           message(a09,MSG_ERROR,"E0072: byte should be 0..255");
            exit(1);
          }
          
@@ -325,19 +326,19 @@ static bool ftest_cmdline(union format *fmt,int *pi,char *argv[])
          break;
          
     case 'R':
-         range(data->prot,pi,argv,PROT_READ);
+         range(a09,data->prot,pi,argv,PROT_READ);
          break;
          
     case 'W':
-         range(data->prot,pi,argv,PROT_WRITE);
+         range(a09,data->prot,pi,argv,PROT_WRITE);
          break;
          
     case 'E':
-         range(data->prot,pi,argv,PROT_EXEC);
+         range(a09,data->prot,pi,argv,PROT_EXEC);
          break;
          
     case 'T':
-         range(data->prot,pi,argv,PROT_TRON);
+         range(a09,data->prot,pi,argv,PROT_TRON);
          break;
          
     default:
@@ -1719,7 +1720,7 @@ static bool ftest_fini(union format *fmt,struct a09 *a09)
       fclose(fp);
     }
     else
-      fprintf(stderr,"%s: %s: %s\n",MSG_ERROR,test->data->corefile,strerror(errno));
+      message(a09,MSG_ERROR,"E0070: %s %s",test->data->corefile,strerror(errno));
   }
   
   free_Asserts(test->data->Asserts);

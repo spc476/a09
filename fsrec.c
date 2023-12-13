@@ -72,9 +72,10 @@ static void write_record(
 
 /**************************************************************************/
 
-static bool fsrec_cmdline(union format *fmt,int *pi,char *argv[])
+static bool fsrec_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[])
 {
   assert(fmt  != NULL);
+  assert(a09  != NULL);
   assert(pi   != NULL);
   assert(*pi  >  0);
   assert(argv != NULL);
@@ -94,12 +95,12 @@ static bool fsrec_cmdline(union format *fmt,int *pi,char *argv[])
            
          if (value == 0)
          {
-           fprintf(stderr,"%s: E0067: minimum record size: 1\n",MSG_ERROR);
+           message(a09,MSG_ERROR,"E0067: minimum record size: 1");
            exit(1);
          }
          else if (value > 252)
          {
-           fprintf(stderr,"%s: E0068: maximum record size: 252\n",MSG_ERROR);
+           message(a09,MSG_ERROR,"E0068: maximum record size: 252");
            exit(1);
          }
          format->recsize = value;
@@ -111,8 +112,8 @@ static bool fsrec_cmdline(union format *fmt,int *pi,char *argv[])
          else
            value = strtoul(&argv[i][2],NULL,0);
          if (value > USHRT_MAX)
-         {
-           fprintf(stderr,"%s: E0069: address exceeds address space\n",MSG_ERROR);
+         {           
+           message(a09,MSG_ERROR,"E0069: address exceeds address space");
            exit(1);
          }
          format->addr = value;
@@ -125,7 +126,7 @@ static bool fsrec_cmdline(union format *fmt,int *pi,char *argv[])
            value = strtoul(&argv[i][2],NULL,0);
          if (value > USHRT_MAX)
          {
-           fprintf(stderr,"%s: E0069: address exceeds address space\n",MSG_ERROR);
+           message(a09,MSG_ERROR,"E0069: address exceeds address space");
            exit(1);
          }
          format->exec = value;
@@ -175,10 +176,7 @@ static bool fsrec_pass_start(union format *fmt,struct a09 *a09,int pass)
         fclose(fp);
       }
       else
-      {
-        fprintf(stderr,"%s: E0070: %s: %s\n",MSG_ERROR,format->S0file,strerror(errno));
-        return false;
-      }
+        return message(a09,MSG_ERROR,"E0070: %s: %s",format->S0file,strerror(errno));
     }
   }
   
