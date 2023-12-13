@@ -82,14 +82,14 @@ E0063: missing value for SET
 E0064: symbol '%.*s' already defined
 E0065: expression parser mismatch
 E0066: expression too complex
-E0067: E0067: minimum record size: 1
-E0068: E0068: maximum record size: 252
+E0067: minimum record size: 1
+E0068: maximum record size: 252
 E0069: address exceeds address space
 E0070: %s %s
 E0071: string too long
 E0072: byte should be 0..255
 E0073: bad register
-E0074: E0074: not enough space for expression
+E0074: not enough space for expression
 E0075: can't negate or complement a string
 E0076: string slot already filled
 E0077: missing .ENDTST directive
