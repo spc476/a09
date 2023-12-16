@@ -1045,6 +1045,8 @@ static bool ft_value(
     prog[(*pvip)++] = VM_SCMP;
     return true;
   }
+  else if (c == '?')
+    v  = data->fill;
   else
     return message(a09,MSG_ERROR,"E0006: not a value");
     
