@@ -123,10 +123,9 @@ struct unittest
 
 struct vmcode
 {
-  size_t        line;
-  enum vmops    prog[MAX_PROG];
-  char          tag[133];
-  struct buffer str;
+  size_t     line;
+  enum vmops prog[MAX_PROG];
+  char       tag[133];
 };
 
 struct Assert
@@ -161,7 +160,7 @@ struct labeltable
   enum vmops op;
 };
 
-static bool ft_expr(enum vmops [],size_t,size_t *,struct buffer *,struct a09 *,struct buffer *,int);
+static bool ft_expr(enum vmops [],size_t,size_t *,struct testdata *,struct a09 *,struct buffer *,int);
 
 /**************************************************************************/
 
@@ -183,7 +182,7 @@ static inline struct Assert *tree2Assert(tree__s *tree)
 char const format_test_usage[] =
         "\n"
         "Test format options:\n"
-        "\t-S addr\t\taddress of system stack (default=0xFFF0)\n"
+        "\t-S addr\t\taddress of system stack and string pool (default=0xFFF0)\n"
         "\t-F byte\t\tfill memory with value (default=0x01, illegal inst)\n"
         "\t-R range\tmark memory read-only (see below)\n"
         "\t-W range\tmark memory write-only (see below)\n"
@@ -610,14 +609,19 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
            break;
            
       case VM_SCMP:
-           rc = memcmp(&data->memory[stack[sp]],test->str.buf,test->str.widx);
-           stack[sp] = 0;
-           if (rc < 0)
-             stack[--sp] = -1;
-           else if (rc > 0)
-             stack[--sp] =  1;
-           else
-             stack[--sp] =  0;
+           {
+             uint16_t len = stack[sp++];
+             uint16_t dst = stack[sp++];
+             uint16_t src = stack[sp++];
+             rc = memcmp(&data->memory[src],&data->memory[dst],len);
+             stack[--sp] = 0;
+             if (rc < 0)
+               stack[--sp] = -1;
+             else if (rc > 0)
+               stack[--sp] =  1;
+             else
+               stack[--sp] =  0;
+           }
            break;
            
       case VM_SEX:
@@ -822,12 +826,13 @@ static bool ft_index_register(
 /**************************************************************************/
 
 static bool ft_register(
-        enum vmops     prog[static MAX_PROG],
-        size_t         max,
-        size_t        *pvip,
-        struct a09    *a09,
-        struct buffer *buffer,
-        int            pass
+        enum vmops       prog[static MAX_PROG],
+        size_t           max,
+        size_t          *pvip,
+        struct testdata *data,
+        struct a09      *a09,
+        struct buffer   *buffer,
+        int              pass
 )
 {
   assert(prog   != NULL);
@@ -871,8 +876,7 @@ static bool ft_register(
     
     if (vmreg == NULL)
     {
-      struct buffer str = { .buf[0] = '\0' , .widx = 0 , .ridx = 0 };
-      if (!ft_expr(prog,max,pvip,&str,a09,buffer,pass))
+      if (!ft_expr(prog,max,pvip,data,a09,buffer,pass))
         return false;
       c = skip_space(buffer);
       if (c != ',')
@@ -921,8 +925,7 @@ static bool ft_register(
   }  
   else
   {
-    struct buffer str = { .buf[0] = '\0' , .widx = 0 , .ridx = 0 };
-    if (!ft_expr(prog,max,pvip,&str,a09,buffer,pass))
+    if (!ft_expr(prog,max,pvip,data,a09,buffer,pass))
       return false;
     c = skip_space(buffer);
     if (c != ',')
@@ -941,19 +944,20 @@ static bool ft_register(
 /**************************************************************************/
 
 static bool ft_value(
-        enum vmops     prog[static MAX_PROG],
-        size_t         max,
-        size_t        *pvip,
-        struct buffer *str,
-        struct a09    *a09,
-        struct buffer *buffer,
-        int            pass
+        enum vmops       prog[static MAX_PROG],
+        size_t           max,
+        size_t          *pvip,
+        struct testdata *data,
+        struct a09      *a09,
+        struct buffer   *buffer,
+        int              pass
 )
 {
   assert(prog   != NULL);
   assert(max    == MAX_PROG);
   assert(pvip   != NULL);
   assert(*pvip  <  max);
+  assert(data   != NULL);
   assert(a09    != NULL);
   assert(buffer != NULL);
   assert(pass   == 2);
@@ -965,14 +969,14 @@ static bool ft_value(
   char     c   = skip_space(buffer);
   
   if (c == '/')
-    return ft_register(prog,max,pvip,a09,buffer,pass);
+    return ft_register(prog,max,pvip,data,a09,buffer,pass);
   else if (c == '(')
   {
     c = skip_space(buffer);
     if (c == '\0')
       return message(a09,MSG_ERROR,"E0010: unexpected end of input");
     buffer->ridx--;
-    if (!ft_expr(prog,max,pvip,str,a09,buffer,pass))
+    if (!ft_expr(prog,max,pvip,data,a09,buffer,pass))
       return false;
     c = skip_space(buffer);
     if (c != ')')
@@ -1023,14 +1027,21 @@ static bool ft_value(
   }
   else if ((c == '"') || (c == '\''))
   {
+    struct buffer text;
+    
     if (neg || not)
       return message(a09,MSG_ERROR,"E0075: can't negate or complement a string");
-    if (str->widx != 0)
-      return message(a09,MSG_ERROR,"E0076: string slot already filled");
-    if (!collect_esc_string(a09,str,buffer,c))
+    if (!collect_esc_string(a09,&text,buffer,c))
       return false;
-    if (*pvip == max)
+    data->sp               -= text.widx;
+    memcpy(&data->memory[data->sp],text.buf,text.widx);
+    if (*pvip + 5 == max)
       return message(a09,MSG_ERROR,"E0066: expression too complex");
+      
+    prog[(*pvip)++] = VM_LIT;
+    prog[(*pvip)++] = data->sp;
+    prog[(*pvip)++] = VM_LIT;
+    prog[(*pvip)++] = text.widx;
     prog[(*pvip)++] = VM_SCMP;
     return true;
   }
@@ -1054,13 +1065,13 @@ static bool ft_value(
 /**************************************************************************/
 
 static bool ft_factor(
-        enum vmops     prog[static MAX_PROG],
-        size_t         max,
-        size_t        *pvip,
-        struct buffer *str,
-        struct a09    *a09,
-        struct buffer *buffer,
-        int            pass
+        enum vmops       prog[static MAX_PROG],
+        size_t           max,
+        size_t          *pvip,
+        struct testdata *data,
+        struct a09      *a09,
+        struct buffer   *buffer,
+        int              pass
 )
 {
   bool fetchbyte = false;
@@ -1107,7 +1118,7 @@ static bool ft_factor(
   else
     buffer->ridx--;
     
-  if (!ft_value(prog,max,pvip,str,a09,buffer,pass))
+  if (!ft_value(prog,max,pvip,data,a09,buffer,pass))
     return false;
     
   if (fetchbyte)
@@ -1142,13 +1153,13 @@ static bool ft_factor(
 /**************************************************************************/
 
 static bool ft_expr(
-        enum vmops     prog[static MAX_PROG],
-        size_t         max,
-        size_t        *pvip,
-        struct buffer *str,
-        struct a09    *a09,
-        struct buffer *buffer,
-        int            pass
+        enum vmops       prog[static MAX_PROG],
+        size_t           max,
+        size_t          *pvip,
+        struct testdata *data,
+        struct a09      *a09,
+        struct buffer   *buffer,
+        int              pass
 )
 {
   assert(prog   != NULL);
@@ -1163,7 +1174,7 @@ static bool ft_expr(
   struct optable const *ostack[15];
   size_t                osp = sizeof(ostack) / sizeof(ostack[0]);
   
-  if (!ft_factor(prog,max,pvip,str,a09,buffer,pass))
+  if (!ft_factor(prog,max,pvip,data,a09,buffer,pass))
     return false;
     
   while(true)
@@ -1191,7 +1202,7 @@ static bool ft_expr(
     ostack[--osp] = op;
     if (*pvip == max)
       return message(a09,MSG_ERROR,"E0066: expression too complex");
-    if (!ft_factor(prog,max,pvip,str,a09,buffer,pass))
+    if (!ft_factor(prog,max,pvip,data,a09,buffer,pass))
       return false;
   }
   
@@ -1209,15 +1220,15 @@ static bool ft_expr(
 /**************************************************************************/
 
 static bool ft_compile(
-        struct a09    *a09,
-        struct buffer  *restrict name,
-        struct Assert  *Assert,
-        struct buffer  *restrict buffer,
-        int             pass
+        struct a09      *a09,
+        struct buffer   *restrict name,
+        struct testdata *data,
+        struct Assert   *Assert,
+        struct buffer   *restrict buffer,
+        int              pass
 )
 {
   enum vmops    program[MAX_PROG];
-  struct buffer str = { .buf[0] = '\0' , .widx = 0 , .ridx = 0 };
   struct buffer tmp = { .buf[0] = '\0' , .widx = 0 , .ridx = 0 };
   size_t        vip = 0;
   char          c;
@@ -1228,7 +1239,7 @@ static bool ft_compile(
   assert(buffer != NULL);
   assert(pass   == 2);
   
-  if (!ft_expr(program,sizeof(program)/sizeof(program[0]),&vip,&str,a09,buffer,pass))
+  if (!ft_expr(program,sizeof(program)/sizeof(program[0]),&vip,data,a09,buffer,pass))
     return false;
     
   if (vip == sizeof(program) / sizeof(program[0]))
@@ -1242,7 +1253,6 @@ static bool ft_compile(
     
   Assert->Asserts = new;
   memcpy(Assert->Asserts[Assert->cnt].prog,program,vip * sizeof(enum vmops));
-  Assert->Asserts[Assert->cnt].str = str;
   
   c = skip_space(buffer);
   if (c == ',')
@@ -1652,12 +1662,12 @@ static bool ftest_Assert(union format *fmt,struct opcdata *opd)
       
       memcpy(name.buf,opd->a09->label.text,opd->a09->label.s);
       name.widx = opd->a09->label.s;
-      if (!ft_compile(opd->a09,&name,Assert,opd->buffer,opd->pass))
+      if (!ft_compile(opd->a09,&name,data,Assert,opd->buffer,opd->pass))
         return false;
     }
     else
     {
-      if (!ft_compile(opd->a09,&data->units[data->nunits-1].name,Assert,opd->buffer,opd->pass))
+      if (!ft_compile(opd->a09,&data->units[data->nunits-1].name,data,Assert,opd->buffer,opd->pass))
         return false;
     }
   }

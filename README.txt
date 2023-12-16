@@ -478,8 +478,9 @@ The test backend
 
 	-S address
 
-		Use the address for the system stack in the emulated
-		6809.  The default value for this is $FFF0.
+		Use the address for the system stack and string pool for
+		tests in the emulated 6809.  The default value for this is
+		$FFF0.
 
 	-F byte
 
