@@ -98,8 +98,6 @@ struct symbol *symbol_add(struct a09 *a09,label const *name,uint16_t value)
       sym->tree.left    = NULL;
       sym->tree.right   = NULL;
       sym->tree.height  = 0;
-      sym->node.ln_Succ = NULL;
-      sym->node.ln_Pred = NULL;
       sym->name         = *name;
       sym->type         = SYM_ADDRESS;
       sym->value        = value;
@@ -108,7 +106,6 @@ struct symbol *symbol_add(struct a09 *a09,label const *name,uint16_t value)
       sym->bits         = a09->dp == value >> 8 ? 8 : 16;
       sym->refs         = 0;
       a09->symtab       = tree_insert(a09->symtab,&sym->tree,symtreecmp);
-      ListAddTail(&a09->symbols,&sym->node);
     }
   }
   else if (sym->type == SYM_SET)

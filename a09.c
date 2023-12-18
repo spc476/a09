@@ -20,7 +20,6 @@
 *
 ****************************************************************************/
 
-#include <cgilib6/nodelist.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -682,7 +681,6 @@ int main(int argc,char *argv[])
     .inbuf     = { .buf = {0}, .widx = 0, .ridx = 0 },
   };
   
-  ListInit(&a09.symbols);
   format_bin_init(&a09.format.bin,&a09);
   fi = parse_command(argc,argv,&a09);
   

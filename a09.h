@@ -39,7 +39,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include <cgilib6/nodelist.h>
 #include <cgilib6/tree.h>
 
 enum backend
@@ -276,7 +275,6 @@ struct a09
   struct buffer  inbuf;
   size_t         lnum;
   tree__s       *symtab;
-  List           symbols;
   struct nowarn *nowarn;
   size_t         nowsize;
   label          label;
@@ -290,7 +288,6 @@ struct a09
 struct symbol
 {
   tree__s       tree;
-  Node          node;
   label         name;
   enum symtype  type;
   uint16_t      value;
@@ -421,21 +418,6 @@ static inline struct symbol *tree2sym(tree__s *tree)
 #  pragma clang diagnostic ignored "-Wcast-align"
 #endif
   return (struct symbol *)((char *)tree - offsetof(struct symbol,tree));
-#if defined(__clang__)
-#  pragma clang diagnostic pop "-Wcast-align"
-#endif
-}
-
-/**************************************************************************/
-
-static inline struct symbol *node2sym(Node *node)
-{
-  assert(node != NULL);
-#if defined(__clang__)
-#  pragma clang diagnostic push "-Wcast-align"
-#  pragma clang diagnostic ignored "-Wcast-align"
-#endif
-  return (struct symbol *)((char *)node - offsetof(struct symbol,node));
 #if defined(__clang__)
 #  pragma clang diagnostic pop "-Wcast-align"
 #endif
