@@ -96,14 +96,6 @@ enum
   TEST_max,
 };
 
-enum protection
-{
-  PROT_READ,
-  PROT_WRITE,
-  PROT_EXEC,
-  PROT_TRON,
-};
-
 struct memprot
 {
   bool read  : 1;
@@ -200,7 +192,13 @@ char const format_test_usage[] =
         
 /**************************************************************************/
 
-static void range(struct a09 *a09,struct memprot *mem,int *pi,char *argv[],enum protection prot)
+static void range(
+        struct a09     *a09,
+        struct memprot *mem,
+        int            *pi,
+        char           *argv[],
+        struct memprot  prot
+)
 {
   assert(mem  != NULL);
   assert(pi   != NULL);
@@ -233,35 +231,13 @@ static void range(struct a09 *a09,struct memprot *mem,int *pi,char *argv[],enum 
       exit(1);
     }
     
-    switch(prot)
+    for ( ; low <= high ; low++)
     {
-      case PROT_READ:
-           for ( ; low <= high ; low++)
-           {
-             mem[low].read  = true;
-             mem[low].write = false;
-             mem[low].exec  = false;
-           }
-           break;
-           
-      case PROT_WRITE:
-           for ( ; low <= high ; low++)
-           {
-             mem[low].read  = false;
-             mem[low].write = true;
-             mem[low].exec  = false;
-           }
-           break;
-           
-      case PROT_EXEC:
-           for ( ; low <= high ; low++)
-             mem[low].exec = true;
-           break;
-           
-      case PROT_TRON:
-           for ( ; low <= high ; low++)
-             mem[low].tron = true;
-           break;
+      mem[low].read  |= prot.read;
+      mem[low].write |= prot.write;
+      mem[low].exec  |= prot.exec;
+      mem[low].tron  |= prot.tron;
+      mem[low].check |= prot.check;
     }
     
     if (*r == ',')
@@ -325,19 +301,19 @@ static bool ftest_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[]
          break;
          
     case 'R':
-         range(a09,data->prot,pi,argv,PROT_READ);
+         range(a09,data->prot,pi,argv,(struct memprot){ .read = true , .write = false , .exec = false , .tron = false , .check = false });
          break;
          
     case 'W':
-         range(a09,data->prot,pi,argv,PROT_WRITE);
+         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = true , .exec = false , .tron = false , .check = false });
          break;
          
     case 'E':
-         range(a09,data->prot,pi,argv,PROT_EXEC);
+         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = true , .tron = false , .check = false });
          break;
          
     case 'T':
-         range(a09,data->prot,pi,argv,PROT_TRON);
+         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = false , .tron = true , .check = false });
          break;
          
     default:
