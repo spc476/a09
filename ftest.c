@@ -1704,7 +1704,7 @@ static bool ftest_fini(union format *fmt,struct a09 *a09)
     FILE *fp = fopen(data->corefile,"wb");
     if (fp != NULL)
     {
-      fwrite(data->memory,1,65535u,fp);
+      fwrite(data->memory,1,65536u,fp);
       fputc(mc6809_cctobyte(&data->cpu),fp);
       fwrite(&data->cpu.A,1,1,fp);
       fwrite(&data->cpu.B,1,1,fp);
