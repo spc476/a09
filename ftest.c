@@ -1173,7 +1173,7 @@ static bool ft_factor(
 /**************************************************************************/
 
 static bool ft_expr(
-        enum vmops       prog[static MAX_PROG],
+        enum vmops       prog[],
         size_t           max,
         size_t          *pvip,
         struct testdata *data,
