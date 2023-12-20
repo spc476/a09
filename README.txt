@@ -165,13 +165,17 @@ non-standard pesudo operation for most 6809 assemblers.
 		Ignored by other backends.  Like the .ASSERT directive, this
 		can appear outside a unit test definition.
 
-	.TRON
+	.TRON [timing]
 
 		Turn on 6809 program tracing if using the test backend. 
 		Each 6809 instruction is printed on stdout and includes the
 		contents of the registers at that point in execution, and
 		can appear outside of a unit test definition.  This is
 		ignored by other backends.
+
+		If the "timing" option is used, the code will be timed, not
+		traced.  At the corresponding .TROFF, the number of CPU
+		cycles will be reported.
 
 	ALIGN expr
 

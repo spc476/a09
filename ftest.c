@@ -84,6 +84,7 @@ enum vmops
   VM_IDU,
   VM_SCMP,
   VM_SEX,
+  VM_TIMING,
   VM_EXIT,
 };
 
@@ -103,6 +104,7 @@ struct memprot
   bool exec  : 1;
   bool tron  : 1;
   bool check : 1;
+  bool time  : 1;
 };
 
 struct unittest
@@ -141,6 +143,7 @@ struct testdata
   uint16_t         sp;
   mc6809byte__t    fill;
   bool             tron;
+  bool             timing;
   char             errbuf[128];
   mc6809byte__t    memory[65536u];
   struct memprot   prot  [65536u];
@@ -238,6 +241,7 @@ static void range(
       mem[low].exec  |= prot.exec;
       mem[low].tron  |= prot.tron;
       mem[low].check |= prot.check;
+      mem[low].time  |= prot.time;
     }
     
     if (*r == ',')
@@ -301,19 +305,19 @@ static bool ftest_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[]
          break;
          
     case 'R':
-         range(a09,data->prot,pi,argv,(struct memprot){ .read = true , .write = false , .exec = false , .tron = false , .check = false });
+         range(a09,data->prot,pi,argv,(struct memprot){ .read = true , .write = false , .exec = false , .tron = false , .check = false , .time = false });
          break;
          
     case 'W':
-         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = true , .exec = false , .tron = false , .check = false });
+         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = true , .exec = false , .tron = false , .check = false , .time = false });
          break;
          
     case 'E':
-         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = true , .tron = false , .check = false });
+         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = true , .tron = false , .check = false , .time = false });
          break;
          
     case 'T':
-         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = false , .tron = true , .check = false });
+         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = false , .tron = true , .check = false , .time = false });
          break;
          
     default:
@@ -352,6 +356,39 @@ static int Asserttreecmp(void const *restrict needle,void const *restrict haysta
     return  1;
   else
     return  0;
+}
+
+/**************************************************************************/
+
+static struct Assert *get_Assert(struct a09 *a09,struct testdata *data,uint16_t here)
+{
+  assert(a09  != NULL);
+  assert(data != NULL);
+  
+  struct Assert *Assert;
+  tree__s       *tree = tree_find(data->Asserts,&here,Assertaddrcmp);
+  
+  if (tree == NULL)
+  {
+    Assert = malloc(sizeof(struct Assert));
+    if (Assert == NULL)
+    {
+      message(a09,MSG_ERROR,"E0046: out of memory");
+      return NULL;
+    }
+    
+    Assert->tree.left   = NULL;
+    Assert->tree.right  = NULL;
+    Assert->tree.height = 0;
+    Assert->here        = here;
+    Assert->cnt         = 0;
+    Assert->Asserts     = NULL;
+    data->Asserts       = tree_insert(data->Asserts,&Assert->tree,Asserttreecmp);
+  }
+  else
+    Assert = tree2Assert(tree);
+    
+  return Assert;
 }
 
 /**************************************************************************/
@@ -603,6 +640,11 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
       case VM_SEX:
            if (stack[sp] >= 0x80)
              stack[sp] |= 0xFF00;
+           break;
+           
+      case VM_TIMING:
+           printf("%s: cycles=%lu\n",test->tag,cpu->cycles);
+           stack[--sp] = true;
            break;
            
       case VM_EXIT:
@@ -1339,6 +1381,12 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
           printf("%s | %s\n",regs,inst);
         }
         
+        if (data->prot[data->cpu.pc.w].time)
+        {
+          data->cpu.cycles = 0;
+          data->prot[data->cpu.pc.w].time = false; // prevent repeated triggerings
+        }
+        
         if (data->prot[data->cpu.pc.w].check)
         {
           bool     okay = false;
@@ -1558,6 +1606,18 @@ static bool ftest_test(union format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
+static bool ft_timingp(struct buffer *buffer)
+{
+  assert(buffer != NULL);
+  char c = skip_space(buffer);
+  if ((c == ';') || (c == '\0'))
+    return false;
+  buffer->ridx--;
+  return strncmp(buffer->buf,"timing",6);
+}
+
+/**************************************************************************/
+
 static bool ftest_tron(union format *fmt,struct opcdata *opd)
 {
   assert(fmt != NULL);
@@ -1569,7 +1629,14 @@ static bool ftest_tron(union format *fmt,struct opcdata *opd)
   {
     struct format_test *test = &fmt->test;
     struct testdata    *data = test->data;
-    data->tron               = true;
+    
+    if (ft_timingp(opd->buffer))
+    {
+      data->timing                  = true;
+      data->prot[opd->a09->pc].time = true;
+    }
+    else
+      data->tron = true;
   }
   
   return true;
@@ -1588,7 +1655,48 @@ static bool ftest_troff(union format *fmt,struct opcdata *opd)
   {
     struct format_test *test = &fmt->test;
     struct testdata    *data = test->data;
-    data->tron               = false;
+    
+    if (data->timing)
+    {
+      struct vmcode *new;
+      struct Assert *Assert = get_Assert(opd->a09,data,opd->a09->pc);
+      if (Assert == NULL)
+        return false;
+      
+      new = realloc(Assert->Asserts,(Assert->cnt + 1) * sizeof(struct vmcode));
+      if (new == NULL)
+        return message(opd->a09,MSG_ERROR,"E0046: out of memory");
+      Assert->Asserts = new;
+      if (data->nunits == 0)
+      {
+        snprintf(
+                  Assert->Asserts[Assert->cnt].tag,
+                  sizeof(Assert->Asserts[Assert->cnt].tag),
+                  "%s:%zu",
+                  opd->a09->infile,
+                  opd->a09->lnum
+                );
+      }
+      else
+      {
+        snprintf(
+                  Assert->Asserts[Assert->cnt].tag,
+                  sizeof(Assert->Asserts[Assert->cnt].tag),
+                  "%.*s:%zu",
+                  (int)data->units[data->nunits-1].name.widx,
+                  data->units[data->nunits-1].name.buf,
+                  opd->a09->lnum
+                );
+      }
+      
+      Assert->Asserts[Assert->cnt].line    = opd->a09->lnum;
+      Assert->Asserts[Assert->cnt].prog[0] = VM_TIMING;
+      Assert->Asserts[Assert->cnt].prog[1] = VM_EXIT;
+      data->prot[opd->a09->pc].check       = true;
+      Assert->cnt++;
+    }
+    else
+      data->tron = false;
   }
   
   return true;
@@ -1605,29 +1713,13 @@ static bool ftest_Assert(union format *fmt,struct opcdata *opd)
   
   if (opd->pass == 2)
   {
-    struct format_test *test = &fmt->test;
-    struct testdata    *data = test->data;
-    
+    struct format_test *test       = &fmt->test;
+    struct testdata    *data       = test->data;
     data->prot[opd->a09->pc].check = true;
+    struct Assert *Assert          = get_Assert(opd->a09,data,opd->a09->pc);
     
-    struct Assert *Assert;
-    tree__s       *tree = tree_find(data->Asserts,&opd->a09->pc,Assertaddrcmp);
-    
-    if (tree == NULL)
-    {
-      Assert = malloc(sizeof(struct Assert));
-      if (Assert == NULL)
-        return message(opd->a09,MSG_ERROR,"E0046: out of memory");
-      Assert->tree.left   = NULL;
-      Assert->tree.right  = NULL;
-      Assert->tree.height = 0;
-      Assert->here        = opd->a09->pc;
-      Assert->cnt         = 0;
-      Assert->Asserts     = NULL;
-      data->Asserts        = tree_insert(data->Asserts,&Assert->tree,Asserttreecmp);
-    }
-    else
-      Assert = tree2Assert(tree);
+    if (Assert == NULL)
+      return false;
       
     if (data->nunits == 0)
     {
@@ -1776,6 +1868,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
         .exec  = false ,
         .tron  = false ,
         .check = false ,
+        .time  = false ,
       }
     };
     
