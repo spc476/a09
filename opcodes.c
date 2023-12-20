@@ -1046,7 +1046,12 @@ static bool pseudo_set(struct opcdata *opd)
     sym->type  = SYM_SET;
     sym->bits  = opd->value.value < 256 ? 8 : 16;
   }
-  
+  else
+  {
+    struct symbol *sym = symbol_find(opd->a09,&opd->label);
+    assert(sym != NULL);
+    sym->ldef = opd->a09->lnum;
+  }
   return true;
 }
 
