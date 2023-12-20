@@ -932,6 +932,7 @@ static bool ft_register(
              if (*pvip == max)
                return message(a09,MSG_ERROR,"E0066: expression too complex");
              prog[(*pvip)++] = VM_SEX;
+             break;
         case VM_CPUD:
              break;
         default: return message(a09,MSG_ERROR,"E0081: missing A, B, or D register");
