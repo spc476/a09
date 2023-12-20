@@ -1399,13 +1399,13 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
             struct Assert *Assert = tree2Assert(tree);
             
             assert(Assert->here == addr);
-            for (size_t i = 0 ; i < Assert->cnt ; i++)
+            for (size_t j = 0 ; j < Assert->cnt ; j++)
             {
-              message(a09,MSG_DEBUG,"checking %s",Assert->Asserts[i].tag);
-              okay = runvm(data->a09,&data->cpu,&Assert->Asserts[i]);
+              message(a09,MSG_DEBUG,"checking %s",Assert->Asserts[j].tag);
+              okay = runvm(data->a09,&data->cpu,&Assert->Asserts[j]);
               if (!okay)
               {
-                tag = Assert->Asserts[i].tag;
+                tag = Assert->Asserts[j].tag;
                 break;
               }
             }
