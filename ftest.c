@@ -164,7 +164,7 @@ static inline struct Assert *tree2Assert(tree__s *tree)
   assert(tree != NULL);
 #if defined(__clang__)
 #  pragma clang diagnostic push "-Wcast-align"
-#  pragma clang diasnostic ignored "-Wcast-align"
+#  pragma clang diagnostic ignored "-Wcast-align"
 #endif
   return (struct Assert *)((char *)tree - offsetof(struct Assert,tree));
 #if defined(__clang__)
