@@ -31,6 +31,10 @@
 
 #include "a09.h"
 
+#if defined(__clang__)
+#  pragma clang diagnostic ignored "-Wmissing-noreturn"
+#endif
+
 /**************************************************************************/
 
 #define MAX_PROG 64
