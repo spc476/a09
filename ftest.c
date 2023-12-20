@@ -33,6 +33,7 @@
 
 #if defined(__clang__)
 #  pragma clang diagnostic ignored "-Wmissing-noreturn"
+#  pragma clang diagnostic ignored "-Wswitch-enum"
 #endif
 
 /**************************************************************************/
