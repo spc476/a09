@@ -951,7 +951,7 @@ static bool ft_register(
     {
       return earlycomma
            ? message(a09,MSG_ERROR,"E0082: missing index register")
-           : message(a09,MSG_ERROR,"E0023: missing expected comma");
+           : message(a09,MSG_ERROR,"E0023: missing expected comma")
            ;
     }
     return ft_index_register(prog,max,pvip,a09,buffer,pass);
