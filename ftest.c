@@ -36,6 +36,10 @@
 #  pragma clang diagnostic ignored "-Wswitch-enum"
 #endif
 
+#if defined(__GNUC__) && __GNUC__ >= 11
+#  pragma GCC diagnostic ignored "-Wenum-conversion"
+#endif
+
 /**************************************************************************/
 
 #define MAX_PROG 64
