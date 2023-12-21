@@ -167,7 +167,7 @@ static bool fsrec_pass_start(union format *fmt,struct a09 *a09,int pass)
     
     if (format->S0file != NULL)
     {
-      FILE               *fp     = fopen(format->S0file,"rb");
+      FILE *fp = fopen(format->S0file,"rb");
       if (fp != NULL)
       {
         size_t bytes = fread(format->buffer,1,format->recsize,fp);

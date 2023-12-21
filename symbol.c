@@ -95,17 +95,17 @@ struct symbol *symbol_add(struct a09 *a09,label const *name,uint16_t value)
     sym = malloc(sizeof(struct symbol));
     if (sym != NULL)
     {
-      sym->tree.left    = NULL;
-      sym->tree.right   = NULL;
-      sym->tree.height  = 0;
-      sym->name         = *name;
-      sym->type         = SYM_ADDRESS;
-      sym->value        = value;
-      sym->filename     = a09->infile;
-      sym->ldef         = a09->lnum;
-      sym->bits         = a09->dp == value >> 8 ? 8 : 16;
-      sym->refs         = 0;
-      a09->symtab       = tree_insert(a09->symtab,&sym->tree,symtreecmp);
+      sym->tree.left   = NULL;
+      sym->tree.right  = NULL;
+      sym->tree.height = 0;
+      sym->name        = *name;
+      sym->type        = SYM_ADDRESS;
+      sym->value       = value;
+      sym->filename    = a09->infile;
+      sym->ldef        = a09->lnum;
+      sym->bits        = a09->dp == value >> 8 ? 8 : 16;
+      sym->refs        = 0;
+      a09->symtab      = tree_insert(a09->symtab,&sym->tree,symtreecmp);
     }
   }
   else if (sym->type == SYM_SET)

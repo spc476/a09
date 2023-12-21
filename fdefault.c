@@ -149,10 +149,8 @@ bool fdefault_test(union format *fmt,struct opcdata *opd)
     if (op->opcode == 1)
       return true;
       
-    //print_list(opd->a09,opd,false); // XXX missing line in list file
-    
+    //print_list(opd->a09,opd,false); // XXX missing line in list file    
   }
-  
   return message(opd->a09,MSG_ERROR,"E0010: unexpected end of input");
 }
 

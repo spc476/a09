@@ -105,15 +105,15 @@ typedef struct label
 
 struct buffer
 {
-  char    buf[133];
-  size_t  widx;
-  size_t  ridx;
+  char   buf[133];
+  size_t widx;
+  size_t ridx;
 };
 
 struct a09;
 struct opcdata;
 struct symbol;
-union format;
+union  format;
 
 struct format_default
 {
