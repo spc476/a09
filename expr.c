@@ -55,8 +55,8 @@ bool s2num(struct a09 *a09,uint16_t *pv,struct buffer *buffer,uint16_t base)
   
   while(true)
   {
-    //static char const trans[16] = "0123456789ABCDEF";
-    char              c         = buffer->buf[buffer->ridx];
+    uint16_t v;
+    char     c = buffer->buf[buffer->ridx];
     
     if (c == '_')
     {
@@ -69,11 +69,10 @@ bool s2num(struct a09 *a09,uint16_t *pv,struct buffer *buffer,uint16_t base)
     if (!isxdigit(c))
       return cnt > 0;
       
-    uint16_t v = toupper(c) - '0';
+    v = toupper(c) - '0';
     if (v > 9)
       v -= 7;
-    //uint16_t v = (uint16_t)((char const *)memchr(trans,toupper(c),sizeof(trans)) - trans);
-    
+      
     if (v >= base)
       return message(a09,MSG_ERROR,"E0061: '%c' not allowed in literal number",c);
       
