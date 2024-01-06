@@ -123,6 +123,7 @@ struct format_default
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
   bool (*data_write)(union format *,struct opcdata *,char const *,size_t);
+  bool (*opt)       (union format *,struct opcdata *);
   bool (*dp)        (union format *,struct opcdata *);
   bool (*code)      (union format *,struct opcdata *);
   bool (*align)     (union format *,struct opcdata *);
@@ -146,6 +147,7 @@ struct format_bin
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
   bool (*data_write)(union format *,struct opcdata *,char const *,size_t);
+  bool (*opt)       (union format *,struct opcdata *);
   bool (*dp)        (union format *,struct opcdata *);
   bool (*code)      (union format *,struct opcdata *);
   bool (*align)     (union format *,struct opcdata *);
@@ -170,6 +172,7 @@ struct format_rsdos
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
   bool (*data_write)(union format *,struct opcdata *,char const *,size_t);
+  bool (*opt)       (union format *,struct opcdata *);
   bool (*dp)        (union format *,struct opcdata *);
   bool (*code)      (union format *,struct opcdata *);
   bool (*align)     (union format *,struct opcdata *);
@@ -197,6 +200,7 @@ struct format_srec
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
   bool (*data_write)(union format *,struct opcdata *,char const *,size_t);
+  bool (*opt)       (union format *,struct opcdata *);
   bool (*dp)        (union format *,struct opcdata *);
   bool (*code)      (union format *,struct opcdata *);
   bool (*align)     (union format *,struct opcdata *);
@@ -231,6 +235,7 @@ struct format_test
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
   bool (*data_write)(union format *,struct opcdata *,char const *,size_t);
+  bool (*opt)       (union format *,struct opcdata *);
   bool (*dp)        (union format *,struct opcdata *);
   bool (*code)      (union format *,struct opcdata *);
   bool (*align)     (union format *,struct opcdata *);
@@ -375,6 +380,7 @@ extern void                  add_file_dep       (struct a09 *,char const *);
 extern bool                  read_line          (FILE *,struct buffer *);
 extern bool                  collect_esc_string (struct a09 *,struct buffer *restirct,struct buffer *restrict,char);
 extern bool                  parse_string       (struct a09 *,struct buffer *restrict,struct buffer *restrict);
+extern bool                  read_label         (struct buffer *,label *,char);
 extern bool                  parse_label        (label *,struct buffer *,struct a09 *,int);
 extern bool                  parse_op           (struct buffer *,struct opcode const **);
 extern char                  skip_space         (struct buffer *);

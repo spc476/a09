@@ -1589,6 +1589,17 @@ static bool pseudo__tron(struct opcdata *opd)
 
 /**************************************************************************/
 
+static bool pseudo__opt(struct opcdata *opd)
+{
+  assert(opd      != NULL);
+  assert(opd->a09 != NULL);
+  assert((opd->pass == 1) | (opd->pass == 2));
+  
+  return opd->a09->format.def.opt(&opd->a09->format,opd);
+}
+
+/**************************************************************************/
+
 static int opcode_cmp(void const *needle,void const *haystack)
 {
   char          const *key    = needle;
@@ -1608,6 +1619,7 @@ struct opcode const *op_find(char const *name)
     { ".DP"     , pseudo__dp     , 0x00 , 0x00 , false } ,
     { ".ENDTST" , pseudo__endtst , 0x01 , 0x00 , false } , // test
     { ".NOTEST" , pseudo__notest , 0x00 , 0x00 , false } , // test
+    { ".OPT"	, pseudo__opt    , 0x00 , 0x00 , false } ,
     { ".TEST"   , pseudo__test   , 0x00 , 0x00 , false } , // test
     { ".TROFF"  , pseudo__troff  , 0x00 , 0x00 , false } , // test
     { ".TRON"   , pseudo__tron   , 0x00 , 0x00 , false } , // test

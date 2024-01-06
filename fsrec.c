@@ -406,6 +406,7 @@ bool format_srec_init(struct format_srec *fmt,struct a09 *a09)
   fmt->pass_end   = fsrec_pass_end;
   fmt->inst_write = fsrec_inst_write;
   fmt->data_write = fsrec_data_write;
+  fmt->opt        = fdefault;
   fmt->dp         = fdefault;
   fmt->code       = fdefault;
   fmt->align      = fsrec_align;

@@ -1524,6 +1524,92 @@ static bool ftest_data_write(
 
 /**************************************************************************/
 
+static bool ftest_opt(union format *fmt,struct opcdata *opd)
+{
+  assert(fmt != NULL);
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt->backend == BACKEND_TEST);
+  
+  if (opd->pass == 2)
+  {
+    struct format_test *test = &fmt->test;
+    struct testdata    *data = test->data;
+    char                c    = skip_space(opd->buffer);
+    label               tmp;
+    
+    read_label(opd->buffer,&tmp,c);
+    upper_label(&tmp);
+    if ((tmp.s != 4) || (memcmp(tmp.text,"TEST",4) != 0)) /* not for us, ignore */
+      return true;
+    
+    c = skip_space(opd->buffer);
+    read_label(opd->buffer,&tmp,c);
+    upper_label(&tmp);
+    
+    if ((tmp.s == 4) && (memcmp(tmp.text,"PROT",4) == 0))
+    {
+      struct memprot prot =
+      {
+        .read  = false ,
+        .write = false ,
+        .exec  = false ,
+        .tron  = false ,
+        .check = false ,
+        .time  = false
+      };
+      struct value low;
+      struct value high;
+      
+      c = skip_space(opd->buffer);
+      while(!isspace(c))
+      {
+        switch(toupper(c))
+        {
+          case 'R': prot.read  = true; break;
+          case 'W': prot.write = true; break;
+          case 'X': prot.exec  = true; break;
+          case 'T': prot.tron  = true; break;
+          case 'N':                    break;
+          default: return message(opd->a09,MSG_ERROR,"E9999: undefined protection bit '%c'",c);
+        }
+        
+        c = opd->buffer->buf[opd->buffer->ridx++];
+      }
+      
+      c = skip_space(opd->buffer);
+      if (c != '=')
+        return message(opd->a09,MSG_ERROR,"E9999: invalid protection expression");
+      
+      if (!expr(&low,opd->a09,opd->buffer,opd->pass))
+        return false;
+      c = skip_space(opd->buffer);
+      if ((c == ';') || (c == '\0'))
+        high = low;
+      else if ((c != '.') || (opd->buffer->buf[opd->buffer->ridx] != '.'))
+        return message(opd->a09,MSG_ERROR,"E9999: expecting range operator");
+      else
+      {
+        assert(c == '.');
+        assert(opd->buffer->buf[opd->buffer->ridx] == '.');
+        
+        opd->buffer->ridx++;
+        if (!expr(&high,opd->a09,opd->buffer,opd->pass))
+          return false;
+      }
+      
+      for (uint16_t a = low.value ; a <= high.value ; a++)
+        data->prot[a] = prot;
+    }
+    else
+      return message(opd->a09,MSG_ERROR,"E9999: option '%.*s' not supported",tmp.s,tmp.text);
+  }
+  
+  return true;
+}
+
+/**************************************************************************/
+
 static bool ftest_align(union format *fmt,struct opcdata *opd)
 {
   assert(fmt != NULL);
@@ -1871,6 +1957,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
   fmt->pass_end   = ftest_pass_end;
   fmt->inst_write = ftest_inst_write;
   fmt->data_write = ftest_data_write;
+  fmt->opt        = ftest_opt;
   fmt->dp         = fdefault;
   fmt->code       = fdefault;
   fmt->align      = ftest_align;

@@ -134,7 +134,7 @@ bool read_line(FILE *in,struct buffer *buffer)
 
 /**************************************************************************/
 
-static bool read_label(struct buffer *buffer,label *label,char c)
+bool read_label(struct buffer *buffer,label *label,char c)
 {
   bool toolong = false;
   
