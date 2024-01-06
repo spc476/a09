@@ -1319,6 +1319,18 @@ static bool ftest_pass_start(union format *fmt,struct a09 *a09,int pass)
   
   struct format_test *test = &fmt->test;
   test->intest = false;
+  
+  if (pass == 2)
+  {
+    struct testdata *data = test->data;
+    
+    for (size_t i = 0 ; i < 1024 ; i++)
+    {
+      data->prot[data->sp - i].read  = true;
+      data->prot[data->sp - i].write = true;
+    }
+  }
+  
   return true;
 }
 
@@ -1472,6 +1484,7 @@ static bool ftest_inst_write(union format *fmt,struct opcdata *opd)
   for (size_t i = 0 ; i < opd->sz ; i++)
   {
     data->prot[data->addr].exec  = true;
+    data->prot[data->addr].read  = true;
     data->prot[data->addr].tron |= data->tron;
     data->addr++;
   }
@@ -1500,7 +1513,12 @@ static bool ftest_data_write(
   
   memcpy(&data->memory[data->addr],buffer,len);
   for (size_t i = 0 ; i < len ; i++)
+  {
+    data->prot[data->addr].read   = true;
+    data->prot[data->addr].write  = true;
     data->prot[data->addr++].tron |= data->tron;
+  }
+  
   return true;
 }
 
@@ -1561,6 +1579,12 @@ static bool ftest_rmb(union format *fmt,struct opcdata *opd)
   {
     struct format_test *test = &fmt->test;
     struct testdata    *data = test->data;
+    
+    for (size_t i = 0 ; i < opd->value.value ; i++)
+    {
+      data->prot[data->addr + i].read  = true;
+      data->prot[data->addr + i].write = true;
+    }
     
     data->addr += opd->value.value;
   }
@@ -1865,23 +1889,6 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
   
   if (fmt->data != NULL)
   {
-    union
-    {
-      struct memprot p;
-      bool           b;
-    } init =
-    {
-      .p =
-      {
-        .read  = true  ,
-        .write = true  ,
-        .exec  = false ,
-        .tron  = false ,
-        .check = false ,
-        .time  = false ,
-      }
-    };
-    
     memset(&fmt->data->dis,0,sizeof(fmt->data->dis));
     
     fmt->data->a09       = a09;
@@ -1902,8 +1909,10 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     fmt->data->tron      = false;
     fmt->data->errbuf[0] = '\0';
     
-    memset(fmt->data->memory,fmt->data->fill,65536u);
-    memset(fmt->data->prot,init.b,65536u);
+    memset(fmt->data->memory,fmt->data->fill,sizeof(fmt->data->memory));
+    memset(fmt->data->prot,0,sizeof(fmt->data->prot));
+    fmt->data->prot[MC6809_VECTOR_RESET  ].read = true;
+    fmt->data->prot[MC6809_VECTOR_RESET+1].read = true;
     mc6809_reset(&fmt->data->cpu);
     return true;
   }
