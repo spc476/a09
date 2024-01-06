@@ -1634,6 +1634,14 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
         return false;
       data->memory[addr.value] = byte.value & 255;
     }
+    else if ((tmp.s == 5) && (memcmp(tmp.text,"STACK",5) == 0))
+    {
+      struct value sp;
+      
+      if (!expr(&sp,opd->a09,opd->buffer,opd->pass))
+        return false;
+      data->sp = sp.value;
+    }
     else
       return message(opd->a09,MSG_ERROR,"E9999: option '%.*s' not supported",tmp.s,tmp.text);
   }
