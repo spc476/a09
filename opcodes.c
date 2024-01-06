@@ -1127,7 +1127,7 @@ static bool pseudo_fcb(struct opcdata *opd)
   
   while(true)
   {
-    char c = skip_space(opd->buffer);
+    skip_space(opd->buffer);
     opd->buffer->ridx--;
     opd->datasz++;
     if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
@@ -1142,7 +1142,7 @@ static bool pseudo_fcb(struct opcdata *opd)
         return false;
     }
     
-    c = skip_space(opd->buffer);
+    char c = skip_space(opd->buffer);
     if ((c == ';') || (c == '\0'))
       return true;
     if (c != ',')
@@ -1163,7 +1163,7 @@ static bool pseudo_fdb(struct opcdata *opd)
   
   while(true)
   {
-    char c = skip_space(opd->buffer);
+    skip_space(opd->buffer);
     opd->buffer->ridx--;
     opd->datasz += 2;
     if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
@@ -1186,7 +1186,7 @@ static bool pseudo_fdb(struct opcdata *opd)
         return false;
     }
     
-    c = skip_space(opd->buffer);
+    char c = skip_space(opd->buffer);
     if ((c == ';') || (c == '\0'))
       return true;
     if (c != ',')
