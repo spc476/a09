@@ -1598,8 +1598,47 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
           return false;
       }
       
-      for (uint16_t a = low.value ; a <= high.value ; a++)
+      message(opd->a09,MSG_DEBUG,
+        "LOW=%04X HIGH=%04X %s %s %s %s",
+        low.value,
+        high.value,
+        prot.read  ? "true " : "false",
+        prot.write ? "true " : "false",
+        prot.exec  ? "true " : "false",
+        prot.tron  ? "true " : "false"
+      );
+      
+      for (uint16_t a = low.value ; (a >= low.value) && (a <= high.value) ; a++)
         data->prot[a] = prot;
+    }
+    else if ((tmp.s == 4) && (memcmp(tmp.text,"MEMW",4) == 0))
+    {
+      struct value addr;
+      struct value word;
+      
+      if (!expr(&addr,opd->a09,opd->buffer,opd->pass))
+        return false;
+      c = skip_space(opd->buffer);
+      if (c != ',')
+        return message(opd->a09,MSG_ERROR,"E0023: missing expected comma");
+      if (!expr(&word,opd->a09,opd->buffer,opd->pass))
+        return false;
+      data->memory[addr.value]     = word.value >> 8;
+      data->memory[addr.value + 1] = word.value & 255;
+    }
+    else if ((tmp.s == 4) && (memcmp(tmp.text,"MEMB",4) == 0))
+    {
+      struct value addr;
+      struct value byte;
+
+      if (!expr(&addr,opd->a09,opd->buffer,opd->pass))
+        return false;
+      c = skip_space(opd->buffer);
+      if (c != ',')
+        return message(opd->a09,MSG_ERROR,"E0023: missing expected comma");
+      if (!expr(&byte,opd->a09,opd->buffer,opd->pass))
+        return false;
+      data->memory[addr.value] = byte.value & 255;
     }
     else
       return message(opd->a09,MSG_ERROR,"E9999: option '%.*s' not supported",tmp.s,tmp.text);
