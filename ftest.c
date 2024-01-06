@@ -1319,18 +1319,6 @@ static bool ftest_pass_start(union format *fmt,struct a09 *a09,int pass)
   
   struct format_test *test = &fmt->test;
   test->intest = false;
-  
-  if (pass == 2)
-  {
-    struct testdata *data = test->data;
-    
-    for (size_t i = 0 ; i < 1024 ; i++)
-    {
-      data->prot[data->sp - i].read  = true;
-      data->prot[data->sp - i].write = true;
-    }
-  }
-  
   return true;
 }
 
@@ -1365,7 +1353,13 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
       
       if (unit->filename != a09->infile)
         return true;
-        
+      
+      for (size_t i = 0 ; i < 1024 ; i++)
+      {
+        data->prot[data->sp - i].read  = true;
+        data->prot[data->sp - i].write = true;
+      }
+      
       data->cpu.pc.w = unit->addr;
       data->cpu.S.w  = data->sp - 2;
       
