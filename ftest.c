@@ -1556,9 +1556,11 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
       struct value high;
       
       c = skip_space(opd->buffer);
-      while(!isspace(c))
+      read_label(opd->buffer,&tmp,c);
+      
+      for (size_t i = 0 ; i < tmp.s ; i++)
       {
-        switch(toupper(c))
+        switch(toupper(tmp.text[i]))
         {
           case 'R': prot.read  = true; break;
           case 'W': prot.write = true; break;
@@ -1567,8 +1569,6 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
           case 'N':                    break;
           default: return message(opd->a09,MSG_ERROR,"E0084: undefined protection bit '%c'",c);
         }
-        
-        c = opd->buffer->buf[opd->buffer->ridx++];
       }
       
       c = skip_space(opd->buffer);
