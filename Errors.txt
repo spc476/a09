@@ -99,3 +99,7 @@ E0080: not an index register
 E0081: missing A, B, or D register
 E0082: missing index register
 E0083: no input file specified
+E0084: undefined protection bit '%c'
+E0085: invalid protection expression
+E0086: expecting range operator
+E0087: option '%.*s' not supported
