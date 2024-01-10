@@ -1602,7 +1602,7 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
         prot.tron  ? "true " : "false"
       );
       
-      for (uint16_t a = low.value ; (a >= low.value) && (a <= high.value) ; a++)
+      for (size_t a = low.value ; a <= high.value ; a++)
         data->prot[a] = prot;
     }
     else if ((tmp.s == 4) && (memcmp(tmp.text,"MEMW",4) == 0))
