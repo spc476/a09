@@ -5,10 +5,11 @@
 tell) most of the standard pseudo operations that other 6809 assemblers
 understand, plus a few others that I find handy.
 
-NOTE: You will need to downlaod and install the libray here to use this
-program:
+NOTE: You will need to downlaod and install the following libraries to use
+the program:
 
 	https://github.com/spc476/CGILib
+	https://github.com/spc476/mc6809
 
   Labels are restricted to 63 charaters in length, which I think is larger
 than most other 6809 assemblers.  I also support a type of 'local' label
