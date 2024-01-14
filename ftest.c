@@ -820,7 +820,7 @@ static bool ft_index_register(
   label                    reg;
   
   if (*pvip == max)
-    return message(a09,MSG_ERROR,"E0066: expresion too complex");
+    return message(a09,MSG_ERROR,"E0066: expression too complex");
     
   skip_space(buffer);
   buffer->ridx--;
@@ -1639,7 +1639,7 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
       data->sp = sp.value;
     }
     else
-      return message(opd->a09,MSG_ERROR,"E00879: option '%.*s' not supported",tmp.s,tmp.text);
+      return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
   }
   
   return true;
@@ -1971,7 +1971,7 @@ static bool ftest_fini(union format *fmt,struct a09 *a09)
       fclose(fp);
     }
     else
-      message(a09,MSG_ERROR,"E0070: %s %s",test->data->corefile,strerror(errno));
+      message(a09,MSG_ERROR,"E0070: %s: %s",test->data->corefile,strerror(errno));
   }
   
   free_Asserts(test->data->Asserts);

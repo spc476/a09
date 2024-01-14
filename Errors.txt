@@ -1,21 +1,3 @@
-W0001: label '%.*s' exceeds %zu characters
-W0002: symbol '%.*s' defined but not used
-W0003: 16-bit value truncated to 5 bits
-W0004: 16-bit value truncated to 8 bits
-W0005: address could be 8-bits, maybe use '<'?
-W0006: offset could be 5-bits, maybe use '<<'?
-W0007: offset could be 8-bits, maybe use '<'?
-W0008: ext/tfr mixed sized registers
-W0009: offset could be 8-bits, maybe use short branch?
-W0010: missing initial label
-W0011: 5-bit offset upped to 8-bit offset for indirect mode
-W0012: branch to next location, maybe remove?
-W0013: label '%.*s' could be mistaken for register in index
-W0014: possible self-modifying code
-W0015:  %s: %s: %s
-W0016: W0016: memory write of %02X to %04X
-W9999: FEATURE NOT FINISHED
-
 E0001: Internal error---'%.*s' should exist, but doesn't
 E0002: Internal error---out of phase;\n\t'%.*s' = %04X pass 1, %04X pass 2
 E0003: unknown opcode
@@ -73,28 +55,28 @@ E0054: Internal error---no header written?
 E0055: object size too large
 E0056: END section already written
 E0057: segment has no data
-E0058: improper warning tag
+E0058: improper warning tag '%.4s'
 E0059: syntax error---mixing up immedate and indexed modes?
 E0060: syntax error
 E0061: '%c' not allowed in literal number
 E0062: missing value for EQU
 E0063: missing value for SET
 E0064: symbol '%.*s' already defined
-E0065: expression parser mismatch
+E0065: Internal error---expression parser mismatch
 E0066: expression too complex
 E0067: minimum record size: 1
 E0068: maximum record size: 252
 E0069: address exceeds address space
-E0070: %s %s
+E0070: %s: %s
 E0071: string too long
 E0072: byte should be 0..255
 E0073: bad register
 E0074: not enough space for expression
 E0075: can't negate or complement a string
-E0076: string slot already filled
+E0076:
 E0077: missing .ENDTST directive
 E0078: cannot nest .TEST
-E0089: no matching .TEST
+E0079: no matching .TEST
 E0080: not an index register
 E0081: missing A, B, or D register
 E0082: missing index register

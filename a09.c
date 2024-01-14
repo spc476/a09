@@ -471,7 +471,7 @@ static bool nowarnlist(struct a09 *a09,char const *warnings)
         return message(a09,MSG_ERROR,"E0023: missing expected comma");
     }
     else
-      return message(a09,MSG_ERROR,"E0058: improper warning tag '%.4s\n",warnings);
+      return message(a09,MSG_ERROR,"E0058: improper warning tag '%.4s'",warnings);
   }
   
   return true;
