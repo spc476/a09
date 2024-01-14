@@ -1572,22 +1572,18 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
       }
       
       c = skip_space(opd->buffer);
-      if (c != '=')
-        return message(opd->a09,MSG_ERROR,"E0085: invalid protection expression");
+      if (c != ',')
+        return message(opd->a09,MSG_ERROR,"E0023: missing expected comma");
       
       if (!expr(&low,opd->a09,opd->buffer,opd->pass))
         return false;
       c = skip_space(opd->buffer);
       if ((c == ';') || (c == '\0'))
         high = low;
-      else if ((c != '.') || (opd->buffer->buf[opd->buffer->ridx] != '.'))
-        return message(opd->a09,MSG_ERROR,"E0086: expecting range operator");
+      else if (c != ',')
+        return message(opd->a09,MSG_ERROR,"E0023: missing expected comma");
       else
       {
-        assert(c == '.');
-        assert(opd->buffer->buf[opd->buffer->ridx] == '.');
-        
-        opd->buffer->ridx++;
         if (!expr(&high,opd->a09,opd->buffer,opd->pass))
           return false;
       }
