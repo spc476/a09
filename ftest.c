@@ -708,7 +708,7 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
            
            addr  = stack[sp++];
            value = stack[sp++];
-           memcmp(&prot,&stack[sp++],sizeof(prot));
+           memcpy(&prot,&stack[sp++],sizeof(prot));
            
            for (size_t a = addr ; a <= value ; a++)
              data->prot[a] = prot;
