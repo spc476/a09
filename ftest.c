@@ -1645,7 +1645,7 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
       }
       
       message(opd->a09,MSG_DEBUG,
-        "LOW=%04X HIGH=%04X %s %s %s %s",
+        "LOW=%04X HIGH=%04X r=%s w=%s x=%s t=%s",
         low.value,
         high.value,
         prot.read  ? "true " : "false",
