@@ -339,6 +339,25 @@ static bool ftest_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[]
 
 /**************************************************************************/
 
+static struct vmcode *new_program(struct Assert *Assert)
+{
+  assert(Assert != NULL);
+  
+  struct vmcode *new = realloc(Assert->Asserts,(Assert->cnt + 1) * sizeof(struct vmcode));
+  if (new != NULL)
+  {
+    Assert->Asserts = new;
+    new             = &Assert->Asserts[Assert->cnt++];
+    new->line       = 0;
+    new->prog[0]    = VM_EXIT;
+    new->tag[0]     = '\0';
+  }
+  
+  return new;
+}
+
+/**************************************************************************/
+
 static int Assertaddrcmp(void const *restrict needle,void const *restrict haystack)
 {
   uint16_t      const *key   = needle;
@@ -1276,13 +1295,12 @@ static bool ft_compile(
     return message(a09,MSG_ERROR,"E0066: expression too complex");
     
   program[vip++] = VM_EXIT;
-  struct vmcode *new = realloc(Assert->Asserts,(Assert->cnt + 1) * sizeof(struct vmcode));
+  struct vmcode *new = new_program(Assert);
   
   if (new == NULL)
     return message(a09,MSG_ERROR,"E0046: out of memory");
     
-  Assert->Asserts = new;
-  memcpy(Assert->Asserts[Assert->cnt].prog,program,vip * sizeof(enum vmops));
+  memcpy(new->prog,program,vip * sizeof(enum vmops));
   
   c = skip_space(buffer);
   if (c == ',')
@@ -1296,14 +1314,13 @@ static bool ft_compile(
   }
   
   snprintf(
-       Assert->Asserts[Assert->cnt].tag,
-       sizeof(Assert->Asserts[Assert->cnt].tag),
+       new->tag,
+       sizeof(new->tag),
        "%.*s:%zu %.*s",
        (int)name->widx,name->buf,
        a09->lnum,
        (int)tmp.widx,tmp.buf
     );
-  Assert->cnt++;
   return true;
 }
 
@@ -1820,15 +1837,15 @@ static bool ftest_troff(union format *fmt,struct opcdata *opd)
       if (Assert == NULL)
         return false;
       
-      new = realloc(Assert->Asserts,(Assert->cnt + 1) * sizeof(struct vmcode));
+      new = new_program(Assert);
       if (new == NULL)
         return message(opd->a09,MSG_ERROR,"E0046: out of memory");
-      Assert->Asserts = new;
+        
       if (data->nunits == 0)
       {
         snprintf(
-                  Assert->Asserts[Assert->cnt].tag,
-                  sizeof(Assert->Asserts[Assert->cnt].tag),
+                  new->tag,
+                  sizeof(new->tag),
                   "%s:%zu",
                   opd->a09->infile,
                   opd->a09->lnum
@@ -1837,8 +1854,8 @@ static bool ftest_troff(union format *fmt,struct opcdata *opd)
       else
       {
         snprintf(
-                  Assert->Asserts[Assert->cnt].tag,
-                  sizeof(Assert->Asserts[Assert->cnt].tag),
+                  new->tag,
+                  sizeof(new->tag),
                   "%.*s:%zu",
                   (int)data->units[data->nunits-1].name.widx,
                   data->units[data->nunits-1].name.buf,
@@ -1846,11 +1863,10 @@ static bool ftest_troff(union format *fmt,struct opcdata *opd)
                 );
       }
       
-      Assert->Asserts[Assert->cnt].line    = opd->a09->lnum;
-      Assert->Asserts[Assert->cnt].prog[0] = VM_TIMING;
-      Assert->Asserts[Assert->cnt].prog[1] = VM_EXIT;
-      data->prot[opd->a09->pc].check       = true;
-      Assert->cnt++;
+      new->line                      = opd->a09->lnum;
+      new->prog[0]                   = VM_TIMING;
+      new->prog[1]                   = VM_EXIT;
+      data->prot[opd->a09->pc].check = true;
     }
     else
       data->tron = false;
