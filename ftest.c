@@ -94,6 +94,11 @@ enum vmops
   VM_SCMP,
   VM_SEX,
   VM_TIMING,
+  VM_FALSE,
+  VM_TRUE,
+  VM_TO8,
+  VM_TO16,
+  VM_PROT,
   VM_EXIT,
 };
 
@@ -429,8 +434,10 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
   
   struct format_test *bend = cpu->user;
   struct testdata    *data = bend->data;
+  struct memprot      prot;
   uint16_t            stack[15];
   uint16_t            result;
+  uint16_t            value;
   uint16_t            addr;
   size_t              sp = sizeof(stack) / sizeof(stack[0]);
   size_t              ip = 0;
@@ -673,6 +680,38 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
       case VM_TIMING:
            printf("%s: cycles=%lu\n",test->tag,cpu->cycles);
            stack[--sp] = true;
+           break;
+           
+      case VM_FALSE:
+           stack[--sp] = 0;
+           break;
+           
+      case VM_TRUE:
+           stack[--sp] = 1;
+           break;
+           
+      case VM_TO8:
+           addr               = stack[sp++];
+           value              = stack[sp++];
+           data->memory[addr] = value & 255;
+           break;
+           
+      case VM_TO16:
+           addr                   = stack[sp++];
+           value                  = stack[sp++];
+           data->memory[addr]     = value >> 8;
+           data->memory[addr + 1] = value & 255;
+           break;
+           
+      case VM_PROT:
+           assert(sizeof(struct memprot) <= sizeof(enum vmops));
+           
+           addr  = stack[sp++];
+           value = stack[sp++];
+           memcmp(&prot,&stack[sp++],sizeof(prot));
+           
+           for (size_t a = addr ; a <= value ; a++)
+             data->prot[a] = prot;
            break;
            
       case VM_EXIT:
@@ -1615,9 +1654,36 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
         prot.tron  ? "true " : "false"
       );
       
-      for (size_t a = low.value ; a <= high.value ; a++)
-        data->prot[a] = prot;
+      if (test->intest)
+      {
+        struct Assert *Assert = get_Assert(opd->a09,data,opd->a09->pc);
+        if (Assert == NULL)
+          return false;
+        
+        struct vmcode *new = new_program(Assert);
+        if (new == NULL)
+          return false;
+        
+        assert(sizeof(struct memprot) <= sizeof(enum vmops));
+        
+        new->prog[0]                   = VM_LIT;
+        memcpy(&new->prog[1],&prot,sizeof(prot));
+        new->prog[2]                   = VM_LIT;
+        new->prog[3]                   = high.value;
+        new->prog[4]                   = VM_LIT;
+        new->prog[5]                   = low.value;
+        new->prog[6]                   = VM_PROT;
+        new->prog[7]                   = VM_TRUE;
+        new->prog[8]                   = VM_EXIT;
+        data->prot[opd->a09->pc].check = true;
+      }
+      else
+      {
+        for (size_t a = low.value ; a <= high.value ; a++)
+          data->prot[a] = prot;
+      }
     }
+    
     else if ((tmp.s == 4) && (memcmp(tmp.text,"MEMW",4) == 0))
     {
       struct value addr;
@@ -1630,9 +1696,33 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
         return message(opd->a09,MSG_ERROR,"E0023: missing expected comma");
       if (!expr(&word,opd->a09,opd->buffer,opd->pass))
         return false;
-      data->memory[addr.value]     = word.value >> 8;
-      data->memory[addr.value + 1] = word.value & 255;
+      
+      if (test->intest)
+      {
+        struct Assert *Assert = get_Assert(opd->a09,data,opd->a09->pc);
+        if (Assert == NULL)
+          return false;
+        
+        struct vmcode *new = new_program(Assert);
+        if (new == NULL)
+          return false;
+        
+        new->prog[0]                   = VM_LIT;
+        new->prog[1]                   = word.value;
+        new->prog[2]                   = VM_LIT;
+        new->prog[3]                   = addr.value;
+        new->prog[4]                   = VM_TO16;
+        new->prog[5]                   = VM_TRUE;
+        new->prog[6]                   = VM_EXIT;
+        data->prot[opd->a09->pc].check = true;
+      }
+      else
+      {
+        data->memory[addr.value]     = word.value >> 8;
+        data->memory[addr.value + 1] = word.value & 255;
+      }
     }
+    
     else if ((tmp.s == 4) && (memcmp(tmp.text,"MEMB",4) == 0))
     {
       struct value addr;
@@ -1645,14 +1735,40 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
         return message(opd->a09,MSG_ERROR,"E0023: missing expected comma");
       if (!expr(&byte,opd->a09,opd->buffer,opd->pass))
         return false;
-      data->memory[addr.value] = byte.value & 255;
+        
+      if (test->intest)
+      {
+        struct Assert *Assert = get_Assert(opd->a09,data,opd->a09->pc);
+        if (Assert == NULL)
+          return false;
+          
+        struct vmcode *new = new_program(Assert);
+        if (new == NULL)
+          return false;
+          
+        new->prog[0]                   = VM_LIT;
+        new->prog[1]                   = byte.value;
+        new->prog[2]                   = VM_LIT;
+        new->prog[3]                   = addr.value;
+        new->prog[4]                   = VM_TO8;
+        new->prog[5]                   = VM_TRUE;
+        new->prog[6]                   = VM_EXIT;
+        data->prot[opd->a09->pc].check = true;
+      }
+      else
+        data->memory[addr.value] = byte.value & 255;
     }
+    
     else if ((tmp.s == 5) && (memcmp(tmp.text,"STACK",5) == 0))
     {
       struct value sp;
       
       if (!expr(&sp,opd->a09,opd->buffer,opd->pass))
         return false;
+        
+      if (test->intest)
+        message(opd->a09,MSG_WARNING,"W0017: cannot assign the stack address within .TEST directive");
+        
       data->sp = sp.value;
     }
     else
