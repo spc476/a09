@@ -113,6 +113,7 @@ struct buffer
 struct a09;
 struct opcdata;
 struct symbol;
+struct testdata;
 union  format;
 
 struct format_default
@@ -224,8 +225,6 @@ struct format_srec
   bool           override;
   unsigned char  buffer[252];
 };
-
-struct testdata;
 
 struct format_test
 {
