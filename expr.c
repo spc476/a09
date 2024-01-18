@@ -43,6 +43,58 @@
 
 /**************************************************************************/
 
+static bool eval(
+                  struct a09   *         a09,
+                  struct value *restrict v1,
+                  enum operator          op,
+                  struct value *restrict v2
+)
+{
+  assert(a09 != NULL);
+  assert(v1  != NULL);
+  assert(v2  != NULL);
+  
+  if (v1->external || v2->external)
+    return message(a09,MSG_ERROR,"E0007: EXTERN in expression not allowed");
+    
+  switch(op)
+  {
+    case OP_LOR:  v1->value = v1->value || v2->value; break;
+    case OP_LAND: v1->value = v1->value && v2->value; break;
+    case OP_GT:   v1->value = v1->value >  v2->value; break;
+    case OP_GE:   v1->value = v1->value >= v2->value; break;
+    case OP_EQ:   v1->value = v1->value == v2->value; break;
+    case OP_LE:   v1->value = v1->value <= v2->value; break;
+    case OP_LT:   v1->value = v1->value <  v2->value; break;
+    case OP_NE:   v1->value = v1->value != v2->value; break;
+    case OP_BOR:  v1->value = v1->value |  v2->value; break;
+    case OP_BEOR: v1->value = v1->value ^  v2->value; break;
+    case OP_BAND: v1->value = v1->value &  v2->value; break;
+    case OP_SHR:  v1->value = v1->value >> v2->value; break;
+    case OP_SHL:  v1->value = v1->value << v2->value; break;
+    case OP_SUB:  v1->value = v1->value -  v2->value; break;
+    case OP_ADD:  v1->value = v1->value +  v2->value; break;
+    case OP_MUL:  v1->value = v1->value *  v2->value; break;
+    case OP_DIV:
+         if (v2->value == 0)
+           return message(a09,MSG_ERROR,"E0008: divide by 0 error");
+         v1->value = v1->value / v2->value;
+         break;
+         
+    case OP_MOD:
+         if (v2->value == 0)
+           return message(a09,MSG_ERROR,"E0008: divide by 0 error");
+         v1->value = v1->value % v2->value;
+         break;
+  }
+  
+  v1->unknownpass1 = v1->unknownpass1 || v2->unknownpass1;
+  v1->defined      = v1->defined      && v2->defined;
+  return true;
+}
+
+/**************************************************************************/
+
 bool s2num(struct a09 *a09,uint16_t *pv,struct buffer *buffer,uint16_t base)
 {
   assert(a09    != NULL);
@@ -187,58 +239,6 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
     pv->value = ~pv->value;
     
   return rc;
-}
-
-/**************************************************************************/
-
-static bool eval(
-                  struct a09   *         a09,
-                  struct value *restrict v1,
-                  enum operator          op,
-                  struct value *restrict v2
-)
-{
-  assert(a09 != NULL);
-  assert(v1  != NULL);
-  assert(v2  != NULL);
-  
-  if (v1->external || v2->external)
-    return message(a09,MSG_ERROR,"E0007: EXTERN in expression not allowed");
-    
-  switch(op)
-  {
-    case OP_LOR:  v1->value = v1->value || v2->value; break;
-    case OP_LAND: v1->value = v1->value && v2->value; break;
-    case OP_GT:   v1->value = v1->value >  v2->value; break;
-    case OP_GE:   v1->value = v1->value >= v2->value; break;
-    case OP_EQ:   v1->value = v1->value == v2->value; break;
-    case OP_LE:   v1->value = v1->value <= v2->value; break;
-    case OP_LT:   v1->value = v1->value <  v2->value; break;
-    case OP_NE:   v1->value = v1->value != v2->value; break;
-    case OP_BOR:  v1->value = v1->value |  v2->value; break;
-    case OP_BEOR: v1->value = v1->value ^  v2->value; break;
-    case OP_BAND: v1->value = v1->value &  v2->value; break;
-    case OP_SHR:  v1->value = v1->value >> v2->value; break;
-    case OP_SHL:  v1->value = v1->value << v2->value; break;
-    case OP_SUB:  v1->value = v1->value -  v2->value; break;
-    case OP_ADD:  v1->value = v1->value +  v2->value; break;
-    case OP_MUL:  v1->value = v1->value *  v2->value; break;
-    case OP_DIV:
-         if (v2->value == 0)
-           return message(a09,MSG_ERROR,"E0008: divide by 0 error");
-         v1->value = v1->value / v2->value;
-         break;
-         
-    case OP_MOD:
-         if (v2->value == 0)
-           return message(a09,MSG_ERROR,"E0008: divide by 0 error");
-         v1->value = v1->value % v2->value;
-         break;
-  }
-  
-  v1->unknownpass1 = v1->unknownpass1 || v2->unknownpass1;
-  v1->defined      = v1->defined      && v2->defined;
-  return true;
 }
 
 /**************************************************************************/
