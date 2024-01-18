@@ -44,17 +44,17 @@ static bool check_warning_tag(struct a09 *a09,char const *tag,div_t *pres)
   
   if ((tag[0] == 'W') && isdigit(tag[1]) && isdigit(tag[2]) && isdigit(tag[3]) && isdigit(tag[4]) && !isdigit(tag[5]))
   {
-    assert(sizeof(a09->nowarns) < INT_MAX);
+    assert(sizeof(a09->nowarn) < INT_MAX);
     int num = (tag[1] - '0') * 1000
             + (tag[2] - '0') *  100
             + (tag[3] - '0') *   10
             + (tag[4] - '0');
-    *pres   = div(num,sizeof(a09->nowarns));
+    *pres   = div(num,CHAR_BIT);
     
     assert(pres->quot >= 0);
-    assert(pres->quot <  (int)(sizeof(a09->nowarns) / sizeof(a09->nowarns[0])));
+    assert(pres->quot <  (int)(sizeof(a09->nowarn)));
     assert(pres->rem  >= 0);
-    assert(pres->rem  <  (int)(sizeof(a09->nowarns[0]) * CHAR_BIT));
+    assert(pres->rem  <  CHAR_BIT);
     
     return true;
   }
@@ -73,7 +73,7 @@ bool enable_warning(struct a09 *a09,char const *tag)
   
   if (!check_warning_tag(a09,tag,&res))
     return false;
-  a09->nowarns[res.quot] &= (~1 << res.rem);
+  a09->nowarn[res.quot] &= (~1 << res.rem);
   return true;
 }
 
@@ -88,7 +88,7 @@ bool disable_warning(struct a09 *a09,char const *tag)
   
   if (!check_warning_tag(a09,tag,&res))
     return false;
-  a09->nowarns[res.quot] |= 1 << res.rem;
+  a09->nowarn[res.quot] |= 1 << res.rem;
   return true;
 }
 
@@ -110,18 +110,12 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
   if ((tag == MSG_DEBUG) && !a09->debug)
     return true;
     
-  if (tag[0] == 'W')
+  if (fmt[0] == 'W')
   {
     div_t res;
-    bool  rc = check_warning_tag(a09,tag,&res);
+    bool  rc = check_warning_tag(a09,fmt,&res);
     assert(rc);
-    if (!(a09->nowarns[res.quot] & (1 << res.rem)))
-      return true;
-  }
-  
-  for (size_t i = 0 ; i < a09->nowsize ; i++)
-  {
-    if (memcmp(fmt,a09->nowarn[i].tag,sizeof(a09->nowarn[i].tag)) == 0)
+    if ((a09->nowarn[res.quot] & (1 << res.rem)))
       return true;
   }
   
@@ -515,6 +509,7 @@ bool assemble_pass(struct a09 *a09,int pass)
 
 /**************************************************************************/
 
+#if 0
 static bool nowarnlist(struct a09 *a09,char const *warnings)
 {
   assert(a09      != NULL);
@@ -543,6 +538,7 @@ static bool nowarnlist(struct a09 *a09,char const *warnings)
   
   return true;
 }
+#endif
 
 /**************************************************************************/
 
@@ -569,12 +565,12 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
         case 'n':
              if (argv[i][2] == '\0')
              {
-               if (!nowarnlist(a09,argv[++i]))
+               if (!disable_warning(a09,argv[++i]))
                  exit(1);
              }
              else
              {
-               if (!nowarnlist(a09,&argv[i][2]))
+               if (!disable_warning(a09,&argv[i][2]))
                  exit(1);
              }
              break;
@@ -737,8 +733,7 @@ int main(int argc,char *argv[])
     .list      = NULL,
     .lnum      = 0,
     .symtab    = NULL,
-    .nowarn    = NULL,
-    .nowarns   = {0},
+    .nowarn    = {0},
     .nowsize   = 0,
     .label     = { .s = 0, .text = { '\0' } },
     .pc        = 0,
@@ -776,7 +771,6 @@ int main(int argc,char *argv[])
   {
     fclose(a09.in);
     symbol_freetable(a09.symtab);
-    free(a09.nowarn);
     putchar('\n');
     exit(0);
   }
@@ -832,6 +826,5 @@ int main(int argc,char *argv[])
   
   a09.format.def.fini(&a09.format,&a09);
   symbol_freetable(a09.symtab);
-  free(a09.nowarn);
   return rc ? 0 : 1;
 }

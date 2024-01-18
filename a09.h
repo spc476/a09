@@ -263,11 +263,6 @@ union format
   struct format_test    test;
 };
 
-struct nowarn
-{
-  char tag[5];
-};
-
 struct a09
 {
   char const    *infile;
@@ -280,8 +275,7 @@ struct a09
   struct buffer  inbuf;
   size_t         lnum;
   tree__s       *symtab;
-  struct nowarn *nowarn;
-  bool           nowarns[10000 / (sizeof(bool) * CHAR_BIT)];
+  unsigned char  nowarn[10000 / CHAR_BIT];
   size_t         nowsize;
   label          label;
   uint16_t       pc;
@@ -376,6 +370,8 @@ extern char const format_rsdos_usage[];
 extern char const format_srec_usage[];
 extern char const format_test_usage[];
 
+extern bool                  enable_warning     (struct a09 *,char const *);
+extern bool                  disable_warning    (struct a09 *,char const *);
 extern bool                  message            (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
 extern void                  add_file_dep       (struct a09 *,char const *);
 extern bool                  read_line          (FILE *,struct buffer *);
