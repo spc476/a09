@@ -37,6 +37,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <limits.h>
 #include <assert.h>
 
 #include <cgilib6/tree.h>
@@ -280,6 +281,7 @@ struct a09
   size_t         lnum;
   tree__s       *symtab;
   struct nowarn *nowarn;
+  bool           nowarns[10000 / (sizeof(bool) * CHAR_BIT)];
   size_t         nowsize;
   label          label;
   uint16_t       pc;

@@ -36,6 +36,64 @@ char const MSG_ERROR[]   = "error";
 
 /**************************************************************************/
 
+static bool check_warning_tag(struct a09 *a09,char const *tag,div_t *pres)
+{
+  assert(a09  != NULL);
+  assert(tag  != NULL);
+  assert(pres != NULL);
+  
+  if ((tag[0] == 'W') && isdigit(tag[1]) && isdigit(tag[2]) && isdigit(tag[3]) && isdigit(tag[4]) && !isdigit(tag[5]))
+  {
+    assert(sizeof(a09->nowarns) < INT_MAX);
+    int num = (tag[1] - '0') * 1000
+            + (tag[2] - '0') *  100
+            + (tag[3] - '0') *   10
+            + (tag[4] - '0');
+    *pres   = div(num,sizeof(a09->nowarns));
+    
+    assert(pres->quot >= 0);
+    assert(pres->quot <  (int)(sizeof(a09->nowarns) / sizeof(a09->nowarns[0])));
+    assert(pres->rem  >= 0);
+    assert(pres->rem  <  (int)(sizeof(a09->nowarns[0]) * CHAR_BIT));
+    
+    return true;
+  }
+  else
+    return message(a09,MSG_ERROR,"E9999: invalid warning '%s'\n",tag);
+}
+
+/**************************************************************************/
+
+bool enable_warning(struct a09 *a09,char const *tag)
+{
+  div_t res;
+  
+  assert(a09 != NULL);
+  assert(tag != NULL);
+  
+  if (!check_warning_tag(a09,tag,&res))
+    return false;
+  a09->nowarns[res.quot] &= (~1 << res.rem);
+  return true;
+}
+
+/**************************************************************************/
+
+bool disable_warning(struct a09 *a09,char const *tag)
+{
+  div_t res;
+  
+  assert(a09 != NULL);
+  assert(tag != NULL);
+  
+  if (!check_warning_tag(a09,tag,&res))
+    return false;
+  a09->nowarns[res.quot] |= 1 << res.rem;
+  return true;
+}
+
+/**************************************************************************/
+
 bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,...)
 {
   assert(a09 != NULL);
@@ -52,6 +110,15 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
   if ((tag == MSG_DEBUG) && !a09->debug)
     return true;
     
+  if (tag[0] == 'W')
+  {
+    div_t res;
+    bool  rc = check_warning_tag(a09,tag,&res);
+    assert(rc);
+    if (!(a09->nowarns[res.quot] & (1 << res.rem)))
+      return true;
+  }
+  
   for (size_t i = 0 ; i < a09->nowsize ; i++)
   {
     if (memcmp(fmt,a09->nowarn[i].tag,sizeof(a09->nowarn[i].tag)) == 0)
@@ -671,6 +738,7 @@ int main(int argc,char *argv[])
     .lnum      = 0,
     .symtab    = NULL,
     .nowarn    = NULL,
+    .nowarns   = {0},
     .nowsize   = 0,
     .label     = { .s = 0, .text = { '\0' } },
     .pc        = 0,
