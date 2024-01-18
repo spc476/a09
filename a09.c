@@ -735,7 +735,7 @@ int main(int argc,char *argv[])
   
   /*-----------------------------------------------------------------------
   ; This initialization phase belongs here and not in assemble_pass().  We
-  ; don't want ot reset the PC or DP or global label when using INCLUDE.
+  ; don't want to reset the PC or DP or global label when using INCLUDE.
   ;------------------------------------------------------------------------*/
   
   a09.pc    = 0;
