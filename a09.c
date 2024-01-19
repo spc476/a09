@@ -262,6 +262,15 @@ bool parse_label(label *res,struct buffer *buffer,struct a09 *a09,int pass)
 
 /**************************************************************************/
 
+void upper_label(label *res)
+{
+  assert(res != NULL);
+  for (size_t i = 0 ; i < res->s ; i++)
+    res->text[i] = toupper(res->text[i]);
+}
+
+/**************************************************************************/
+
 bool parse_op(struct buffer *buffer,struct opcode const **pop)
 {
   assert(buffer != NULL);
@@ -804,6 +813,8 @@ int main(int argc,char *argv[])
   a09.dp    = 0;
   a09.label = (label){ .s = 0 , .text = { '\0' } };
   rc        = assemble_pass(&a09,2);
+  
+  message(&a09,MSG_DEBUG,"Post assembly phases");
   
   if (rc)
     warning_unused_symbols(&a09,a09.symtab);

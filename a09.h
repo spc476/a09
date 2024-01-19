@@ -379,6 +379,7 @@ extern bool                  collect_esc_string (struct a09 *,struct buffer *res
 extern bool                  parse_string       (struct a09 *,struct buffer *restrict,struct buffer *restrict);
 extern bool                  read_label         (struct buffer *,label *,char);
 extern bool                  parse_label        (label *,struct buffer *,struct a09 *,int);
+extern void                  upper_label        (label *);
 extern bool                  parse_op           (struct buffer *,struct opcode const **);
 extern char                  skip_space         (struct buffer *);
 extern bool                  print_list         (struct a09 *,struct opcdata *,bool);

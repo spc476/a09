@@ -806,15 +806,6 @@ static void ft_dis_fault(mc6809dis__t *dis,mc6809fault__t fault)
 
 /**************************************************************************/
 
-static void upper_label(label *res)
-{
-  assert(res != NULL);
-  for (size_t i = 0 ; i < res->s ; i++)
-    res->text[i] = toupper(res->text[i]);
-}
-
-/**************************************************************************/
-
 static int regsearch(void const *needle,void const *haystack)
 {
   label             const *key   = needle;

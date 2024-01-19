@@ -1595,7 +1595,37 @@ static bool pseudo__opt(struct opcdata *opd)
   assert(opd->a09 != NULL);
   assert((opd->pass == 1) | (opd->pass == 2));
   
-  return opd->a09->format.def.opt(&opd->a09->format,opd);
+  label tmp;
+  char  c = skip_space(opd->buffer);
+  
+  if (c != '*')
+  {
+    opd->buffer->ridx--;
+    return opd->a09->format.def.opt(&opd->a09->format,opd);
+  }
+  
+  c = skip_space(opd->buffer);
+  read_label(opd->buffer,&tmp,c);
+  upper_label(&tmp);
+  
+  if ((tmp.s == 7) && (memcmp(tmp.text,"DISABLE",7) == 0))
+  {
+    fprintf(stderr,"DISABLE WARNING\n");
+    skip_space(opd->buffer);
+    opd->buffer->ridx--;
+    return disable_warning(opd->a09,&opd->buffer->buf[opd->buffer->ridx]);
+  }
+  
+  else if ((tmp.s == 6) && (memcmp(tmp.text,"ENABLE",6) == 0))
+  {
+    fprintf(stderr,"ENABLE WARNING\n");
+    skip_space(opd->buffer);
+    opd->buffer->ridx--;
+    return enable_warning(opd->a09,&opd->buffer->buf[opd->buffer->ridx]);
+  }
+  
+  else
+    return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
 }
 
 /**************************************************************************/
