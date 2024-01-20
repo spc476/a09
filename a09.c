@@ -115,6 +115,7 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
     div_t res;
     bool  rc = check_warning_tag(a09,fmt,&res);
     assert(rc);
+    (void)rc;
     if ((a09->nowarn[res.quot] & (1 << res.rem)))
       return true;
   }
