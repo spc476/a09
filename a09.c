@@ -518,7 +518,6 @@ bool assemble_pass(struct a09 *a09,int pass)
 
 /**************************************************************************/
 
-#if 0
 static bool nowarnlist(struct a09 *a09,char const *warnings)
 {
   assert(a09      != NULL);
@@ -526,28 +525,17 @@ static bool nowarnlist(struct a09 *a09,char const *warnings)
   
   while(true)
   {
-    if ((warnings[0] == 'W') && isdigit(warnings[1]) && isdigit(warnings[2]) && isdigit(warnings[3]) && isdigit(warnings[4]))
-    {
-      struct nowarn *new = realloc(a09->nowarn,(a09->nowsize + 1) * sizeof(struct nowarn));
-      if (new == NULL)
-        return message(a09,MSG_ERROR,"E0046: out of memory");
-      a09->nowarn = new;
-      memcpy(a09->nowarn[a09->nowsize].tag,warnings,5);
-      warnings += 5;
-      a09->nowsize++;
-      
-      if (*warnings == '\0')
-        break;
-      if (*warnings++ != ',')
-        return message(a09,MSG_ERROR,"E0023: missing expected comma");
-    }
-    else
+    if (!disable_warning(a09,warnings))
       return message(a09,MSG_ERROR,"E0058: improper warning tag '%.4s'",warnings);
+    warnings += 5;
+    if (*warnings == '\0')
+      break;
+    if (*warnings++ != ',')
+      return message(a09,MSG_ERROR,"E0023: missing expected comma");
   }
   
   return true;
 }
-#endif
 
 /**************************************************************************/
 
@@ -574,12 +562,12 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
         case 'n':
              if (argv[i][2] == '\0')
              {
-               if (!disable_warning(a09,argv[++i]))
+               if (!nowarnlist(a09,argv[++i]))
                  exit(1);
              }
              else
              {
-               if (!disable_warning(a09,&argv[i][2]))
+               if (!nowarnlist(a09,&argv[i][2]))
                  exit(1);
              }
              break;
