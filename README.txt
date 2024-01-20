@@ -149,7 +149,79 @@ non-standard pesudo operation for most 6809 assemblers.
 	.NOTEST
 
 		All text up to a .ENDTST directive is ignored.  This is
-		an easy way to disable a test when using the test backend. 
+		an easy way to disable a test when using the test backend.
+
+	.OPT backend option data...
+
+		Supply an option from within the source code instead of the
+		command line.  The following options are always available:
+
+			.OPT * DISABLE <warning>
+
+				Disable the given warning (see list below).
+				Note that W0002, W0014, W0015 and W0016
+				cannot be disabled with this directive given
+				the nature of when they happen.  W0002 can
+				be disabled with the ".OPT * USES <label>"
+				directive; the others only happen when using
+				the test backend.
+
+			.OPT * ENABLE <warning>
+
+				Enable a given warning.  Note that upon
+				program startup, all warnings are enabled by
+				default.  This is typically used to
+				re-enable a warning after being disabled.
+
+			.OPT * USES <label>
+
+				Mark a label as being used.  This is used to
+				supress W0002 warnings.
+
+		The following options are only used by the TEST backend.
+		They are otherwise ignored by other backends.  The following
+		options can appear inside or outside a .TEST directive
+		unless otherwise specified.  If they appear outside, it
+		applies to all tests; otherwise it only applies to the test
+		they appear in.
+
+			.OPT TEST MEMB address,byte
+
+				Write the byte value to the address in the
+				virtual memory for the 6809 emulator.
+
+			.OPT TEST MEMW address,word
+
+				Write the word (16-bit value) to the address
+				in the virtual memory for the 6809 emulator.
+
+			.OPT TEST PROT prot,address[,end-address]
+
+				Enable memory permissions for the given
+				address(es).  The permissions allowed are:
+
+					r	allow reads
+					w	allow writes
+					x	allow execution
+					t	trace execution and writes
+					n	remove any protections
+
+
+				The first four can be all be used; 'n' is
+				used to remove any existing protections on a
+				memory location.
+
+					.OPT TEST PROT r,$400	; ro of $400
+					.OPT TEST PROT rw,foo	; rw @ foo
+					.OPT TEST PROT n,$400	; no access
+					.OPT TEST PROT rxt,run
+
+			.OPT TEST STACK address
+
+				Set the default stack address for tests.
+				This can ONLY appear outside a .TEST
+				directive, given the nature of the
+				assembler.
 
 	.TEST ["name"]
 
@@ -386,6 +458,11 @@ be potential problems.  The defined warnings are:
 		A write to memory that appears with a .TRON and .TROFF
 		directives.  This is only issued if using the test backend.
 
+	W0017
+
+		The .OPT TEST STACK <address> directive can only appear
+		outside a .TEST directive.
+
   Individual warnings can be supressed by using the appropritate command
 line option.
 
@@ -515,4 +592,3 @@ The test backend
 
 		Write the 6809 memory to the given file at the end of
 		assembly and all tests have run.
-
