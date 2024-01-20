@@ -1608,9 +1608,27 @@ static bool pseudo__opt(struct opcdata *opd)
   read_label(opd->buffer,&tmp,c);
   upper_label(&tmp);
   
-  if ((tmp.s == 7) && (memcmp(tmp.text,"DISABLE",7) == 0))
+  if ((tmp.s == 4) && (memcmp(tmp.text,"USES",4) == 0))
   {
-    fprintf(stderr,"DISABLE WARNING\n");
+    if (opd->pass == 2)
+    {
+      struct symbol *sym;
+      
+      c = skip_space(opd->buffer);
+      opd->buffer->ridx--;
+      if (!parse_label(&tmp,opd->buffer,opd->a09,opd->pass))
+        return false;
+      sym = symbol_find(opd->a09,&tmp);
+      if (sym == NULL)
+        return message(opd->a09,MSG_ERROR,"E9999: label not defined");
+      sym->refs++;
+    }
+    
+    return true;
+  }
+  
+  else if ((tmp.s == 7) && (memcmp(tmp.text,"DISABLE",7) == 0))
+  {
     skip_space(opd->buffer);
     opd->buffer->ridx--;
     return disable_warning(opd->a09,&opd->buffer->buf[opd->buffer->ridx]);
@@ -1618,7 +1636,6 @@ static bool pseudo__opt(struct opcdata *opd)
   
   else if ((tmp.s == 6) && (memcmp(tmp.text,"ENABLE",6) == 0))
   {
-    fprintf(stderr,"ENABLE WARNING\n");
     skip_space(opd->buffer);
     opd->buffer->ridx--;
     return enable_warning(opd->a09,&opd->buffer->buf[opd->buffer->ridx]);
