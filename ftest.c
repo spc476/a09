@@ -1400,10 +1400,10 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
       if (unit->filename != a09->infile)
         return true;
       
-      for (size_t i = 0 ; i < 1024 ; i++)
+      for (size_t j = 0 ; j < 1024 ; j++)
       {
-        data->prot[data->sp - i].read  = true;
-        data->prot[data->sp - i].write = true;
+        data->prot[data->sp - j].read  = true;
+        data->prot[data->sp - j].write = true;
       }
       
       data->cpu.pc.w = unit->addr;
