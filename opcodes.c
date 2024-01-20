@@ -1620,7 +1620,7 @@ static bool pseudo__opt(struct opcdata *opd)
         return false;
       sym = symbol_find(opd->a09,&tmp);
       if (sym == NULL)
-        return message(opd->a09,MSG_ERROR,"E9999: label not defined");
+        return message(opd->a09,MSG_ERROR,"E0076: label not defined");
       sym->refs++;
     }
     

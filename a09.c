@@ -59,7 +59,7 @@ static bool check_warning_tag(struct a09 *a09,char const *tag,div_t *pres)
     return true;
   }
   else
-    return message(a09,MSG_ERROR,"E9999: invalid warning '%s'\n",tag);
+    return message(a09,MSG_ERROR,"E0012: invalid warning '%s'",tag);
 }
 
 /**************************************************************************/
