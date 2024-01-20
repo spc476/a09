@@ -679,15 +679,14 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
            
       case VM_TIMING:
            printf("%s: cycles=%lu\n",test->tag,cpu->cycles);
-           stack[--sp] = true;
            break;
            
       case VM_FALSE:
-           stack[--sp] = 0;
+           stack[--sp] = false;
            break;
            
       case VM_TRUE:
-           stack[--sp] = 1;
+           stack[--sp] = true;
            break;
            
       case VM_TO8:
@@ -1973,7 +1972,8 @@ static bool ftest_troff(union format *fmt,struct opcdata *opd)
       
       new->line                      = opd->a09->lnum;
       new->prog[0]                   = VM_TIMING;
-      new->prog[1]                   = VM_EXIT;
+      new->prog[1]                   = VM_TRUE;
+      new->prog[2]                   = VM_EXIT;
       data->prot[opd->a09->pc].check = true;
     }
     else
