@@ -73,7 +73,7 @@ bool enable_warning(struct a09 *a09,char const *tag)
   
   if (!check_warning_tag(a09,tag,&res))
     return false;
-  a09->nowarn[res.quot] &= (~1 << res.rem);
+  a09->nowarn[res.quot] &= (~(1 << res.rem));
   return true;
 }
 
