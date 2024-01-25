@@ -388,7 +388,7 @@ extern struct opcode const  *op_find            (char const *);
 extern bool                  s2num              (struct a09 *,uint16_t *,struct buffer *,uint16_t);
 extern struct optable const *get_op             (struct buffer *);
 extern bool                  expr               (struct value *,struct a09 *,struct buffer *,int);
-extern struct symbol        *symbol_find        (struct a09 *,label const *);
+extern int                   symstrcmp          (void const *restrict,void const *restrict);
 extern struct symbol        *symbol_add         (struct a09 *,label const *,uint16_t);
 extern void                  symbol_freetable   (tree__s *);
 extern bool                  format_bin_init    (struct format_bin   *,struct a09 *);
@@ -425,6 +425,18 @@ static inline struct symbol *tree2sym(tree__s *tree)
 #if defined(__clang__)
 #  pragma clang diagnostic pop "-Wcast-align"
 #endif
+}
+
+/**************************************************************************/
+
+static inline struct symbol *symbol_find(struct a09 *a09,label const *name)
+{
+  assert(a09 != NULL);
+  tree__s *tree = tree_find(a09->symtab,name,symstrcmp);
+  if (tree != NULL)
+    return tree2sym(tree);
+  else
+    return NULL;
 }
 
 /**************************************************************************/

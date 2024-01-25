@@ -28,7 +28,7 @@
 
 /**************************************************************************/
 
-static int symstrcmp(void const *restrict needle,void const *restrict haystack)
+int symstrcmp(void const *restrict needle,void const *restrict haystack)
 {
   label         const *key   = needle;
   struct symbol const *value = haystack;
@@ -60,18 +60,6 @@ static int symtreecmp(void const *restrict needle,void const *restrict haystack)
       rc = 1;
   }
   return rc;
-}
-
-/**************************************************************************/
-
-struct symbol *symbol_find(struct a09 *a09,label const *name)
-{
-  tree__s *tree = tree_find(a09->symtab,name,symstrcmp);
-  
-  if (tree)
-    return tree2sym(tree);
-  else
-    return NULL;
 }
 
 /**************************************************************************/
