@@ -82,6 +82,6 @@ E0081: missing A, B, or D register
 E0082: missing index register
 E0083: no input file specified
 E0084: undefined protection bit '%c'
-E0085:
+E0085: unknown flag '%c'
 E0086:
 E0087: option '%.*s' not supported

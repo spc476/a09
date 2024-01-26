@@ -1666,7 +1666,7 @@ static bool ccflags(unsigned char *p,struct a09 *a09,struct buffer *buffer)
       case 'H': cc |= 0x20; break;
       case 'F': cc |= 0x40; break;
       case 'E': cc |= 0x80; break;
-      default: return message(a09,MSG_ERROR,"E9999: unknown flag '%c'",buffer->buf[buffer->ridx-1]);
+      default: return message(a09,MSG_ERROR,"E0085: unknown flag '%c'",buffer->buf[buffer->ridx-1]);
     }
   }
   
