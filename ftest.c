@@ -93,7 +93,8 @@ enum vmops
   VM_IDU,
   VM_SCMP,
   VM_SEX,
-  VM_TIMING,
+  VM_TIMEON,
+  VM_TIMEOFF,
   VM_FALSE,
   VM_TRUE,
   VM_TO8,
@@ -118,7 +119,6 @@ struct memprot
   bool exec  : 1;
   bool tron  : 1;
   bool check : 1;
-  bool time  : 1;
 };
 
 struct unittest
@@ -255,7 +255,6 @@ static void range(
       mem[low].exec  |= prot.exec;
       mem[low].tron  |= prot.tron;
       mem[low].check |= prot.check;
-      mem[low].time  |= prot.time;
     }
     
     if (*r == ',')
@@ -319,19 +318,19 @@ static bool ftest_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[]
          break;
          
     case 'R':
-         range(a09,data->prot,pi,argv,(struct memprot){ .read = true , .write = false , .exec = false , .tron = false , .check = false , .time = false });
+         range(a09,data->prot,pi,argv,(struct memprot){ .read = true , .write = false , .exec = false , .tron = false , .check = false });
          break;
          
     case 'W':
-         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = true , .exec = false , .tron = false , .check = false , .time = false });
+         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = true , .exec = false , .tron = false , .check = false });
          break;
          
     case 'E':
-         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = true , .tron = false , .check = false , .time = false });
+         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = true , .tron = false , .check = false });
          break;
          
     case 'T':
-         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = false , .tron = true , .check = false , .time = false });
+         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = false , .tron = true , .check = false });
          break;
          
     default:
@@ -677,7 +676,11 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
              stack[sp] |= 0xFF00;
            break;
            
-      case VM_TIMING:
+      case VM_TIMEON:
+           cpu->cycles = 0;
+           break;
+           
+      case VM_TIMEOFF:
            printf("%s: cycles=%lu\n",test->tag,cpu->cycles);
            break;
            
@@ -1444,12 +1447,6 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
           printf("%s | %s\n",regs,inst);
         }
         
-        if (data->prot[data->cpu.pc.w].time)
-        {
-          data->cpu.cycles = 0;
-          data->prot[data->cpu.pc.w].time = false; // prevent repeated triggerings
-        }
-        
         if (data->prot[data->cpu.pc.w].check)
         {
           bool     okay = false;
@@ -1597,7 +1594,6 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
         .exec  = false ,
         .tron  = false ,
         .check = false ,
-        .time  = false
       };
       struct value low;
       struct value high;
@@ -1913,8 +1909,43 @@ static bool ftest_tron(union format *fmt,struct opcdata *opd)
     
     if (ft_timingp(opd->buffer))
     {
-      data->timing                  = true;
-      data->prot[opd->a09->pc].time = true;
+      struct vmcode *new;
+      struct Assert *Assert = get_Assert(opd->a09,data,opd->a09->pc);
+      
+      if (Assert == NULL)
+        return false;
+      new = new_program(Assert);
+      if (new == NULL)
+        return message(opd->a09,MSG_ERROR,"E0046: out of memory");
+      
+      if (data->nunits == 0)
+      {
+        snprintf(
+                  new->tag,
+                  sizeof(new->tag),
+                  "%s:%zu",
+                  opd->a09->infile,
+                  opd->a09->lnum
+                );
+      }
+      else
+      {
+        snprintf(
+                  new->tag,
+                  sizeof(new->tag),
+                  "%.*s:%zu",
+                  (int)data->units[data->nunits-1].name.widx,
+                  data->units[data->nunits-1].name.buf,
+                  opd->a09->lnum
+                );
+      }
+      
+      new->line                      = opd->a09->lnum;
+      new->prog[0]                   = VM_TIMEON;
+      new->prog[1]                   = VM_TRUE;
+      new->prog[2]                   = VM_EXIT;
+      data->prot[opd->a09->pc].check = true;
+      data->timing                   = true;
     }
     else
       data->tron = true;
@@ -1937,7 +1968,7 @@ static bool ftest_troff(union format *fmt,struct opcdata *opd)
     struct format_test *test = &fmt->test;
     struct testdata    *data = test->data;
     
-    if (data->timing)
+    if (data->timing || ft_timingp(opd->buffer))
     {
       struct vmcode *new;
       struct Assert *Assert = get_Assert(opd->a09,data,opd->a09->pc);
@@ -1971,7 +2002,7 @@ static bool ftest_troff(union format *fmt,struct opcdata *opd)
       }
       
       new->line                      = opd->a09->lnum;
-      new->prog[0]                   = VM_TIMING;
+      new->prog[0]                   = VM_TIMEOFF;
       new->prog[1]                   = VM_TRUE;
       new->prog[2]                   = VM_EXIT;
       data->prot[opd->a09->pc].check = true;
