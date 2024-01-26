@@ -1647,6 +1647,87 @@ static bool pseudo__opt(struct opcdata *opd)
 
 /**************************************************************************/
 
+static bool ccflags(unsigned char *p,struct a09 *a09,struct buffer *buffer)
+{
+  assert(p      != NULL);
+  assert(buffer != NULL);
+  
+  unsigned char cc = 0;
+  
+  while(buffer->buf[buffer->ridx] != '}')
+  {
+    switch(toupper(buffer->buf[buffer->ridx++]))
+    {
+      case 'C': cc |= 0x01; break;
+      case 'V': cc |= 0x02; break;
+      case 'Z': cc |= 0x04; break;
+      case 'N': cc |= 0x08; break;
+      case 'I': cc |= 0x10; break;
+      case 'H': cc |= 0x20; break;
+      case 'F': cc |= 0x40; break;
+      case 'E': cc |= 0x80; break;
+      default: return message(a09,MSG_ERROR,"E9999: unknown flag '%c'",buffer->buf[buffer->ridx-1]);
+    }
+  }
+  
+  *p = cc;
+  return true;
+}
+
+/**************************************************************************/
+
+static bool op_andcc(struct opcdata *opd)
+{
+  assert(opd           != NULL);
+  assert(opd->op->page == 0);
+  
+  char c = skip_space(opd->buffer);
+  if (c == '{')
+  {
+    unsigned char cc;
+    
+    if (!ccflags(&cc,opd->a09,opd->buffer))
+      return false;
+      
+    opd->bytes[opd->sz++] = opd->op->opcode;
+    opd->bytes[opd->sz++] = ~cc;
+    return true;
+  }
+  else
+  {
+    opd->buffer->ridx--;
+    return op_imm(opd);
+  }
+}
+
+/**************************************************************************/
+
+static bool op_orcc(struct opcdata *opd)
+{
+  assert(opd           != NULL);
+  assert(opd->op->page == 0);
+  
+  char c = skip_space(opd->buffer);
+  if (c == '{')
+  {
+    unsigned char cc;
+    
+    if (!ccflags(&cc,opd->a09,opd->buffer))
+      return false;
+      
+    opd->bytes[opd->sz++] = opd->op->opcode;
+    opd->bytes[opd->sz++] = cc;
+    return true;
+  }
+  else
+  {
+    opd->buffer->ridx--;
+    return op_imm(opd);
+  }
+}
+
+/**************************************************************************/
+
 static int opcode_cmp(void const *needle,void const *haystack)
 {
   char          const *key    = needle;
@@ -1679,7 +1760,7 @@ struct opcode const *op_find(char const *name)
     { "ALIGN"   , pseudo_align   , 0x00 , 0x00 , false } ,
     { "ANDA"    , op_idie        , 0x84 , 0x00 , false } ,
     { "ANDB"    , op_idie        , 0xC4 , 0x00 , false } ,
-    { "ANDCC"   , op_imm         , 0x1C , 0x00 , false } ,
+    { "ANDCC"   , op_andcc       , 0x1C , 0x00 , false } ,
     { "ASCII"   , pseudo_ascii   , 0x00 , 0x00 , false } ,
     { "ASL"     , op_die         , 0x08 , 0x00 , false } ,
     { "ASLA"    , op_inh         , 0x48 , 0x00 , false } ,
@@ -1721,7 +1802,7 @@ struct opcode const *op_find(char const *name)
     { "COM"     , op_die         , 0x03 , 0x00 , false } ,
     { "COMA"    , op_inh         , 0x43 , 0x00 , false } ,
     { "COMB"    , op_inh         , 0x53 , 0x00 , false } ,
-    { "CWAI"    , op_imm         , 0x3C , 0x00 , false } ,
+    { "CWAI"    , op_andcc       , 0x3C , 0x00 , false } ,
     { "DAA"     , op_inh         , 0x19 , 0x00 , false } ,
     { "DEC"     , op_die         , 0x0A , 0x00 , false } ,
     { "DECA"    , op_inh         , 0x4A , 0x00 , false } ,
@@ -1787,7 +1868,7 @@ struct opcode const *op_find(char const *name)
     { "NOP"     , op_inh         , 0x12 , 0x00 , false } ,
     { "ORA"     , op_idie        , 0x8A , 0x00 , false } ,
     { "ORB"     , op_idie        , 0xCA , 0x00 , false } ,
-    { "ORCC"    , op_imm         , 0x1A , 0x00 , false } ,
+    { "ORCC"    , op_orcc        , 0x1A , 0x00 , false } ,
     { "ORG"     , pseudo_org     , 0x00 , 0x00 , false } ,
     { "PSHS"    , op_pshpul      , 0x34 , 0x00 , false } ,
     { "PSHU"    , op_pshpul      , 0x36 , 0x00 , false } ,

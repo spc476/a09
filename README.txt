@@ -131,6 +131,48 @@ And the warnings the assembler generated from the above code:
 considerations, and complexity---each such change requires another pass, and
 that would lead a more complex assembler.)
 
+  Numbers can be specified in decimal, octal (leading '&'), binary (leading
+'%') and hexadecimal (leading '$').  The use of an underscore ('_') within
+numbers can be used to separate groups.  Some examples:
+
+	122		decimal
+	12_123		decimal
+	%10101010	binary
+	%10_101_110	binary
+	&34		octal
+	&23_44		octal
+	$FF		hexadecimal
+	$F_ff_3		hexadecimal
+
+  There is also a special form of value for use with the ANDCC, ORCC and
+CWAI instructions.  Instead of an immediate value, like:
+
+	ORCC	#$50	; disable interrupts
+	ANDCC	#$AF	; enable interrupts
+	CWAI	#$AF	; enable interrupts and wait
+	ORCC	#$01	; set carry flag
+	ANDCC	#$FE	; reset carry flag
+
+you can specify a "flag set", as:
+
+	ORCC	{FI}
+	ANDCC	{FI}
+	CWAI	{FI}
+	ORCC	{C}
+	ANDCC	{C}
+
+This form will construct the appropriate values for the instructions.  The
+flags are:
+
+	C	carry
+	V	overflow
+	Z	zero
+	N	negative
+	I	interrupt
+	H	half-carry
+	F	fast interrupt
+	E	entire state
+
   The list of supported pseudo operations---if label "Non-standard", it's a
 non-standard pesudo operation for most 6809 assemblers.
 
