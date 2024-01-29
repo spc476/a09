@@ -73,7 +73,7 @@ E0072: byte should be 0..255
 E0073: bad register
 E0074: not enough space for expression
 E0075: can't negate or complement a string
-E0076: option '%.*s' not supported
+E0076: label not defined
 E0077: missing .ENDTST directive
 E0078: cannot nest .TEST
 E0079: no matching .TEST
