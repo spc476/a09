@@ -1042,7 +1042,8 @@ static bool pseudo_set(struct opcdata *opd)
   {
     struct symbol *sym = symbol_find(opd->a09,&opd->label);
     assert(sym != NULL);
-    sym->ldef = opd->a09->lnum;
+    sym->value = opd->value.value;
+    sym->ldef  = opd->a09->lnum;
   }
   return true;
 }
