@@ -2214,8 +2214,8 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     
     memset(fmt->data->memory,fmt->data->fill,sizeof(fmt->data->memory));
     memset(fmt->data->prot,0,sizeof(fmt->data->prot));
-    fmt->data->prot[MC6809_VECTOR_RESET  ].read = true;
-    fmt->data->prot[MC6809_VECTOR_RESET+1].read = true;
+    for (size_t addr = MC6809_VECTOR_SWI3 ; addr <= MC6809_VECTOR_RESET + 1 ; addr++)
+      fmt->data->prot[addr].read = true;
     mc6809_reset(&fmt->data->cpu);
     return true;
   }
