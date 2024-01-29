@@ -431,7 +431,9 @@ static inline struct symbol *tree2sym(tree__s *tree)
 
 static inline struct symbol *symbol_find(struct a09 *a09,label const *name)
 {
-  assert(a09 != NULL);
+  assert(a09  != NULL);
+  assert(name != NULL);
+  
   tree__s *tree = tree_find(a09->symtab,name,symstrcmp);
   if (tree != NULL)
     return tree2sym(tree);
