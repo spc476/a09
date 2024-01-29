@@ -2139,6 +2139,30 @@ static bool ftest_fini(union format *fmt,struct a09 *a09)
 
 bool format_test_init(struct format_test *fmt,struct a09 *a09)
 {
+  /*------------------------------------------------------------------------
+  ; C99 doesn't have static asserts, so this will have to do for now.  This
+  ; will at least double check out assumptions about the values used.
+  ;-------------------------------------------------------------------------*/
+  
+  assert((int)VM_LOR  == (int)OP_LOR);
+  assert((int)VM_LAND == (int)OP_LAND);
+  assert((int)VM_GT   == (int)OP_GT);
+  assert((int)VM_GE   == (int)OP_GE);
+  assert((int)VM_EQ   == (int)OP_EQ);
+  assert((int)VM_LE   == (int)OP_LE);
+  assert((int)VM_LT   == (int)OP_LT);
+  assert((int)VM_NE   == (int)OP_NE);
+  assert((int)VM_BOR  == (int)OP_BOR);
+  assert((int)VM_BEOR == (int)OP_BEOR);
+  assert((int)VM_BAND == (int)OP_BAND);
+  assert((int)VM_SHR  == (int)OP_SHR);
+  assert((int)VM_SHL  == (int)OP_SHL);
+  assert((int)VM_SUB  == (int)OP_SUB);
+  assert((int)VM_ADD  == (int)OP_ADD);
+  assert((int)VM_MUL  == (int)OP_MUL);
+  assert((int)VM_DIV  == (int)OP_DIV);
+  assert((int)VM_MOD  == (int)OP_MOD);
+  
   assert(fmt != NULL);
   assert(a09 != NULL);
   (void)a09;
