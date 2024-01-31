@@ -84,11 +84,6 @@ static bool fbin_rmb(union format *fmt,struct opcdata *opd)
   assert((opd->pass == 1 ) || (opd->pass == 2));
   assert(fmt->backend == BACKEND_BIN);
   
-  /*---------------------
-  ; XXX - maybe if the file offset is 0, skip this, to become
-  ; compatible with the Lua assembler I have?
-  ;--------------------*/
-  
   if (opd->pass == 2)
   {
     if (fseek(opd->a09->out,opd->value.value,SEEK_CUR) == -1)

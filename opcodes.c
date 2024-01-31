@@ -1057,7 +1057,10 @@ static bool pseudo_rmb(struct opcdata *opd)
     return false;
   opd->data   = true;
   opd->datasz = opd->value.value;
-  return opd->a09->format.def.rmb(&opd->a09->format,opd);
+  if (opd->a09->obj)
+    return opd->a09->format.def.rmb(&opd->a09->format,opd);
+  else
+    return true;
 }
 
 /**************************************************************************/
@@ -1074,7 +1077,11 @@ static bool pseudo_org(struct opcdata *opd)
     
   last         = opd->a09->pc;
   opd->a09->pc = opd->value.value;
-  return opd->a09->format.def.org(&opd->a09->format,opd,opd->value.value,last);
+
+  if (opd->a09->obj)
+    return opd->a09->format.def.org(&opd->a09->format,opd,opd->value.value,last);
+  else
+    return true;
 }
 
 /**************************************************************************/
@@ -1134,7 +1141,7 @@ static bool pseudo_fcb(struct opcdata *opd)
     if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
       return false;
       
-    if (opd->pass == 2)
+    if (opd->a09->obj && (opd->pass == 2))
     {
       unsigned char byte = value_lsb(opd->a09,opd->value.value,opd->pass);
       if (opd->sz < sizeof(opd->bytes))
@@ -1170,7 +1177,7 @@ static bool pseudo_fdb(struct opcdata *opd)
     if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
       return false;
       
-    if (opd->pass == 2)
+    if (opd->a09->obj && (opd->pass == 2))
     {
       unsigned char word[2] =
       {
@@ -1213,7 +1220,7 @@ static bool pseudo_fcc(struct opcdata *opd)
   opd->data   = true;
   opd->datasz = textstring.widx;
   
-  if (opd->pass == 2)
+  if (opd->a09->obj && (opd->pass == 2))
   {
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
@@ -1239,7 +1246,7 @@ static bool pseudo_ascii(struct opcdata *opd)
   opd->data   = true;
   opd->datasz = textstring.widx;
   
-  if (opd->pass == 2)
+  if (opd->a09->obj && (opd->pass == 2))
   {
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
@@ -1330,7 +1337,7 @@ static bool pseudo_incbin(struct opcdata *opd)
     if (opd->a09->mkdeps)
       add_file_dep(opd->a09,filename.buf);
   }
-  else
+  else if ((opd->pass == 2) && opd->a09->obj)
   {
     char   buffer[BUFSIZ];
     size_t bsz;
@@ -1510,7 +1517,7 @@ static bool pseudo_fcs(struct opcdata *opd)
   opd->data   = true;
   opd->datasz = textstring.widx;
   
-  if (opd->pass == 2)
+  if (opd->a09->obj && (opd->pass == 2))
   {
     textstring.buf[textstring.widx - 1] |= 0x80;
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
@@ -1640,6 +1647,21 @@ static bool pseudo__opt(struct opcdata *opd)
     skip_space(opd->buffer);
     opd->buffer->ridx--;
     return enable_warning(opd->a09,&opd->buffer->buf[opd->buffer->ridx]);
+  }
+  
+  else if ((tmp.s == 3) && (memcmp(tmp.text,"OBJ",3) == 0))
+  {
+    c = skip_space(opd->buffer);
+    read_label(opd->buffer,&tmp,c);
+    upper_label(&tmp);
+    if ((tmp.s == 5) && (memcmp(tmp.text,"FALSE",5) == 0))
+      opd->a09->obj = false;
+    else if ((tmp.s == 4) && (memcmp(tmp.text,"TRUE",4) == 0))
+      opd->a09->obj = true;
+    else
+      return message(opd->a09,MSG_ERROR,"E0086: boolean value must be 'true' or 'false'");
+      
+    return true;
   }
   
   else

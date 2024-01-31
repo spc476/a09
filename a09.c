@@ -475,7 +475,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     else
       a09->pc += opd.sz;
       
-    if ((pass == 2) && (opd.sz > 0) && opd.datasz == 0)
+    if ((pass == 2) && (opd.sz > 0) && (opd.datasz == 0) && a09->obj)
       return a09->format.def.inst_write(&a09->format,&opd);
   }
   
@@ -738,6 +738,7 @@ int main(int argc,char *argv[])
     .dp        = 0,
     .debug     = false,
     .mkdeps    = false,
+    .obj       = true,
     .mkdlen    = 0,
     .inbuf     = { .buf = {0}, .widx = 0, .ridx = 0 },
   };

@@ -282,6 +282,7 @@ struct a09
   unsigned char  dp;
   bool           debug;
   bool           mkdeps;
+  bool           obj;
   int            mkdlen;
 };
 

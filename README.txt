@@ -220,6 +220,15 @@ non-standard pesudo operation for most 6809 assemblers.
 				Mark a label as being used.  This is used to
 				supress W0002 warnings.
 
+			.OPT * OBJ ('TRUE' | 'FALSE')
+
+				Enable or disable the generation of object
+				code.  This option is used to define
+				variables for the direct page without
+				actually generating data in the output file.
+				Symbols, however, are defined.  Default
+				value is TRUE.
+
 		The following options are only used by the TEST backend.
 		They are otherwise ignored by other backends.  The following
 		options can appear inside or outside a .TEST directive
