@@ -609,12 +609,12 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              if (argv[i][2] == '\0')
              {
                if (!nowarnlist(a09,argv[++i]))
-                 exit(1);
+                 return -1;
              }
              else
              {
                if (!nowarnlist(a09,&argv[i][2]))
-                 exit(1);
+                 return -1;
              }
              break;
              
@@ -645,37 +645,37 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              if (strcmp(format,"bin") == 0)
              {
                if (!format_bin_init(&a09->format.bin,a09))
-                 exit(1);
+                 return -1;
              }
              else if (strcmp(format,"rsdos") == 0)
              {
                if (!format_rsdos_init(&a09->format.rsdos,a09))
-                 exit(1);
+                 return -1;
              }
              else if (strcmp(format,"srec") == 0)
              {
                if (!format_srec_init(&a09->format.srec,a09))
-                 exit(1);
+                 return -1;
              }
              else if (strcmp(format,"test") == 0)
              {
                if (!format_test_init(&a09->format.test,a09))
-                 exit(1);
+                 return -1;
              }
              else
              {
                message(a09,MSG_ERROR,"E0053: format '%s' not supported",format);
-               exit(1);
+               return -1;
              }
              break;
              
         case 'h':
              usage(argv[0]);
-             exit(1);
+             return -1;
              
         default:
              if (!a09->format.def.cmdline(&a09->format,a09,&i,argv))
-               exit(1);
+               return -1;
       }
     }
     else
@@ -742,6 +742,30 @@ static void dump_symbols(FILE *out,tree__s *tree)
 
 /**************************************************************************/
 
+static int cleanup(struct a09 *a09,bool success)
+{
+  assert(a09 != NULL);
+  
+  fclose(a09->out);
+  fclose(a09->in);
+  
+  if (!success)
+  {
+    if (a09->listfile) remove(a09->listfile);
+    remove(a09->outfile);
+  }
+  
+  a09->format.def.fini(&a09->format,a09);
+  
+  symbol_freetable(a09->symtab);
+  for (size_t i = 0 ; i < a09->ndeps ; i++)
+    free(a09->deps[i]);
+  free(a09->deps);
+  return success ? 0 : 1;
+}
+
+/**************************************************************************/
+
 int main(int argc,char *argv[])
 {
   int         fi;
@@ -772,10 +796,13 @@ int main(int argc,char *argv[])
   format_bin_init(&a09.format.bin,&a09);
   fi = parse_command(argc,argv,&a09);
   
+  if (fi == -1)
+    return cleanup(&a09,false);
+    
   if (fi == argc)
   {
     message(&a09,MSG_ERROR,"E0083: no input file specified");
-    exit(1);
+    return cleanup(&a09,false);
   }
   
   a09.infile = add_file_dep(&a09,argv[fi]);
@@ -783,11 +810,11 @@ int main(int argc,char *argv[])
   if (a09.in == NULL)
   {
     perror(a09.infile);
-    exit(1);
+    return cleanup(&a09,false);
   }
   
   if (!assemble_pass(&a09,1))
-    exit(1);
+    return cleanup(&a09,false);
     
   if (a09.mkdeps)
   {
@@ -804,10 +831,8 @@ int main(int argc,char *argv[])
       len += printf(" %s",a09.deps[i]);
     }
     
-    fclose(a09.in);
-    symbol_freetable(a09.symtab);
     putchar('\n');
-    exit(0);
+    return cleanup(&a09,true);
   }
   
   a09.out  = fopen(a09.outfile,"wb");
@@ -815,7 +840,7 @@ int main(int argc,char *argv[])
   if (a09.out == NULL)
   {
     perror(a09.outfile);
-    exit(1);
+    return cleanup(&a09,false);
   }
   
   if (a09.listfile != NULL)
@@ -824,7 +849,7 @@ int main(int argc,char *argv[])
     if (a09.list == NULL)
     {
       perror(a09.listfile);
-      exit(1);
+      return cleanup(&a09,false);
     }
     
     fprintf(a09.list,"                         | FILE %s\n",a09.infile);
@@ -852,19 +877,5 @@ int main(int argc,char *argv[])
     fclose(a09.list);
   }
   
-  fclose(a09.out);
-  fclose(a09.in);
-  
-  if (!rc)
-  {
-    if (a09.listfile) remove(a09.listfile);
-    remove(a09.outfile);
-  }
-  
-  a09.format.def.fini(&a09.format,&a09);
-  symbol_freetable(a09.symtab);
-  for (size_t i = 0 ; i < a09.ndeps ; i++)
-    free(a09.deps[i]);
-  free(a09.deps);
-  return rc ? 0 : 1;
+  return cleanup(&a09,rc);
 }
