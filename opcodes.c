@@ -1296,7 +1296,6 @@ static bool pseudo_include(struct opcdata *opd)
   fclose(new.in);
   opd->a09->pc     = new.pc;
   opd->a09->symtab = new.symtab;
-  opd->a09->list   = new.list;
   opd->a09->deps   = new.deps;
   opd->a09->ndeps  = new.ndeps;
   return rc;
