@@ -149,6 +149,12 @@ char *add_file_dep(struct a09 *a09,char const *filename)
   assert(a09      != NULL);
   assert(filename != NULL);
   
+  for (size_t i = 0 ; i < a09->ndeps ; i++)
+  {
+    if (strcmp(a09->deps[i],filename) == 0)
+      return a09->deps[i];
+  }
+  
   deps = realloc(a09->deps,(a09->ndeps + 1) * sizeof(char *));
   if (deps == NULL)
   {

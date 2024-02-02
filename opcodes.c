@@ -1598,10 +1598,13 @@ static void uses_all(tree__s *tree,char const *filename)
 {
   assert(filename != NULL);
   
-  uses_all(tree->left,filename);
-  struct symbol *sym = tree2sym(tree);
-  fprintf(stderr,"sym=%p filename=%p\n",sym->filename,filename);
-  uses_all(tree->right,filename);
+  if (tree != NULL)
+  {
+    uses_all(tree->left,filename);
+    struct symbol *sym = tree2sym(tree);
+    fprintf(stderr,"sym=%p filename=%p\n",sym->filename,filename);
+    uses_all(tree->right,filename);
+  }
 }
 
 /**************************************************************************/
@@ -1635,7 +1638,8 @@ static bool pseudo__opt(struct opcdata *opd)
       
       if (c == '*')
       {
-        
+        uses_all(opd->a09->symtab,opd->a09->infile);
+        return true;
       }
       
       opd->buffer->ridx--;
