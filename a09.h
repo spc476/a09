@@ -42,6 +42,12 @@
 
 #include <cgilib6/tree.h>
 
+enum
+{
+  BYTE,
+  WORD,
+};
+
 enum backend
 {
   BACKEND_BIN,
@@ -351,7 +357,7 @@ struct indexregs
   unsigned char pushpull;
   unsigned char tehi;
   unsigned char telo;
-  bool          b16;
+  bool          bit16;
 };
 
 struct optable
