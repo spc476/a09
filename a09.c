@@ -746,7 +746,7 @@ static int cleanup(struct a09 *a09,bool success)
 {
   assert(a09 != NULL);
   
-  fclose(a09->out);
+  if (a09->out != NULL) fclose(a09->out);
   fclose(a09->in);
   
   if (!success)

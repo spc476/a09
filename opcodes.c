@@ -1594,6 +1594,18 @@ static bool pseudo__tron(struct opcdata *opd)
 
 /**************************************************************************/
 
+static void uses_all(tree__s *tree,char const *filename)
+{
+  assert(filename != NULL);
+  
+  uses_all(tree->left,filename);
+  struct symbol *sym = tree2sym(tree);
+  fprintf(stderr,"sym=%p filename=%p\n",sym->filename,filename);
+  uses_all(tree->right,filename);
+}
+
+/**************************************************************************/
+
 static bool pseudo__opt(struct opcdata *opd)
 {
   assert(opd      != NULL);
@@ -1620,6 +1632,12 @@ static bool pseudo__opt(struct opcdata *opd)
       struct symbol *sym;
       
       c = skip_space(opd->buffer);
+      
+      if (c == '*')
+      {
+        
+      }
+      
       opd->buffer->ridx--;
       if (!parse_label(&tmp,opd->buffer,opd->a09,opd->pass))
         return false;
