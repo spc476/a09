@@ -386,6 +386,7 @@ extern bool                  parse_op           (struct buffer *,struct opcode c
 extern char                  skip_space         (struct buffer *);
 extern bool                  print_list         (struct a09 *,struct opcdata *,bool);
 extern bool                  assemble_pass      (struct a09 *,int);
+extern void                  usage              (char const *);
 extern struct opcode const  *op_find            (char const *);
 extern bool                  s2num              (struct a09 *,uint16_t *,struct buffer *,uint16_t);
 extern struct optable const *get_op             (struct buffer *);

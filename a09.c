@@ -556,6 +556,35 @@ static bool nowarnlist(struct a09 *a09,char const *warnings)
 
 /**************************************************************************/
 
+void usage(char const *prog)
+{
+  fprintf(
+           stderr,
+           "usage: %s [options] [files...]\n"
+           "\t-n Wxxxx\tsupress the given warnings\n"
+           "\t-o filename\toutput filename\n"
+           "\t-l listfile\tlist filename\n"
+           "\t-f format\toutput format (bin)\n"
+           "\t-d\t\tdebug output\n"
+           "\t-M\t\tgenerate Makefile dependencies on stdout\n"
+           "\t-h\t\thelp (this text)\n"
+           "\n"
+           "\tformats: bin rsdos srec test\n"
+           "%s"
+           "%s"
+           "%s"
+           "%s"
+           "",
+           prog,
+           format_bin_usage,
+           format_rsdos_usage,
+           format_srec_usage,
+           format_test_usage
+         );
+}
+
+/**************************************************************************/
+
 static int parse_command(int argc,char *argv[],struct a09 *a09)
 {
   int i;
@@ -641,32 +670,12 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              break;
              
         case 'h':
-        default:
-             if (a09->format.def.cmdline(&a09->format,a09,&i,argv))
-               break;
-             fprintf(
-                      stderr,
-                      "usage: [options] [files...]\n"
-                      "\t-n Wxxxx\tsupress the given warnings\n"
-                      "\t-o filename\toutput filename\n"
-                      "\t-l listfile\tlist filename\n"
-                      "\t-f format\toutput format (bin)\n"
-                      "\t-d\t\tdebug output\n"
-                      "\t-M\t\tgenerate Makefile dependencies on stdout\n"
-                      "\t-h\t\thelp (this text)\n"
-                      "\n"
-                      "\tformats: bin rsdos srec test\n"
-                      "%s"
-                      "%s"
-                      "%s"
-                      "%s"
-                      "",
-                      format_bin_usage,
-                      format_rsdos_usage,
-                      format_srec_usage,
-                      format_test_usage
-                    );
+             usage(argv[0]);
              exit(1);
+             
+        default:
+             if (!a09->format.def.cmdline(&a09->format,a09,&i,argv))
+               exit(1);
       }
     }
     else

@@ -209,7 +209,7 @@ char const format_test_usage[] =
         
 /**************************************************************************/
 
-static void range(
+static bool range(
         struct a09     *a09,
         struct memprot *mem,
         int            *pi,
@@ -243,10 +243,7 @@ static void range(
       high = low;
       
     if ((low > 65535u) || (high > 65535u))
-    {
-      message(a09,MSG_ERROR,"E0069: address exceeds address space");
-      exit(1);
-    }
+      return message(a09,MSG_ERROR,"E0069: address exceeds address space");
     
     for ( ; low <= high ; low++)
     {
@@ -260,6 +257,8 @@ static void range(
     if (*r == ',')
       r++;
   }
+  
+  return true;
 }
 
 /**************************************************************************/
@@ -287,10 +286,7 @@ static bool ftest_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[]
            value = strtoul(&argv[i][2],NULL,0);
            
          if (value > 65535u)
-         {
-           message(a09,MSG_ERROR,"E0069: address exceeds address space");
-           exit(1);
-         }
+           return message(a09,MSG_ERROR,"E0069: address exceeds address space");
          
          data->sp = value;
          break;
@@ -309,31 +305,33 @@ static bool ftest_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[]
            value = strtoul(&argv[i][2],NULL,0);
            
          if (value > 255)
-         {
-           message(a09,MSG_ERROR,"E0072: byte should be 0..255");
-           exit(1);
-         }
+           return message(a09,MSG_ERROR,"E0072: byte should be 0..255");
          
          data->fill = value;
          break;
          
     case 'R':
-         range(a09,data->prot,pi,argv,(struct memprot){ .read = true , .write = false , .exec = false , .tron = false , .check = false });
+         if (!range(a09,data->prot,pi,argv,(struct memprot){ .read = true , .write = false , .exec = false , .tron = false , .check = false }))
+           return false;
          break;
          
     case 'W':
-         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = true , .exec = false , .tron = false , .check = false });
+         if (!range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = true , .exec = false , .tron = false , .check = false }))
+           return false;
          break;
          
     case 'E':
-         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = true , .tron = false , .check = false });
+         if (!range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = true , .tron = false , .check = false }))
+           return false;
          break;
          
     case 'T':
-         range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = false , .tron = true , .check = false });
+         if (!range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = false , .tron = true , .check = false }))
+           return false;
          break;
          
     default:
+         usage(argv[0]);
          return false;
   }
   

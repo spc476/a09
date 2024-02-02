@@ -94,15 +94,10 @@ static bool fsrec_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[]
            value = strtoul(&argv[i][2],NULL,0);
            
          if (value == 0)
-         {
-           message(a09,MSG_ERROR,"E0067: minimum record size: 1");
-           exit(1);
-         }
+           return message(a09,MSG_ERROR,"E0067: minimum record size: 1");           
          else if (value > 252)
-         {
-           message(a09,MSG_ERROR,"E0068: maximum record size: 252");
-           exit(1);
-         }
+           return message(a09,MSG_ERROR,"E0068: maximum record size: 252");
+
          format->recsize = value;
          break;
          
@@ -112,10 +107,7 @@ static bool fsrec_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[]
          else
            value = strtoul(&argv[i][2],NULL,0);
          if (value > USHRT_MAX)
-         {           
-           message(a09,MSG_ERROR,"E0069: address exceeds address space");
-           exit(1);
-         }
+           return message(a09,MSG_ERROR,"E0069: address exceeds address space");
          format->addr = value;
          break;
          
@@ -125,10 +117,7 @@ static bool fsrec_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[]
          else
            value = strtoul(&argv[i][2],NULL,0);
          if (value > USHRT_MAX)
-         {
-           message(a09,MSG_ERROR,"E0069: address exceeds address space");
-           exit(1);
-         }
+           return message(a09,MSG_ERROR,"E0069: address exceeds address space");
          format->exec = value;
          format->execf = true;
          break;
@@ -145,6 +134,7 @@ static bool fsrec_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[]
          break;
          
     default:
+         usage(argv[0]);
          return false;
   }
   
