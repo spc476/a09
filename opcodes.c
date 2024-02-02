@@ -1602,7 +1602,8 @@ static void uses_all(tree__s *tree,char const *filename)
   {
     uses_all(tree->left,filename);
     struct symbol *sym = tree2sym(tree);
-    fprintf(stderr,"sym=%p filename=%p\n",sym->filename,filename);
+    if (sym->filename == filename)
+      sym->refs++;
     uses_all(tree->right,filename);
   }
 }
