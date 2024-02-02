@@ -140,19 +140,35 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
 
 /**************************************************************************/
 
-void add_file_dep(struct a09 *a09,char const *filename)
+char *add_file_dep(struct a09 *a09,char const *filename)
 {
+  char  **deps;
+  char   *name;
+  size_t  len;
+  
   assert(a09      != NULL);
   assert(filename != NULL);
   
-  size_t len = strlen(filename);
-  if (len + (unsigned)a09->mkdlen > 77)
+  deps = realloc(a09->deps,(a09->ndeps + 1) * sizeof(char *));
+  if (deps == NULL)
   {
-    printf(" \\\n ");
-    a09->mkdlen = 1;
+    message(a09,MSG_ERROR,"E0046: out of memory");
+    return NULL;
   }
   
-  a09->mkdlen += printf(" %s",filename);
+  len  = strlen(filename) + 1;
+  name = malloc(len);
+  if (name == NULL)
+  {
+    message(a09,MSG_ERROR,"E0046: out of memory");
+    return NULL;
+  }
+  
+  memcpy(name,filename,len);
+  a09->deps               = deps;
+  a09->deps[a09->ndeps++] = name;
+  
+  return name;
 }
 
 /**************************************************************************/
@@ -726,6 +742,8 @@ int main(int argc,char *argv[])
     .infile    = argv[0],
     .outfile   = "a09.obj",
     .listfile  = NULL,
+    .deps      = NULL,
+    .ndeps     = 0,
     .in        = NULL,
     .out       = NULL,
     .list      = NULL,
@@ -739,7 +757,6 @@ int main(int argc,char *argv[])
     .debug     = false,
     .mkdeps    = false,
     .obj       = true,
-    .mkdlen    = 0,
     .inbuf     = { .buf = {0}, .widx = 0, .ridx = 0 },
   };
   
@@ -752,22 +769,32 @@ int main(int argc,char *argv[])
     exit(1);
   }
   
-  a09.infile = argv[fi];
-  a09.in = fopen(a09.infile,"r");
+  a09.infile = add_file_dep(&a09,argv[fi]);
+  a09.in     = fopen(a09.infile,"r");
   if (a09.in == NULL)
   {
     perror(a09.infile);
     exit(1);
   }
   
-  if (a09.mkdeps)
-    a09.mkdlen = printf("%s: %s",a09.outfile,a09.infile);
-    
   if (!assemble_pass(&a09,1))
     exit(1);
     
   if (a09.mkdeps)
   {
+    int len = printf("%s:",a09.outfile);
+    
+    for (size_t i = 0 ; i < a09.ndeps ; i++)
+    {
+      size_t fnlen = strlen(a09.deps[i]);
+      if (fnlen + (unsigned)len > 77u)
+      {
+        printf(" \\\n ");
+        len = 1;
+      }
+      len += printf(" %s",a09.deps[i]);
+    }
+    
     fclose(a09.in);
     symbol_freetable(a09.symtab);
     putchar('\n');
@@ -827,5 +854,8 @@ int main(int argc,char *argv[])
   
   a09.format.def.fini(&a09.format,&a09);
   symbol_freetable(a09.symtab);
+  for (size_t i = 0 ; i < a09.ndeps ; i++)
+    free(a09.deps[i]);
+  free(a09.deps);
   return rc ? 0 : 1;
 }

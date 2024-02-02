@@ -268,6 +268,8 @@ struct a09
   char const    *infile;
   char const    *outfile;
   char const    *listfile;
+  char         **deps;
+  size_t         ndeps;
   FILE          *in;
   FILE          *out;
   FILE          *list;
@@ -283,7 +285,6 @@ struct a09
   bool           debug;
   bool           mkdeps;
   bool           obj;
-  int            mkdlen;
 };
 
 struct symbol
@@ -374,7 +375,7 @@ extern char const format_test_usage[];
 extern bool                  enable_warning     (struct a09 *,char const *);
 extern bool                  disable_warning    (struct a09 *,char const *);
 extern bool                  message            (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
-extern void                  add_file_dep       (struct a09 *,char const *);
+extern char                 *add_file_dep       (struct a09 *,char const *);
 extern bool                  read_line          (FILE *,struct buffer *);
 extern bool                  collect_esc_string (struct a09 *,struct buffer *restirct,struct buffer *restrict,char);
 extern bool                  parse_string       (struct a09 *,struct buffer *restrict,struct buffer *restrict);

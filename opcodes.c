@@ -1276,14 +1276,11 @@ static bool pseudo_include(struct opcdata *opd)
   
   new.label  = (label){ .s = 0 , .text = { '\0' } };
   new.inbuf  = (struct buffer){ .buf = {0}, .widx = 0 , .ridx = 0 };
-  new.infile = filename.buf;
+  new.infile = add_file_dep(&new,filename.buf);
   new.in     = fopen(filename.buf,"r");
   
   if (new.in == NULL)
     return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
-    
-  if ((opd->pass == 1) && opd->a09->mkdeps)
-    add_file_dep(opd->a09,filename.buf);
     
   if ((opd->pass == 2) && (new.list != NULL))
   {
@@ -1300,6 +1297,8 @@ static bool pseudo_include(struct opcdata *opd)
   opd->a09->pc     = new.pc;
   opd->a09->symtab = new.symtab;
   opd->a09->list   = new.list;
+  opd->a09->deps   = new.deps;
+  opd->a09->ndeps  = new.ndeps;
   return rc;
 }
 
@@ -1334,8 +1333,7 @@ static bool pseudo_incbin(struct opcdata *opd)
     opd->data   = true;
     opd->datasz = fsize;
     fclose(fp);
-    if (opd->a09->mkdeps)
-      add_file_dep(opd->a09,filename.buf);
+    add_file_dep(opd->a09,filename.buf);
   }
   else if ((opd->pass == 2) && opd->a09->obj)
   {
