@@ -1417,7 +1417,7 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
       if (unit->filename != a09->infile)
         return true;
       
-      for (size_t j = 0 ; j < data->stacksize ; j++) // XXX
+      for (size_t j = 0 ; j < data->stacksize ; j++)
       {
         data->prot[data->sp - j].read  = true;
         data->prot[data->sp - j].write = true;
