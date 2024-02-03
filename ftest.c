@@ -155,6 +155,7 @@ struct testdata
   mc6809dis__t     dis;
   uint16_t         addr;
   uint16_t         sp;
+  uint16_t         stacksize;
   mc6809byte__t    fill;
   bool             tron;
   bool             timing;
@@ -192,6 +193,7 @@ char const format_test_usage[] =
         "\n"
         "Test format options:\n"
         "\t-S addr\t\taddress of system stack and string pool (default=0xFFF0)\n"
+        "\t-Z size\t\tsize of system stack (min=2, max=4096, default=1024)\n"
         "\t-F byte\t\tfill memory with value (default=0x01, illegal inst)\n"
         "\t-R range\tmark memory read-only (see below)\n"
         "\t-W range\tmark memory write-only (see below)\n"
@@ -328,6 +330,20 @@ static bool ftest_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[]
     case 'T':
          if (!range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = false , .tron = true , .check = false }))
            return false;
+         break;
+         
+    case 'Z':
+         if (argv[i][2] == '\0')
+           value = strtoul(argv[++i],NULL,0);
+         else
+           value = strtoul(&argv[i][2],NULL,0);
+         
+         if (value < 2)
+           return message(a09,MSG_ERROR,"E0088: minimum stack size: 2");
+         else if (value > 4096)
+           return message(a09,MSG_ERROR,"E0089: maximum stack size: 4096");
+           
+         data->stacksize = value;
          break;
          
     default:
@@ -1401,7 +1417,7 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
       if (unit->filename != a09->infile)
         return true;
       
-      for (size_t j = 0 ; j < 1024 ; j++)
+      for (size_t j = 0 ; j < data->stacksize ; j++) // XXX
       {
         data->prot[data->sp - j].read  = true;
         data->prot[data->sp - j].write = true;
@@ -1756,6 +1772,20 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
         
       data->sp = sp.value;
     }
+    
+    else if ((tmp.s == 9) && (memcmp(tmp.text,"STACKSIZE",9) == 0))
+    {
+      struct value size;
+      
+      if (!expr(&size,opd->a09,opd->buffer,opd->pass))
+        return false;
+      
+      if (test->intest)
+        message(opd->a09,MSG_WARNING,"W0018: cannot assign the stack size within .TEST directive");
+      
+      data->stacksize = size.value;
+    }
+    
     else
       return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
   }
@@ -2206,6 +2236,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     fmt->data->dis.fault = ft_dis_fault;
     fmt->data->addr      = 0;
     fmt->data->sp        = 0xFFF0;
+    fmt->data->stacksize = 1024;
     fmt->data->fill      = 0x01; // illegal instruction
     fmt->data->tron      = false;
     fmt->data->errbuf[0] = '\0';

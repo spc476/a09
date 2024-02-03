@@ -274,6 +274,13 @@ non-standard pesudo operation for most 6809 assemblers.
 				directive, given the nature of the
 				assembler.
 
+			.OPT TEST STACKSIZE size
+
+				Set the default stack size for tests.  This
+				can ONLY appear outside of a .TEST
+				directive, given the nature of the
+				assembler.
+
 	.TEST ["name"]
 
 		Define a unit test if using the test backend.  Any 6809 code
@@ -614,6 +621,11 @@ The test backend
 		Use the address for the system stack and string pool for
 		tests in the emulated 6809.  The default value for this is
 		$FFF0.
+
+	-Z size
+
+		Use the value for the stack size.  The minimum size is
+		2 bytes; the maximum is 4096 and the default is 1024.
 
 	-F byte
 

@@ -15,4 +15,5 @@ W0014: possible self-modifying code
 W0015: %s: %s: %s
 W0016: memory write of %02X to %04X
 W0017: cannot assign the stack address within .TEST directive
+W0018: cannot assign the stack size within .TEST directive
 W9999: FEATURE NOT FINISHED

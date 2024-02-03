@@ -85,3 +85,5 @@ E0084: undefined protection bit '%c'
 E0085: unknown flag '%c'
 E0086: boolean value must be 'true' or 'false'
 E0087: option '%.*s' not supported
+E0088: minimum stack size: 2
+E0089: maximum stack size: 4096
