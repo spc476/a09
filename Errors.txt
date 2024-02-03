@@ -64,8 +64,8 @@ E0063: missing value for SET
 E0064: symbol '%.*s' already defined
 E0065: Internal error---expression parser mismatch
 E0066: expression too complex
-E0067: minimum record size: 1
-E0068: maximum record size: 252
+E0067: record size must be between 1 and 252
+E0068: missing option argument
 E0069: address exceeds address space
 E0070: %s: %s
 E0071: string too long
@@ -85,5 +85,4 @@ E0084: undefined protection bit '%c'
 E0085: unknown flag '%c'
 E0086: boolean value must be 'true' or 'false'
 E0087: option '%.*s' not supported
-E0088: minimum stack size: 2
-E0089: maximum stack size: 4096
+E0088: stack size must be between 2 and 4096

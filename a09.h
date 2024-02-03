@@ -126,7 +126,7 @@ union  format;
 struct format_default
 {
   enum backend backend;
-  bool (*cmdline)   (union format *,struct a09 *,int *,char *[]);
+  bool (*cmdline)   (union format *,struct a09 *,int,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
@@ -150,7 +150,7 @@ struct format_default
 struct format_bin
 {
   enum backend backend;
-  bool (*cmdline)   (union format *,struct a09 *,int *,char *[]);
+  bool (*cmdline)   (union format *,struct a09 *,int,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
@@ -175,7 +175,7 @@ struct format_bin
 struct format_rsdos
 {
   enum backend backend;
-  bool (*cmdline)   (union format *,struct a09 *,int *,char *[]);
+  bool (*cmdline)   (union format *,struct a09 *,int,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
@@ -203,7 +203,7 @@ struct format_rsdos
 struct format_srec
 {
   enum backend backend;
-  bool (*cmdline)   (union format *,struct a09 *,int *,char *[]);
+  bool (*cmdline)   (union format *,struct a09 *,int,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
@@ -236,7 +236,7 @@ struct format_srec
 struct format_test
 {
   enum backend backend;
-  bool (*cmdline)   (union format *,struct a09 *,int *,char *[]);
+  bool (*cmdline)   (union format *,struct a09 *,int,int *,char *[]);
   bool (*pass_start)(union format *,struct a09 *,int);
   bool (*pass_end)  (union format *,struct a09 *,int);
   bool (*inst_write)(union format *,struct opcdata *);
@@ -378,6 +378,11 @@ extern char const format_rsdos_usage[];
 extern char const format_srec_usage[];
 extern char const format_test_usage[];
 
+extern bool                  cmd_unsigned_long  (unsigned long int *,int *,int,char *[],unsigned long,unsigned long);
+extern bool                  cmd_size_t         (size_t            *,int *,int,char *[],unsigned long,unsigned long);
+extern bool                  cmd_uint16_t       (uint16_t          *,int *,int,char *[],unsigned long,unsigned long);
+extern bool                  cmd_uint8_t        (uint8_t           *,int *,int,char *[],unsigned long,unsigned long);
+extern char                 *cmd_opt            (int *,int,char *[]);
 extern bool                  enable_warning     (struct a09 *,char const *);
 extern bool                  disable_warning    (struct a09 *,char const *);
 extern bool                  message            (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
@@ -407,7 +412,7 @@ extern bool                  format_test_init   (struct format_test  *,struct a0
 extern bool                  fdefault           (union format *,struct opcdata *);
 extern bool                  fdefault_end       (union format *,struct opcdata *,struct symbol const *);
 extern bool                  fdefault_org       (union format *,struct opcdata *,uint16_t,uint16_t);
-extern bool                  fdefault_cmdline   (union format *,struct a09 *,int *,char *[]);
+extern bool                  fdefault_cmdline   (union format *,struct a09 *,int,int *,char *[]);
 extern bool                  fdefault_pass      (union format *,struct a09 *,int);
 extern bool                  fdefault_inst_write(union format *,struct opcdata *);
 extern bool                  fdefault_data_write(union format *,struct opcdata *,char const *,size_t);

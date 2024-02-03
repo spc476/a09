@@ -543,9 +543,11 @@ bool assemble_pass(struct a09 *a09,int pass)
 
 static bool nowarnlist(struct a09 *a09,char const *warnings)
 {
-  assert(a09      != NULL);
-  assert(warnings != NULL);
+  assert(a09 != NULL);
   
+  if (warnings == NULL)
+    return message(a09,MSG_ERROR,"E0068: missing option argument");
+    
   while(true)
   {
     if (!disable_warning(a09,warnings))
@@ -612,30 +614,18 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              break;
              
         case 'n':
-             if (argv[i][2] == '\0')
-             {
-               if (!nowarnlist(a09,argv[++i]))
-                 return -1;
-             }
-             else
-             {
-               if (!nowarnlist(a09,&argv[i][2]))
-                 return -1;
-             }
+            if (!nowarnlist(a09,cmd_opt(&i,argc,argv)))
+              return -1;
              break;
              
         case 'o':
-             if (argv[i][2] == '\0')
-               a09->outfile = argv[++i];
-             else
-               a09->outfile = &argv[i][2];
+             if ((a09->outfile = cmd_opt(&i,argc,argv)) == NULL)
+               return -1;
              break;
              
         case 'l':
-             if (argv[i][2] == '\0')
-               a09->listfile = argv[++i];
-             else
-               a09->listfile = &argv[i][2];
+             if ((a09->listfile = cmd_opt(&i,argc,argv)) == NULL)
+               return -1;
              break;
              
         case 'd':
@@ -643,12 +633,11 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              break;
              
         case 'f':
-             if (argv[i][2] == '\0')
-               format = argv[++i];
-             else
-               format = &argv[i][2];
-               
-             if (strcmp(format,"bin") == 0)
+             format = cmd_opt(&i,argc,argv);
+             
+             if (format == NULL)
+               return message(a09,MSG_ERROR,"E0068: missing option argument");
+             else if (strcmp(format,"bin") == 0)
              {
                if (!format_bin_init(&a09->format.bin,a09))
                  return -1;
@@ -680,7 +669,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              return -1;
              
         default:
-             if (!a09->format.def.cmdline(&a09->format,a09,&i,argv))
+             if (!a09->format.def.cmdline(&a09->format,a09,argc,&i,argv))
                return -1;
       }
     }

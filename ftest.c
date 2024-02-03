@@ -156,7 +156,7 @@ struct testdata
   uint16_t         addr;
   uint16_t         sp;
   uint16_t         stacksize;
-  mc6809byte__t    fill;
+  uint8_t          fill;
   bool             tron;
   bool             timing;
   char             errbuf[128];
@@ -215,23 +215,24 @@ static bool range(
         struct a09     *a09,
         struct memprot *mem,
         int            *pi,
+        int             argc,
         char           *argv[],
         struct memprot  prot
 )
 {
   assert(mem  != NULL);
   assert(pi   != NULL);
-  assert(*pi  >  0);
+  assert(argc >  0);
   assert(argv != NULL);
+  assert(*pi  >  0);
+  assert(*pi  <  argc);
   
   unsigned long int  low;
   unsigned long int  high;
-  char              *r;
+  char              *r = cmd_opt(pi,argc,argv);
   
-  if (argv[*pi][2] == '\0')
-    r = argv[++(*pi)];
-  else
-    r = &argv[*pi][2];
+  if (r == NULL)
+    return message(a09,MSG_ERROR,"E0068: missing option argument");
     
   while(*r)
   {
@@ -265,10 +266,11 @@ static bool range(
 
 /**************************************************************************/
 
-static bool ftest_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[])
+static bool ftest_cmdline(union format *fmt,struct a09 *a09,int argc,int *pi,char *argv[])
 {
   assert(fmt  != NULL);
   assert(a09  != NULL);
+  assert(argc >  0);
   assert(pi   != NULL);
   assert(*pi  >  0);
   assert(argv != NULL);
@@ -276,74 +278,47 @@ static bool ftest_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[]
   
   struct format_test *test = &fmt->test;
   struct testdata    *data = test->data;
-  int                 i    = *pi;
-  unsigned long int   value;
   
-  switch(argv[i][1])
+  switch(argv[*pi][1])
   {
     case 'S':
-         if (argv[i][2] == '\0')
-           value = strtoul(argv[++i],NULL,0);
-         else
-           value = strtoul(&argv[i][2],NULL,0);
-           
-         if (value > 65535u)
+         if (!cmd_uint16_t(&data->sp,pi,argc,argv,0,65535u))
            return message(a09,MSG_ERROR,"E0069: address exceeds address space");
-         
-         data->sp = value;
          break;
          
     case 'D':
-         if (argv[i][2] == '\0')
-           data->corefile = argv[++i];
-         else
-           data->corefile = &argv[i][2];
+         if ((data->corefile = cmd_opt(pi,argc,argv)) == NULL)
+           return message(a09,MSG_ERROR,"E0068: missing option argument");
          break;
          
     case 'F':
-         if (argv[i][2] == '\0')
-           value = strtoul(argv[++i],NULL,0);
-         else
-           value = strtoul(&argv[i][2],NULL,0);
-           
-         if (value > 255)
-           return message(a09,MSG_ERROR,"E0072: byte should be 0..255");
-         
-         data->fill = value;
+         if (!cmd_uint8_t(&data->fill,pi,argc,argv,0,255))
+           return message(a09,MSG_ERROR,"E0072: byte should be 0..255");         
          break;
          
     case 'R':
-         if (!range(a09,data->prot,pi,argv,(struct memprot){ .read = true , .write = false , .exec = false , .tron = false , .check = false }))
+         if (!range(a09,data->prot,pi,argc,argv,(struct memprot){ .read = true , .write = false , .exec = false , .tron = false , .check = false }))
            return false;
          break;
          
     case 'W':
-         if (!range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = true , .exec = false , .tron = false , .check = false }))
+         if (!range(a09,data->prot,pi,argc,argv,(struct memprot){ .read = false , .write = true , .exec = false , .tron = false , .check = false }))
            return false;
          break;
          
     case 'E':
-         if (!range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = true , .tron = false , .check = false }))
+         if (!range(a09,data->prot,pi,argc,argv,(struct memprot){ .read = false , .write = false , .exec = true , .tron = false , .check = false }))
            return false;
          break;
          
     case 'T':
-         if (!range(a09,data->prot,pi,argv,(struct memprot){ .read = false , .write = false , .exec = false , .tron = true , .check = false }))
+         if (!range(a09,data->prot,pi,argc,argv,(struct memprot){ .read = false , .write = false , .exec = false , .tron = true , .check = false }))
            return false;
          break;
          
     case 'Z':
-         if (argv[i][2] == '\0')
-           value = strtoul(argv[++i],NULL,0);
-         else
-           value = strtoul(&argv[i][2],NULL,0);
-         
-         if (value < 2)
-           return message(a09,MSG_ERROR,"E0088: minimum stack size: 2");
-         else if (value > 4096)
-           return message(a09,MSG_ERROR,"E0089: maximum stack size: 4096");
-           
-         data->stacksize = value;
+         if (!cmd_uint16_t(&data->stacksize,pi,argc,argv,2,4096))
+           return message(a09,MSG_ERROR,"E0088: stack size must be between 2 and 4096");
          break;
          
     default:
@@ -351,7 +326,6 @@ static bool ftest_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[]
          return false;
   }
   
-  *pi = i;
   return true;
 }
 

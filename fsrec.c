@@ -72,53 +72,33 @@ static void write_record(
 
 /**************************************************************************/
 
-static bool fsrec_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[])
+static bool fsrec_cmdline(union format *fmt,struct a09 *a09,int argc,int *pi,char *argv[])
 {
   assert(fmt  != NULL);
   assert(a09  != NULL);
+  assert(argc >  0);
   assert(pi   != NULL);
   assert(*pi  >  0);
   assert(argv != NULL);
   assert(fmt->backend == BACKEND_SREC);
   
   struct format_srec *format = &fmt->srec;
-  int                 i      = *pi;
-  unsigned long int   value;
   
-  switch(argv[i][1])
+  switch(argv[*pi][1])
   {
     case 'R':
-         if (argv[i][2] == '\0')
-           value = strtoul(argv[++i],NULL,0);
-         else
-           value = strtoul(&argv[i][2],NULL,0);
-           
-         if (value == 0)
-           return message(a09,MSG_ERROR,"E0067: minimum record size: 1");           
-         else if (value > 252)
-           return message(a09,MSG_ERROR,"E0068: maximum record size: 252");
-
-         format->recsize = value;
+         if (!cmd_size_t(&format->recsize,pi,argc,argv,1,252))
+           return message(a09,MSG_ERROR,"E0067: record size must be between 1 and 252");
          break;
          
     case 'L':
-         if (argv[i][2] == '\0')
-           value = strtoul(argv[++i],NULL,0);
-         else
-           value = strtoul(&argv[i][2],NULL,0);
-         if (value > USHRT_MAX)
+         if (!cmd_uint16_t(&format->addr,pi,argc,argv,0,65535u))
            return message(a09,MSG_ERROR,"E0069: address exceeds address space");
-         format->addr = value;
          break;
          
     case 'E':
-         if (argv[i][2] == '\0')
-           value = strtoul(argv[++i],NULL,0);
-         else
-           value = strtoul(&argv[i][2],NULL,0);
-         if (value > USHRT_MAX)
+         if (!cmd_uint16_t(&format->exec,pi,argc,argv,0,65535u))
            return message(a09,MSG_ERROR,"E0069: address exceeds address space");
-         format->exec = value;
          format->execf = true;
          break;
          
@@ -127,10 +107,8 @@ static bool fsrec_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[]
          break;
          
     case '0':
-         if (argv[i][2] == '\0')
-           format->S0file = argv[++i];
-         else
-           format->S0file = &argv[i][2];
+         if ((format->S0file = cmd_opt(pi,argc,argv)) == NULL)
+           return message(a09,MSG_ERROR,"E0068: missing option argument");
          break;
          
     default:
@@ -138,7 +116,6 @@ static bool fsrec_cmdline(union format *fmt,struct a09 *a09,int *pi,char *argv[]
          return false;
   }
   
-  *pi = i;
   return true;
 }
 
