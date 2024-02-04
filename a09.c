@@ -569,13 +569,13 @@ void usage(char const *prog)
   fprintf(
            stderr,
            "usage: %s [options] [files...]\n"
+           "\t-M\t\tgenerate Makefile dependencies on stdout\n"
+           "\t-d\t\tdebug output\n"
+           "\t-f format\toutput format (bin)\n"
+           "\t-h\t\thelp (this text)\n"
+           "\t-l listfile\tlist filename\n"
            "\t-n Wxxxx\tsupress the given warnings\n"
            "\t-o filename\toutput filename\n"
-           "\t-l listfile\tlist filename\n"
-           "\t-f format\toutput format (bin)\n"
-           "\t-d\t\tdebug output\n"
-           "\t-M\t\tgenerate Makefile dependencies on stdout\n"
-           "\t-h\t\thelp (this text)\n"
            "\n"
            "\tformats: bin rsdos srec test\n"
            "%s"
