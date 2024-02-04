@@ -267,6 +267,11 @@ non-standard pesudo operation for most 6809 assemblers.
 					.OPT TEST PROT n,$400	; no access
 					.OPT TEST PROT rxt,run
 
+			.OPT TEST RANDOMIZE
+
+				Randomize the order of the tests.  This can
+				ONLY appear outside of a .TEST directive.
+
 			.OPT TEST STACK address
 
 				Set the default stack address for tests.
@@ -544,21 +549,14 @@ They are:
 
   The following command line options are supported:
 
-	-n Wxxxx[,Wyyyy...]
+	-M
 
-		Supress warnings from the assembler.  This option can be
-		specified multiple times, and multiple warnings can be
-		specified per option.  See the file 'Errors.txt' for the
-		warning tags to use.
+		This will generate a list of dependencies appropriate for
+		make.
 
-	-o filename
+	-d
 
-		Specify the output file name.  Defaults to 'a09.obj'.
-
-	-l listfile
-
-		Specify the listing file.  If not given, no listing file
-		will be generated.
+		Reserved for debug output.
 
 	-f format
 
@@ -570,28 +568,30 @@ They are:
 			srec	- Motorola SREC format
 			test	- unit test backend
 
-	-d
-
-		Reserved for debug output.
-
-	-M
-
-		This will generate a list of dependencies appropriate for
-		make.
-
 	-h
 
 		Output a summary of the options supported.
+
+	-l listfile
+
+		Specify the listing file.  If not given, no listing file
+		will be generated.
+
+	-n Wxxxx[,Wyyyy...]
+
+		Supress warnings from the assembler.  This option can be
+		specified multiple times, and multiple warnings can be
+		specified per option.  See the file 'Errors.txt' for the
+		warning tags to use.
+
+	-o filename
+
+		Specify the output file name.  Defaults to 'a09.obj'.
 
   Individual backends can have their own command line options that are
 activated after the '-f' option.  They are:
 
 The SREC backend
-
-	-R size
-
-		This specifies the number of data bytes per line.  Valid
-		values are 1 to 252, with 34 being the default.
 
 	-0 file
 
@@ -599,14 +599,14 @@ The SREC backend
 		no standard format for the S0 record, this allows you to use
 		whatever format is required for your use.
 
-	-L address
-
-		Use the given address for the loading address if no ORG
-		directive appears in the source code.
-
 	-E address
 
 		Use the given address for the execute address if no END
+		directive appears in the source code.
+
+	-L address
+
+		Use the given address for the loading address if no ORG
 		directive appears in the source code.
 
 	-O
@@ -614,18 +614,22 @@ The SREC backend
 		Force the use of the -L and -E options to override any
 		ORG or END directives that appear in the source code.
 
+
+	-R size
+
+		This specifies the number of data bytes per line.  Valid
+		values are 1 to 252, with 34 being the default.
+
 The test backend
 
-	-S address
+	-D file
 
-		Use the address for the system stack and string pool for
-		tests in the emulated 6809.  The default value for this is
-		$FFF0.
+		Write the 6809 memory to the given file at the end of
+		assembly and all tests have run.
 
-	-Z size
+	-E lowaddress[-highaddress]
 
-		Use the value for the stack size.  The minimum size is
-		2 bytes; the maximum is 4096 and the default is 1024.
+		Mark the memory of the emulated 6809 as allowing execution.
 
 	-F byte
 
@@ -636,13 +640,11 @@ The test backend
 
 		Mark the memory of the emulated 6809 as read-only.
 
-	-W lowaddress[-highaddress]
+	-S address
 
-		Mark the memory of the emulated 6809 as write-only.
-
-	-E lowaddress[-highaddress]
-
-		Mark the memory of the emulated 6809 as allowing execution.
+		Use the address for the system stack and string pool for
+		tests in the emulated 6809.  The default value for this is
+		$FFF0.
 
 	-T lowaddress[-highaddress]
 
@@ -651,7 +653,15 @@ The test backend
 		register dump.  For memory writes, this will print out the
 		address and the new value.
 
-	-D file
+	-W lowaddress[-highaddress]
 
-		Write the 6809 memory to the given file at the end of
-		assembly and all tests have run.
+		Mark the memory of the emulated 6809 as write-only.
+
+	-Z size
+
+		Use the value for the stack size.  The minimum size is
+		2 bytes; the maximum is 4096 and the default is 1024.
+
+	-r
+
+		Run the tests in a random order.

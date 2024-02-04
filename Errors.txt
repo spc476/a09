@@ -86,3 +86,4 @@ E0085: unknown flag '%c'
 E0086: boolean value must be 'true' or 'false'
 E0087: option '%.*s' not supported
 E0088: stack size must be between 2 and 4096
+E0089: can only set outside a .TEST directive

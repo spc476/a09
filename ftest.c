@@ -25,6 +25,7 @@
 #include <string.h>
 #include <setjmp.h>
 #include <errno.h>
+#include <time.h>
 
 #include <mc6809.h>
 #include <mc6809dis.h>
@@ -159,6 +160,7 @@ struct testdata
   uint8_t          fill;
   bool             tron;
   bool             timing;
+  bool             rndorder;
   char             errbuf[128];
   mc6809byte__t    memory[65536u];
   struct memprot   prot  [65536u];
@@ -200,6 +202,7 @@ char const format_test_usage[] =
         "\t-T range\ttrace execution of code (see below)\n"
         "\t-W range\tmark memory write-only (see below)\n"
         "\t-Z size\t\tsize of system stack (min=2, max=4096, default=1024)\n"
+        "\t-r\t\trandomize the testing order\n"
         "\n"
         "NOTE:\tmemory ranges can be specified as:\n"
         "\t\t<low-address>[ '-' <high-address>]\n"
@@ -319,6 +322,10 @@ static bool ftest_cmdline(union format *fmt,struct a09 *a09,int argc,int *pi,cha
     case 'Z':
          if (!cmd_uint16_t(&data->stacksize,pi,argc,argv,2,4096))
            return message(a09,MSG_ERROR,"E0088: stack size must be between 2 and 4096");
+         break;
+         
+    case 'r':
+         data->rndorder = true;
          break;
          
     default:
@@ -1377,6 +1384,29 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
     
   if (pass == 2)
   {
+    /*-----------------------------------------------------------------------
+    ; A simple way to randomize the tests array, based upon:
+    ; https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+    ; We check if we have more than one test; 0 or 1 tests, there's no need
+    ; for this step at all.
+    ;------------------------------------------------------------------------*/
+    
+    if ((data->rndorder) && (data->nunits > 1))
+    {
+      message(a09,MSG_DEBUG,"Randomizing tests");
+      srand(time(NULL)); /* XXX is there a better way? */
+      for (size_t i = data->nunits ; i > 1 ; i--)
+      {
+        size_t j = rand() % i;
+        if (j != i - 1)
+        {
+          struct unittest tmp = data->units[i-1];
+          data->units[i-1]    = data->units[j];
+          data->units[j]      = tmp;
+        }
+      }
+    }
+    
     for (size_t i = 0 ; i < data->nunits ; i++)
     {
       struct unittest *unit = &data->units[i];
@@ -1758,6 +1788,13 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
         message(opd->a09,MSG_WARNING,"W0018: cannot assign the stack size within .TEST directive");
       
       data->stacksize = size.value;
+    }
+    
+    else if ((tmp.s == 9) && (memcmp(tmp.text,"RANDOMIZE",9) == 0))
+    {
+      if (test->intest)
+        return message(opd->a09,MSG_ERROR,"E0089: can only set outside a .TEST directive");
+      data->rndorder = true;
     }
     
     else
@@ -2213,6 +2250,8 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
     fmt->data->stacksize = 1024;
     fmt->data->fill      = 0x01; // illegal instruction
     fmt->data->tron      = false;
+    fmt->data->timing    = false;
+    fmt->data->rndorder  = false;
     fmt->data->errbuf[0] = '\0';
     
     memset(fmt->data->memory,fmt->data->fill,sizeof(fmt->data->memory));
