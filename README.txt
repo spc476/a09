@@ -236,12 +236,12 @@ non-standard pesudo operation for most 6809 assemblers.
 		applies to all tests; otherwise it only applies to the test
 		they appear in.
 
-			.OPT TEST MEMB address,byte
+			.OPT TEST POKE address,byte
 
 				Write the byte value to the address in the
 				virtual memory for the 6809 emulator.
 
-			.OPT TEST MEMW address,word
+			.OPT TEST POKEW address,word
 
 				Write the word (16-bit value) to the address
 				in the virtual memory for the 6809 emulator.

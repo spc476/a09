@@ -1689,7 +1689,7 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
       }
     }
     
-    else if ((tmp.s == 4) && (memcmp(tmp.text,"MEMW",4) == 0))
+    else if ((tmp.s == 5) && (memcmp(tmp.text,"POKEW",5) == 0))
     {
       struct value addr;
       struct value word;
@@ -1728,7 +1728,7 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
       }
     }
     
-    else if ((tmp.s == 4) && (memcmp(tmp.text,"MEMB",4) == 0))
+    else if ((tmp.s == 4) && (memcmp(tmp.text,"POKE",4) == 0))
     {
       struct value addr;
       struct value byte;
