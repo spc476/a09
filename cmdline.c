@@ -25,6 +25,12 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#if defined(__clang__)
+#  pragma clang diagnostic ignored "-Wconversion"
+#  pragma clang diagnostic ignored "-Wdeclaration-after-statement"
+#  pragma clang diagnostic ignored "-Wmissing-prototypes"
+#endif
+
 /**************************************************************************/
 
 char *cmd_opt(int *pi,int argc,char *argv[])
