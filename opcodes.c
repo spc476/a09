@@ -1142,13 +1142,16 @@ static bool pseudo_fcb(struct opcdata *opd)
     if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
       return false;
       
-    if (opd->a09->obj && (opd->pass == 2))
+    if (opd->pass == 2)
     {
       unsigned char byte = value_lsb(opd->a09,opd->value.value,opd->pass);
       if (opd->sz < sizeof(opd->bytes))
         opd->bytes[opd->sz++] = byte;
-      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,(char *)&byte,1))
-        return false;
+      if (opd->a09->obj)
+      {
+        if (!opd->a09->format.def.data_write(&opd->a09->format,opd,(char *)&byte,1))
+          return false;
+      }
     }
     
     char c = skip_space(opd->buffer);
@@ -1178,7 +1181,7 @@ static bool pseudo_fdb(struct opcdata *opd)
     if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
       return false;
       
-    if (opd->a09->obj && (opd->pass == 2))
+    if (opd->pass == 2)
     {
       unsigned char word[2] =
       {
@@ -1191,8 +1194,11 @@ static bool pseudo_fdb(struct opcdata *opd)
         opd->bytes[opd->sz++] = word[0];
         opd->bytes[opd->sz++] = word[1];
       }
-      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,(char *)word,2))
-        return false;
+      if (opd->a09->obj)
+      {
+        if (!opd->a09->format.def.data_write(&opd->a09->format,opd,(char *)word,2))
+          return false;
+      }
     }
     
     char c = skip_space(opd->buffer);
@@ -1221,12 +1227,15 @@ static bool pseudo_fcc(struct opcdata *opd)
   opd->data   = true;
   opd->datasz = textstring.widx;
   
-  if (opd->a09->obj && (opd->pass == 2))
+  if (opd->pass == 2)
   {
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
-    if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
-      return false;
+    if (opd->a09->obj)
+    {
+      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
+        return false;
+    }
   }
   
   return true;
@@ -1247,12 +1256,15 @@ static bool pseudo_ascii(struct opcdata *opd)
   opd->data   = true;
   opd->datasz = textstring.widx;
   
-  if (opd->a09->obj && (opd->pass == 2))
+  if (opd->pass == 2)
   {
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
-    if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
-      return false;
+    if (opd->a09->obj)
+    {
+      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
+        return false;
+    }
   }
   
   return true;
@@ -1335,7 +1347,7 @@ static bool pseudo_incbin(struct opcdata *opd)
     fclose(fp);
     add_file_dep(opd->a09,filename.buf);
   }
-  else if ((opd->pass == 2) && opd->a09->obj)
+  else if (opd->pass == 2)
   {
     char   buffer[BUFSIZ];
     size_t bsz;
@@ -1357,8 +1369,11 @@ static bool pseudo_incbin(struct opcdata *opd)
         memcpy(opd->bytes,buffer,opd->sz);
       }
       
-      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,buffer,bsz))
-        return false;
+      if (opd->a09->obj)
+      {
+        if (!opd->a09->format.def.data_write(&opd->a09->format,opd,buffer,bsz))
+          return false;
+      }
       opd->datasz += bsz;
     } while (bsz > 0);
     fclose(fp);
@@ -1515,13 +1530,16 @@ static bool pseudo_fcs(struct opcdata *opd)
   opd->data   = true;
   opd->datasz = textstring.widx;
   
-  if (opd->a09->obj && (opd->pass == 2))
+  if (opd->pass == 2)
   {
     textstring.buf[textstring.widx - 1] |= 0x80;
     opd->sz = min(textstring.widx,sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
-    if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
-      return false;
+    if (opd->a09->obj)
+    {
+      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
+        return false;
+    }
   }
   
   return true;
