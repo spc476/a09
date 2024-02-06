@@ -207,9 +207,10 @@ char const format_test_usage[] =
         "NOTE:\tmemory ranges can be specified as:\n"
         "\t\t<low-address>[ '-' <high-address>]\n"
         "\tmultiple ranges can be specified, separated by a comma\n"
-        "\tBy default, all memory is readable, writable and executable,\n"
-        "\tbut not traced.  You can also enable tracing with the\n"
-        "\t.TRON directive.\n"
+        "\tBy default, memory has no permissions (addresses outside of\n"
+        "\tassembled file), read/execute or read/write, but never trace\n"
+        "\tby default.  You can also enable tracing with the .TRON\n"
+        "\tdirective.\n"
         ;
         
 /**************************************************************************/
