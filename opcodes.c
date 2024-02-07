@@ -1950,7 +1950,7 @@ static bool pseudo__float(struct opcdata *opd)
       
       if (opd->pass == 2)
       {
-        if (!write_double(opd,fv.value.d,opd->a09->fdecb))
+        if (!write_double(opd,fv.value.d,opd->op->opcode == 1))
           return false;
       }
     }
