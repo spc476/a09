@@ -102,6 +102,7 @@ enum operator
   OP_MUL,
   OP_DIV,
   OP_MOD,
+  OP_EXP,
 };
 
 typedef struct label

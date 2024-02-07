@@ -86,6 +86,18 @@ static bool eval(
            return message(a09,MSG_ERROR,"E0008: divide by 0 error");
          v1->value = v1->value % v2->value;
          break;
+         
+    case OP_EXP:
+         if (v2->value > 0x7FFF)
+           return message(a09,MSG_ERROR,"E0091: negative exponents for integers not supported");
+         else if (v2->value == 0)
+           v1->value = 1;
+         else
+         {
+           while(--v2->value)
+             v1->value = v1->value * v1->value;
+         }
+         break;
   }
   
   v1->unknownpass1 = v1->unknownpass1 || v2->unknownpass1;
@@ -301,31 +313,31 @@ struct optable const *get_op(struct buffer *buffer)
   
   static struct optable const cops[] =
   {
-    [OP_MUL]  = { OP_MUL  , AS_LEFT , 900 } ,
-    [OP_DIV]  = { OP_DIV  , AS_LEFT , 900 } ,
-    [OP_MOD]  = { OP_MOD  , AS_LEFT , 900 } ,
-    [OP_ADD]  = { OP_ADD  , AS_LEFT , 800 } ,
-    [OP_SUB]  = { OP_SUB  , AS_LEFT , 800 } ,
-    [OP_SHL]  = { OP_SHL  , AS_LEFT , 700 } ,
-    [OP_SHR]  = { OP_SHR  , AS_LEFT , 700 } ,
-    [OP_BAND] = { OP_BAND , AS_LEFT , 600 } ,
-    [OP_BEOR] = { OP_BEOR , AS_LEFT , 500 } ,
-    [OP_BOR]  = { OP_BOR  , AS_LEFT , 400 } ,
-    [OP_NE]   = { OP_NE   , AS_LEFT , 300 } ,
-    [OP_LT]   = { OP_LT   , AS_LEFT , 300 } ,
-    [OP_LE]   = { OP_LE   , AS_LEFT , 300 } ,
-    [OP_EQ]   = { OP_EQ   , AS_LEFT , 300 } ,
-    [OP_GE]   = { OP_GE   , AS_LEFT , 300 } ,
-    [OP_GT]   = { OP_GT   , AS_LEFT , 300 } ,
-    [OP_LAND] = { OP_LAND , AS_LEFT , 200 } ,
-    [OP_LOR]  = { OP_LOR  , AS_LEFT , 100 } ,
+    [OP_EXP]  = { OP_EXP  , AS_RIGHT , 1000 } ,
+    [OP_MUL]  = { OP_MUL  , AS_LEFT  ,  900 } ,
+    [OP_DIV]  = { OP_DIV  , AS_LEFT  ,  900 } ,
+    [OP_MOD]  = { OP_MOD  , AS_LEFT  ,  900 } ,
+    [OP_ADD]  = { OP_ADD  , AS_LEFT  ,  800 } ,
+    [OP_SUB]  = { OP_SUB  , AS_LEFT  ,  800 } ,
+    [OP_SHL]  = { OP_SHL  , AS_LEFT  ,  700 } ,
+    [OP_SHR]  = { OP_SHR  , AS_LEFT  ,  700 } ,
+    [OP_BAND] = { OP_BAND , AS_LEFT  ,  600 } ,
+    [OP_BEOR] = { OP_BEOR , AS_LEFT  ,  500 } ,
+    [OP_BOR]  = { OP_BOR  , AS_LEFT  ,  400 } ,
+    [OP_NE]   = { OP_NE   , AS_LEFT  ,  300 } ,
+    [OP_LT]   = { OP_LT   , AS_LEFT  ,  300 } ,
+    [OP_LE]   = { OP_LE   , AS_LEFT  ,  300 } ,
+    [OP_EQ]   = { OP_EQ   , AS_LEFT  ,  300 } ,
+    [OP_GE]   = { OP_GE   , AS_LEFT  ,  300 } ,
+    [OP_GT]   = { OP_GT   , AS_LEFT  ,  300 } ,
+    [OP_LAND] = { OP_LAND , AS_LEFT  ,  200 } ,
+    [OP_LOR]  = { OP_LOR  , AS_LEFT  ,  100 } ,
   };
   
   char c = skip_space(buffer);
   
   switch(c)
   {
-    case '*': return &cops[OP_MUL];
     case '/': return &cops[OP_DIV];
     case '%': return &cops[OP_MOD];
     case '+': return &cops[OP_ADD];
@@ -333,6 +345,15 @@ struct optable const *get_op(struct buffer *buffer)
     case '^': return &cops[OP_BEOR];
     case '=': return &cops[OP_EQ];
     
+    case '*':
+         if (buffer->buf[buffer->ridx] == '*')
+         {
+           buffer->ridx++;
+           return &cops[OP_EXP];
+         }
+         else
+           return &cops[OP_MUL];
+           
     case '&':
          if (buffer->buf[buffer->ridx] == '&')
          {

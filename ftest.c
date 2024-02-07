@@ -65,6 +65,7 @@ enum vmops
   VM_MUL,
   VM_DIV,
   VM_MOD,
+  VM_EXP,
   VM_NEG,       /* and now new operators */
   VM_NOT,
   VM_LIT,
@@ -539,6 +540,20 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
              return message(a09,MSG_ERROR,"E0008: divide by 0 error");
            result      = stack[sp + 1] % stack[sp];
            stack[++sp] = result;
+           break;
+           
+      case VM_EXP:
+           if (stack[sp] > 0x7FFF)
+             return message(a09,MSG_ERROR,"E0091: negative exponents for integers not supported");
+           else if (stack[sp] == 0)
+             stack[++sp] = 1;
+           else
+           {
+             while(--stack[sp])
+               stack[sp+1] = stack[sp+1] * stack[sp+1];
+             result = stack[sp + 1];
+             stack[++sp] = result;
+           }
            break;
            
       case VM_NEG:
@@ -2202,6 +2217,7 @@ bool format_test_init(struct format_test *fmt,struct a09 *a09)
   assert((int)VM_MUL  == (int)OP_MUL);
   assert((int)VM_DIV  == (int)OP_DIV);
   assert((int)VM_MOD  == (int)OP_MOD);
+  assert((int)VM_EXP  == (int)OP_EXP);
   
   assert(fmt != NULL);
   assert(a09 != NULL);
