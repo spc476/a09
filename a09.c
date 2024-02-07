@@ -785,6 +785,7 @@ int main(int argc,char *argv[])
     .debug     = false,
     .mkdeps    = false,
     .obj       = true,
+    .fdecb     = false,
     .inbuf     = { .buf = {0}, .widx = 0, .ridx = 0 },
   };
   

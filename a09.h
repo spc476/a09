@@ -291,6 +291,7 @@ struct a09
   bool           debug;
   bool           mkdeps;
   bool           obj;
+  bool           fdecb;
 };
 
 struct symbol
@@ -313,6 +314,15 @@ struct value
   bool          unknownpass1;
   bool          defined;
   bool          external;
+};
+
+struct fvalue
+{
+  union { float f; double d; } value;
+  bool fdouble;
+  bool unknownpass1;
+  bool defined;
+  bool external;
 };
 
 struct opcdata

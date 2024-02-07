@@ -21,6 +21,7 @@
 ****************************************************************************/
 
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,6 +29,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "a09.h"
 
@@ -1790,6 +1792,177 @@ static bool op_orcc(struct opcdata *opd)
 
 /**************************************************************************/
 
+static bool write_single(struct opcdata *opd,float val)
+{
+  assert(opd       != NULL);
+  assert(opd->a09  != NULL);
+  assert(opd->pass == 2);
+  assert(!opd->a09->fdecb);
+  
+  char le[sizeof(float)];
+  char be[sizeof(float)];
+  
+  memcpy(le,&val,sizeof(val));
+  for (size_t i = sizeof(val) ; i > 0 ; i--)
+    be[sizeof(val) - i] = le[i - 1];
+  for (size_t i = 0 ; (opd->sz < sizeof(opd->bytes)) && (i < sizeof(val)) ; i++ , opd->sz++)
+    opd->bytes[opd->sz] = be[i];
+  if (opd->a09->obj)
+  {
+    if (!opd->a09->format.def.data_write(&opd->a09->format,opd,be,sizeof(be)))
+      return false;
+  }
+  return true;
+}
+
+/**************************************************************************/
+
+static bool write_double(struct opcdata *opd,double val,bool unpacked)
+{
+  assert(opd       != NULL);
+  assert(opd->a09  != NULL);
+  assert(opd->pass == 2);
+  
+  if (opd->a09->fdecb)
+  {
+    union float_u { double   f; uint64_t i;                   };
+    union frac    { uint64_t i; char     c[sizeof(uint64_t)]; };
+
+    if (!isnormal(val) && (val != 0.0))
+      return message(opd->a09,MSG_ERROR,"E0090: floating point exceeds range of Color Computer");
+    
+    /*----------------------------------------------------------------------
+    ; The IEEE-754 double (which pretty much all systems use these days) is
+    ; formatted as:
+    ;
+    ;		[s:1] [exp:11 (biased by 1022)] [frac:52]
+    ;
+    ; The floating point format for the Color Computer is:
+    ;
+    ;		[exp:8 (biased by 128)] [s:1] [frac:31]
+    ;
+    ; Both assume the floating point fraction has a leading 1 and thus,
+    ; it's not part of the actual storage format.  So all we have to do
+    ; is kind of massage the bits around a bit.
+    ;
+    ; One wrinkle in this is the unpacked floating point format used on the
+    ; Color Computer.  It's one byte longer:
+    ;
+    ;		[exp:8 (biased by 128)] [frac:32] [s:8]
+    ;
+    ; NOTE: The floating point system on the Color Computer doesn't have the
+    ;	    concepts of +-inf or NaN---those will generate an error.
+    ;----------------------------------------------------------------------*/
+    
+    char          decbfloat[6];
+    size_t        dfs  = 5; /* let's default to a packed DECB value */
+    union float_u x    = { .f = val };
+    union frac    frac = { .i = (x.i & 0x000FFFFFFFFFFFFFuLL) << 11 };
+    bool          sign = (x.i >> 63) != 0;
+    int           exp  = (int)((x.i >> 52) & 0x7ffuLL);
+    
+    assert(exp >= 0);
+    assert(exp != 0x7FF);
+    assert((exp > 0) || ((exp == 0) && (frac.i == 0)));
+    
+    if (exp > 0)
+      exp = exp - 1022 + 128; /* unbias from IEEE-754 to DECB float */
+
+    if (exp > 255)
+      return message(opd->a09,MSG_ERROR,"E0090: floating point exceeds range of Color Computer");
+    
+    decbfloat[0] = exp;
+    for (size_t i = sizeof(uint64_t) ; i > 4 ; i--)
+      decbfloat[1 + sizeof(uint64_t) - i] = frac.c[i - 1];
+    
+    if (unpacked)
+    {
+      dfs++;
+      decbfloat[5] = sign * 255;
+      decbfloat[1] |= 0x80;
+    }
+    else
+      decbfloat[1] |= sign ? 0x80 : 0x00;
+    
+    for (size_t i = 0 ; (opd->sz < sizeof(opd->bytes)) && (i < dfs) ; i++,opd->sz++)
+      opd->bytes[opd->sz] = decbfloat[i];
+      
+    if (opd->a09->obj)
+    {
+      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,decbfloat,sizeof(decbfloat)))
+        return false;
+    }
+  }
+  else
+  {
+    char le[sizeof(double)];
+    char be[sizeof(double)];
+    
+    memcpy(le,&val,sizeof(val));
+    for (size_t i = sizeof(val) ; i > 0 ; i--)
+      be[sizeof(val) - i] = le[i - 1];
+    for (size_t i = 0 ; (opd->sz < sizeof(opd->bytes)) && (i < sizeof(val)) ; i++ , opd->sz++)
+      opd->bytes[opd->sz] = be[i];
+    if (opd->a09->obj)
+    {
+      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,be,sizeof(be)))
+        return false;
+    }
+  }
+  return true;
+}
+
+/**************************************************************************/
+
+static bool pseudo__float(struct opcdata *opd)
+{
+  assert(opd         != NULL);
+  assert(opd->a09    != NULL);
+  assert(opd->buffer != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  opd->data = true;
+  
+  while(true)
+  {
+    char *p;
+    
+    skip_space(opd->buffer);
+    opd->buffer->ridx--;
+    if ((opd->op->opcode == 0) && !opd->a09->fdecb)
+    {
+      float f      = strtof(&opd->buffer->buf[opd->buffer->ridx],&p);
+      opd->datasz += sizeof(f);
+      
+      if (opd->pass == 2)
+      {
+        if (!write_single(opd,f))
+          return false;
+      }
+    }
+    else
+    {
+      double  d    = strtod(&opd->buffer->buf[opd->buffer->ridx],&p);
+      opd->datasz += sizeof(d);
+      
+      if (opd->pass == 2)
+      {
+        if (!write_double(opd,d,opd->op->opcode))
+          return false;
+      }
+    }
+    
+    opd->buffer->ridx += p - &opd->buffer->buf[opd->buffer->ridx];
+    char c = skip_space(opd->buffer);
+    if ((c == ';') || (c == '\0'))
+      return true;
+    if (c != ',')
+      return message(opd->a09,MSG_ERROR,"E0034: missing comma");
+  }
+}
+
+/**************************************************************************/
+
 static int opcode_cmp(void const *needle,void const *haystack)
 {
   char          const *key    = needle;
@@ -1808,6 +1981,8 @@ struct opcode const *op_find(char const *name)
     { ".CODE"   , pseudo__code   , 0x00 , 0x00 , false } ,
     { ".DP"     , pseudo__dp     , 0x00 , 0x00 , false } ,
     { ".ENDTST" , pseudo__endtst , 0x01 , 0x00 , false } , // test
+    { ".FLOAT"  , pseudo__float  , 0x00 , 0x00 , false } ,
+    { ".FLOATD" , pseudo__float  , 0x01 , 0x00 , false } ,
     { ".NOTEST" , pseudo__notest , 0x00 , 0x00 , false } , // test
     { ".OPT"	, pseudo__opt    , 0x00 , 0x00 , false } ,
     { ".TEST"   , pseudo__test   , 0x00 , 0x00 , false } , // test
