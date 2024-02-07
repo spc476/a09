@@ -1895,8 +1895,8 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
   }
   else
   {
-    char le[sizeof(double)];
-    char be[sizeof(double)];
+    char le[sizeof(val)];
+    char be[sizeof(val)];
     
     memcpy(le,&val,sizeof(val));
     for (size_t i = sizeof(val) ; i > 0 ; i--)
@@ -1925,34 +1925,36 @@ static bool pseudo__float(struct opcdata *opd)
   
   while(true)
   {
-    char *p;
+    struct fvalue  fv;
     
     skip_space(opd->buffer);
     opd->buffer->ridx--;
+    
     if ((opd->op->opcode == 0) && !opd->a09->fdecb)
     {
-      float f      = strtof(&opd->buffer->buf[opd->buffer->ridx],&p);
-      opd->datasz += sizeof(f);
+      if (!fexpr(&fv,opd->a09,opd->buffer,opd->pass,false))
+        return false;
+      opd->datasz += sizeof(float);
       
       if (opd->pass == 2)
       {
-        if (!write_single(opd,f))
+        if (!write_single(opd,fv.value.f))
           return false;
       }
     }
     else
     {
-      double  d    = strtod(&opd->buffer->buf[opd->buffer->ridx],&p);
-      opd->datasz += sizeof(d);
+      if (!fexpr(&fv,opd->a09,opd->buffer,opd->pass,true))
+        return false;
+      opd->datasz += sizeof(double);
       
       if (opd->pass == 2)
       {
-        if (!write_double(opd,d,opd->op->opcode))
+        if (!write_double(opd,fv.value.d,opd->a09->fdecb))
           return false;
       }
     }
     
-    opd->buffer->ridx += p - &opd->buffer->buf[opd->buffer->ridx];
     char c = skip_space(opd->buffer);
     if ((c == ';') || (c == '\0'))
       return true;

@@ -320,7 +320,6 @@ struct value
 struct fvalue
 {
   union { float f; double d; } value;
-  bool fdouble;
   bool unknownpass1;
   bool defined;
   bool external;
@@ -412,7 +411,8 @@ extern void                  usage              (char const *);
 extern struct opcode const  *op_find            (char const *);
 extern bool                  s2num              (struct a09 *,uint16_t *,struct buffer *,uint16_t);
 extern struct optable const *get_op             (struct buffer *);
-extern bool                  expr               (struct value *,struct a09 *,struct buffer *,int);
+extern bool                  expr               (struct value  *,struct a09 *,struct buffer *,int);
+extern bool                  fexpr              (struct fvalue *,struct a09 *,struct buffer *,int,bool);
 extern int                   symstrcmp          (void const *restrict,void const *restrict);
 extern struct symbol        *symbol_add         (struct a09 *,label const *,uint16_t);
 extern void                  symbol_freetable   (tree__s *);
