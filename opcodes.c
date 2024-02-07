@@ -1035,7 +1035,7 @@ static bool pseudo_set(struct opcdata *opd)
   if (opd->pass == 1)
   {
     if (sym == NULL)
-      return message(opd->a09,MSG_ERROR,"E0037: missing label for SET");    
+      return message(opd->a09,MSG_ERROR,"E0037: missing label for SET");
     assert(opd->a09->lnum == sym->ldef);
     sym->type = SYM_SET;
   }
@@ -1080,7 +1080,7 @@ static bool pseudo_org(struct opcdata *opd)
     
   last         = opd->a09->pc;
   opd->a09->pc = opd->value.value;
-
+  
   if (opd->a09->obj)
     return opd->a09->format.def.org(&opd->a09->format,opd,opd->value.value,last);
   else
@@ -1827,19 +1827,19 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
   {
     union float_u { double   f; uint64_t i;                   };
     union frac    { uint64_t i; char     c[sizeof(uint64_t)]; };
-
+    
     if (!isnormal(val) && (val != 0.0))
       return message(opd->a09,MSG_ERROR,"E0090: floating point exceeds range of Color Computer");
-    
+      
     /*----------------------------------------------------------------------
     ; The IEEE-754 double (which pretty much all systems use these days) is
     ; formatted as:
     ;
-    ;		[s:1] [exp:11 (biased by 1022)] [frac:52]
+    ;           [s:1] [exp:11 (biased by 1022)] [frac:52]
     ;
     ; The floating point format for the Color Computer is:
     ;
-    ;		[exp:8 (biased by 128)] [s:1] [frac:31]
+    ;           [exp:8 (biased by 128)] [s:1] [frac:31]
     ;
     ; Both assume the floating point fraction has a leading 1 and thus,
     ; it's not part of the actual storage format.  So all we have to do
@@ -1848,10 +1848,10 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
     ; One wrinkle in this is the unpacked floating point format used on the
     ; Color Computer.  It's one byte longer:
     ;
-    ;		[exp:8 (biased by 128)] [frac:32] [s:8]
+    ;           [exp:8 (biased by 128)] [frac:32] [s:8]
     ;
     ; NOTE: The floating point system on the Color Computer doesn't have the
-    ;	    concepts of +-inf or NaN---those will generate an error.
+    ;       concepts of +-inf or NaN---those will generate an error.
     ;----------------------------------------------------------------------*/
     
     char          decbfloat[6];
@@ -1867,23 +1867,23 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
     
     if (exp > 0)
       exp = exp - 1022 + 128; /* unbias from IEEE-754 to DECB float */
-
+      
     if (exp > 255)
       return message(opd->a09,MSG_ERROR,"E0090: floating point exceeds range of Color Computer");
-    
+      
     decbfloat[0] = exp;
     for (size_t i = sizeof(uint64_t) ; i > 4 ; i--)
       decbfloat[1 + sizeof(uint64_t) - i] = frac.c[i - 1];
-    
+      
     if (unpacked)
     {
       dfs++;
-      decbfloat[5] = sign * 255;
+      decbfloat[5]  = sign * 255;
       decbfloat[1] |= 0x80;
     }
     else
       decbfloat[1] |= sign ? 0x80 : 0x00;
-    
+      
     for (size_t i = 0 ; (opd->sz < sizeof(opd->bytes)) && (i < dfs) ; i++,opd->sz++)
       opd->bytes[opd->sz] = decbfloat[i];
       
@@ -1984,7 +1984,7 @@ struct opcode const *op_find(char const *name)
     { ".FLOAT"  , pseudo__float  , 0x00 , 0x00 , false } ,
     { ".FLOATD" , pseudo__float  , 0x01 , 0x00 , false } ,
     { ".NOTEST" , pseudo__notest , 0x00 , 0x00 , false } , // test
-    { ".OPT"	, pseudo__opt    , 0x00 , 0x00 , false } ,
+    { ".OPT"    , pseudo__opt    , 0x00 , 0x00 , false } ,
     { ".TEST"   , pseudo__test   , 0x00 , 0x00 , false } , // test
     { ".TROFF"  , pseudo__troff  , 0x00 , 0x00 , false } , // test
     { ".TRON"   , pseudo__tron   , 0x00 , 0x00 , false } , // test

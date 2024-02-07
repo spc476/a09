@@ -104,7 +104,7 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
           || ((tag == MSG_ERROR)   && (fmt[0] == 'E'))
           || ((tag == MSG_DEBUG))
         );
-  
+        
   va_list ap;
   
   if ((tag == MSG_DEBUG) && !a09->debug)

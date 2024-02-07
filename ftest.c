@@ -251,7 +251,7 @@ static bool range(
       
     if ((low > 65535u) || (high > 65535u))
       return message(a09,MSG_ERROR,"E0069: address exceeds address space");
-    
+      
     for ( ; low <= high ; low++)
     {
       mem[low].read  |= prot.read;
@@ -297,7 +297,7 @@ static bool ftest_cmdline(union format *fmt,struct a09 *a09,int argc,int *pi,cha
          
     case 'F':
          if (!cmd_uint8_t(&data->fill,pi,argc,argv,0,255))
-           return message(a09,MSG_ERROR,"E0072: byte should be 0..255");         
+           return message(a09,MSG_ERROR,"E0072: byte should be 0..255");
          break;
          
     case 'R':
@@ -933,7 +933,7 @@ static bool ft_register(
   }
   
   if (parse_label(&reg,buffer,a09,pass))
-  {  
+  {
     upper_label(&reg);
     vmreg = bsearch(
               &reg,
@@ -962,7 +962,7 @@ static bool ft_register(
       }
       return ft_index_register(prog,max,pvip,a09,buffer,pass);
     }
-      
+    
     /*---------------------------------------------------------------------
     ; We might have just a regiser, or the accum,index mode.  Choose here.
     ; In either case, we compile a VM_CPUaccum op here.
@@ -997,7 +997,7 @@ static bool ft_register(
     }
     else
       buffer->ridx--;
-  }  
+  }
   else
   {
     if (!ft_expr(prog,max,pvip,data,a09,buffer,pass))
@@ -1421,7 +1421,7 @@ static bool ftest_pass_end(union format *fmt,struct a09 *a09,int pass)
       
       if (unit->filename != a09->infile)
         return true;
-      
+        
       for (size_t j = 0 ; j < data->stacksize ; j++)
       {
         data->prot[data->sp - j].read  = true;
@@ -1599,7 +1599,7 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
     upper_label(&tmp);
     if ((tmp.s != 4) || (memcmp(tmp.text,"TEST",4) != 0)) /* not for us, ignore */
       return true;
-    
+      
     c = skip_space(opd->buffer);
     read_label(opd->buffer,&tmp,c);
     upper_label(&tmp);
@@ -1636,7 +1636,7 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
       c = skip_space(opd->buffer);
       if (c != ',')
         return message(opd->a09,MSG_ERROR,"E0023: missing expected comma");
-      
+        
       if (!expr(&low,opd->a09,opd->buffer,opd->pass))
         return false;
       c = skip_space(opd->buffer);
@@ -1665,11 +1665,11 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
         struct Assert *Assert = get_Assert(opd->a09,data,opd->a09->pc);
         if (Assert == NULL)
           return false;
-        
+          
         struct vmcode *new = new_program(Assert);
         if (new == NULL)
           return false;
-        
+          
         assert(sizeof(struct memprot) <= sizeof(enum vmops));
         
         new->prog[0]                   = VM_LIT;
@@ -1702,17 +1702,17 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
         return message(opd->a09,MSG_ERROR,"E0023: missing expected comma");
       if (!expr(&word,opd->a09,opd->buffer,opd->pass))
         return false;
-      
+        
       if (test->intest)
       {
         struct Assert *Assert = get_Assert(opd->a09,data,opd->a09->pc);
         if (Assert == NULL)
           return false;
-        
+          
         struct vmcode *new = new_program(Assert);
         if (new == NULL)
           return false;
-        
+          
         new->prog[0]                   = VM_LIT;
         new->prog[1]                   = word.value;
         new->prog[2]                   = VM_LIT;
@@ -1733,7 +1733,7 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
     {
       struct value addr;
       struct value byte;
-
+      
       if (!expr(&addr,opd->a09,opd->buffer,opd->pass))
         return false;
       c = skip_space(opd->buffer);
@@ -1784,10 +1784,10 @@ static bool ftest_opt(union format *fmt,struct opcdata *opd)
       
       if (!expr(&size,opd->a09,opd->buffer,opd->pass))
         return false;
-      
+        
       if (test->intest)
         message(opd->a09,MSG_WARNING,"W0018: cannot assign the stack size within .TEST directive");
-      
+        
       data->stacksize = size.value;
     }
     
@@ -1957,7 +1957,7 @@ static bool ftest_tron(union format *fmt,struct opcdata *opd)
       new = new_program(Assert);
       if (new == NULL)
         return message(opd->a09,MSG_ERROR,"E0046: out of memory");
-      
+        
       if (data->nunits == 0)
       {
         snprintf(
@@ -2014,7 +2014,7 @@ static bool ftest_troff(union format *fmt,struct opcdata *opd)
       struct Assert *Assert = get_Assert(opd->a09,data,opd->a09->pc);
       if (Assert == NULL)
         return false;
-      
+        
       new = new_program(Assert);
       if (new == NULL)
         return message(opd->a09,MSG_ERROR,"E0046: out of memory");
