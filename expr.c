@@ -262,6 +262,9 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
   assert(buffer != NULL);
   assert((pass == 1) || (pass == 2));
   
+  bool neg = false;
+  bool not = false;
+  
   memset(pv,0,sizeof(struct value));
   char c = skip_space(buffer);
   if (c == '\0')
@@ -285,6 +288,19 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
     c = skip_space(buffer);
   }
   
+  if (c == '-')
+  {
+    neg = true;
+    c   = buffer->buf[buffer->ridx++];
+  }
+  else if (c == '~')
+  {
+    not = true;
+    c   = buffer->buf[buffer->ridx++];
+  }
+  else if (c == '+')
+    c = buffer->buf[buffer->ridx++];
+    
   if (c == '(')
   {
     c = skip_space(buffer);
@@ -296,13 +312,20 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
     c = skip_space(buffer);
     if (c != ')')
       return message(a09,MSG_ERROR,"E0011: missing right parenthesis");
-    return true;
   }
   else
   {
     buffer->ridx--;
-    return value(pv,a09,buffer,pass);
+    if (!value(pv,a09,buffer,pass))
+      return false;
   }
+  
+  if (neg)
+    pv->value = -pv->value;
+  else if (not)
+    pv->value = ~pv->value;
+  
+  return true;
 }
 
 /**************************************************************************/
