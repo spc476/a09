@@ -1835,7 +1835,7 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
     ; The IEEE-754 double (which pretty much all systems use these days) is
     ; formatted as:
     ;
-    ;           [s:1] [exp:11 (biased by 1022)] [frac:52]
+    ;           [s:1] [exp:11 (biased by 1023)] [frac:52]
     ;
     ; The floating point format for the Color Computer is:
     ;
@@ -1866,7 +1866,7 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
     assert((exp > 0) || ((exp == 0) && (frac.i == 0)));
     
     if (exp > 0)
-      exp = exp - 1022 + 128; /* unbias from IEEE-754 to DECB float */
+      exp = exp - 1023 + 128; /* unbias from IEEE-754 to DECB float */
       
     if (exp > 255)
       return message(opd->a09,MSG_ERROR,"E0090: floating point exceeds range of Color Computer");
