@@ -1839,7 +1839,7 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
     ;
     ; The floating point format for the Color Computer is:
     ;
-    ;           [exp:8 (biased by 128)] [s:1] [frac:31]
+    ;           [exp:8 (biased by 129)] [s:1] [frac:31]
     ;
     ; Both assume the floating point fraction has a leading 1 and thus,
     ; it's not part of the actual storage format.  So all we have to do
@@ -1848,7 +1848,7 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
     ; One wrinkle in this is the unpacked floating point format used on the
     ; Color Computer.  It's one byte longer:
     ;
-    ;           [exp:8 (biased by 128)] [frac:32] [s:8]
+    ;           [exp:8 (biased by 129)] [frac:32] [s:8]
     ;
     ; NOTE: The floating point system on the Color Computer doesn't have the
     ;       concepts of +-inf or NaN---those will generate an error.
@@ -1866,7 +1866,7 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
     assert((exp > 0) || ((exp == 0) && (frac.i == 0)));
     
     if (exp > 0)
-      exp = exp - 1023 + 128; /* unbias from IEEE-754 to DECB float */
+      exp = exp - 1023 + 129; /* unbias from IEEE-754 to DECB float */
       
     if (exp > 255)
       return message(opd->a09,MSG_ERROR,"E0090: floating point exceeds range of Color Computer");
