@@ -1799,6 +1799,7 @@ static bool write_single(struct opcdata *opd,float val)
   assert(opd->pass == 2);
   assert(!opd->a09->fdecb);
   
+#if defined(__i386) || defined(__x86_64)
   char le[sizeof(float)];
   char be[sizeof(float)];
   
@@ -1813,6 +1814,9 @@ static bool write_single(struct opcdata *opd,float val)
       return false;
   }
   return true;
+#else
+#  error You need to define the byte order
+#endif
 }
 
 /**************************************************************************/
@@ -1872,9 +1876,13 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
       return message(opd->a09,MSG_ERROR,"E0090: floating point exceeds range of Color Computer");
       
     decbfloat[0] = exp;
+#if defined(__i386) || defined(__x86_64)
     for (size_t i = sizeof(uint64_t) ; i > 4 ; i--)
       decbfloat[1 + sizeof(uint64_t) - i] = frac.c[i - 1];
-      
+#else
+#  error You need to define the byte order
+#endif
+
     if (unpacked)
     {
       dfs++;
@@ -1895,6 +1903,7 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
   }
   else
   {
+#if defined(__i386) || defined(__x86_64)
     char le[sizeof(val)];
     char be[sizeof(val)];
     
@@ -1908,6 +1917,9 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
       if (!opd->a09->format.def.data_write(&opd->a09->format,opd,be,sizeof(be)))
         return false;
     }
+#else
+#  error You need to define the byte order
+#endif
   }
   return true;
 }
