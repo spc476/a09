@@ -188,6 +188,32 @@ non-standard pesudo operation for most 6809 assemblers.
 
 		End a unit test; ignored by other backends.
 
+	.FLOAT float-expr [, float-expr ... ]
+
+		Format a floating point number.  For all backends except for
+		the rsdos one, this will format a 32-bit IEEE-754 floating
+		point number, which can be used with the MC6839.  For the
+		rsdos backend, this will generate the Color Basic floating
+		point format (40 bits).  There may be some differences with
+		a value generated from Color Basic itself, but may be "close
+		enough" to be useful.
+
+		There currently is no way to force the Color Basic format
+		for the test backend.
+
+	.FLOATD float-expr [, float-expr ... ]
+
+		Format a floating point number.  For all backends except for
+		the rsdos one, this will format a 64-bit IEEE-754 floating
+		point number, which can be used with the MC6839.  For the
+		rsdos backend, this will generate the Color Basic unpacked
+		floating point format (48 bits).  There may be some
+		differences with a vlaue generated from Color Basic itself,
+		but may be "close enough" to be useful.
+
+		There current is no way to force the Color Basic format for
+		the test backend.
+
 	.NOTEST
 
 		All text up to a .ENDTST directive is ignored.  This is
