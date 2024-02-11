@@ -1060,20 +1060,7 @@ static bool ft_value(
   
   if (c == '/')
     return ft_register(prog,max,pvip,data,a09,buffer,pass);
-  else if (c == '(')
-  {
-    c = skip_space(buffer);
-    if (c == '\0')
-      return message(a09,MSG_ERROR,"E0010: unexpected end of input");
-    buffer->ridx--;
-    if (!ft_expr(prog,max,pvip,data,a09,buffer,pass))
-      return false;
-    c = skip_space(buffer);
-    if (c != ')')
-      return message(a09,MSG_ERROR,"E0011: missing right parenthesis");
-    return true;
-  }
-  
+    
   if (*pvip >= max - 2)
     return message(a09,MSG_ERROR,"E0074: not enough space for expression");
     
@@ -1194,25 +1181,40 @@ static bool ft_factor(
     not = true;
     c   = skip_space(buffer);
   }
-  
+  else if (c == '+')
+    c = buffer->buf[buffer->ridx]++;
+    
   if (c == '@')
   {
     if (buffer->buf[buffer->ridx] == '@')
     {
-      buffer->ridx++;
+      c = buffer->buf[buffer->ridx++];
       fetchword = true;
     }
     else
       fetchbyte = true;
-    skip_space(buffer);
+    c = skip_space(buffer);
+  }
+  
+  if (c == '(')
+  {
+    c = skip_space(buffer);
+    if (c == '\0')
+      return message(a09,MSG_ERROR,"E0010: unexpected end of input");
     buffer->ridx--;
+    if (!ft_expr(prog,max,pvip,data,a09,buffer,pass))
+      return false;
+    c = skip_space(buffer);
+    if (c != ')')
+      return message(a09,MSG_ERROR,"E0011: missing right parenthesis");
   }
   else
+  {
     buffer->ridx--;
-    
-  if (!ft_value(prog,max,pvip,data,a09,buffer,pass))
-    return false;
-    
+    if (!ft_value(prog,max,pvip,data,a09,buffer,pass))
+      return false;
+  }
+  
   if (fetchbyte)
   {
     if (*pvip == max)
