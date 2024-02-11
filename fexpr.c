@@ -299,7 +299,6 @@ static bool ffactor(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int 
   bool neg = false;
   
   memset(pv,0,sizeof(struct fvalue));
-  
   char c = skip_space(buffer);
   if (c == '\0')
     return message(a09,MSG_ERROR,"E0010: unexpected end of input");
@@ -309,7 +308,9 @@ static bool ffactor(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int 
     neg = true;
     c   = skip_space(buffer);
   }
-  
+  else if (c == '+')
+    c = buffer->buf[buffer->ridx++];
+    
   if (c == '(')
   {
     c = skip_space(buffer);
