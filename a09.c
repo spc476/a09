@@ -778,7 +778,6 @@ int main(int argc,char *argv[])
     .lnum      = 0,
     .symtab    = NULL,
     .nowarn    = {0},
-    .nowsize   = 0,
     .label     = { .s = 0, .text = { '\0' } },
     .pc        = 0,
     .dp        = 0,

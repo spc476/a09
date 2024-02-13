@@ -285,7 +285,6 @@ struct a09
   size_t         lnum;
   tree__s       *symtab;
   unsigned char  nowarn[10000 / CHAR_BIT];
-  size_t         nowsize;
   label          label;
   uint16_t       pc;
   unsigned char  dp;
