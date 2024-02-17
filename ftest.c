@@ -299,6 +299,7 @@ static bool ftest_cmdline(union format *fmt,struct a09 *a09,int argc,int *pi,cha
     case 'F':
          if (!cmd_uint8_t(&data->fill,pi,argc,argv,0,255))
            return message(a09,MSG_ERROR,"E0072: byte should be 0..255");
+         memset(data->memory,data->fill,sizeof(data->memory));
          break;
          
     case 'R':
