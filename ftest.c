@@ -777,9 +777,9 @@ static void ft_cpu_write(mc6809__t *cpu,mc6809addr__t addr,mc6809byte__t byte)
     longjmp(cpu->err,TEST_NON_WRITE_MEM);
   }
   if (data->prot[addr].exec)
-    message(data->a09,MSG_WARNING,"W0014: possible self-modifying code");
+    message(data->a09,MSG_WARNING,"W0014: possible self-modifying code @ %04X",cpu->pc.w);
   if (data->prot[addr].tron)
-    message(data->a09,MSG_WARNING,"W0016: memory write of %02X to %04X",byte,addr);
+    message(data->a09,MSG_WARNING,"W0016: memory write of %02X to %04X @ %04X",byte,addr,cpu->pc.w);
   data->memory[addr] = byte;
 }
 

@@ -11,9 +11,9 @@ W0010: missing initial label
 W0011: 5-bit offset upped to 8 bits for indirect mode
 W0012: branch to next location, maybe remove?
 W0013: label '%.*s' could be mistaken for register in index
-W0014: possible self-modifying code
+W0014: possible self-modifying code @ %04X
 W0015: %s: %s: %s
-W0016: memory write of %02X to %04X
+W0016: memory write of %02X to %04X @ %04X
 W0017: cannot assign the stack address within .TEST directive
 W0018: cannot assign the stack size within .TEST directive
 W9999: FEATURE NOT FINISHED
