@@ -748,13 +748,13 @@ static mc6809byte__t ft_cpu_read(mc6809__t *cpu,mc6809addr__t addr,bool inst)
   
   if (!data->prot[addr].read)
   {
-    snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X addr=%04X",cpu->pc.w,addr);
+    snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X addr=%04X",cpu->instpc,addr);
     longjmp(cpu->err,TEST_NON_READ_MEM);
   }
   
   if (inst && !data->prot[addr].exec)
   {
-    snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X addr=%04X",cpu->pc.w,addr);
+    snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X addr=%04X",cpu->instpc,addr);
     longjmp(cpu->err,TEST_WEEDS);
   }
   
@@ -773,13 +773,13 @@ static void ft_cpu_write(mc6809__t *cpu,mc6809addr__t addr,mc6809byte__t byte)
   
   if (!data->prot[addr].write)
   {
-    snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X addr=%04X",cpu->pc.w,addr);
+    snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X addr=%04X",cpu->instpc,addr);
     longjmp(cpu->err,TEST_NON_WRITE_MEM);
   }
   if (data->prot[addr].exec)
-    message(data->a09,MSG_WARNING,"W0014: possible self-modifying code @ %04X",cpu->pc.w);
+    message(data->a09,MSG_WARNING,"W0014: possible self-modifying code @ %04X",cpu->instpc);
   if (data->prot[addr].tron)
-    message(data->a09,MSG_WARNING,"W0016: memory write of %02X to %04X @ %04X",byte,addr,cpu->pc.w);
+    message(data->a09,MSG_WARNING,"W0016: memory write of %02X to %04X @ %04X",byte,addr,cpu->instpc);
   data->memory[addr] = byte;
 }
 
@@ -793,7 +793,7 @@ static void ft_cpu_fault(mc6809__t *cpu,mc6809fault__t fault)
   struct format_test *test = cpu->user;
   struct testdata    *data = test->data;
   
-  snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X",cpu->pc.w - 1);
+  snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X",cpu->instpc);
   longjmp(cpu->err,fault);
 }
 
