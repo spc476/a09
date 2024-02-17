@@ -68,10 +68,10 @@ static bool feval(
       case OP_LAND: v1->value.d = v1->value.d && v2->value.d; break;
       case OP_GT:   v1->value.d = v1->value.d >  v2->value.d; break;
       case OP_GE:   v1->value.d = v1->value.d >= v2->value.d; break;
-      case OP_EQ:   v1->value.d = v1->value.d == v2->value.d; break;
       case OP_LE:   v1->value.d = v1->value.d <= v2->value.d; break;
       case OP_LT:   v1->value.d = v1->value.d <  v2->value.d; break;
-      case OP_NE:   v1->value.d = v1->value.d != v2->value.d; break;
+      case OP_EQ:   /* EQ and NE are problematic for floating point */
+      case OP_NE:   /* so until I figure something out, no support  */
       case OP_BOR:
       case OP_BEOR:
       case OP_BAND:
@@ -102,10 +102,10 @@ static bool feval(
       case OP_LAND: v1->value.f = v1->value.f && v2->value.f; break;
       case OP_GT:   v1->value.f = v1->value.f >  v2->value.f; break;
       case OP_GE:   v1->value.f = v1->value.f >= v2->value.f; break;
-      case OP_EQ:   v1->value.f = v1->value.f == v2->value.f; break;
       case OP_LE:   v1->value.f = v1->value.f <= v2->value.f; break;
       case OP_LT:   v1->value.f = v1->value.f <  v2->value.f; break;
-      case OP_NE:   v1->value.f = v1->value.f != v2->value.f; break;
+      case OP_EQ:   /* EQ and NE are problematic for floating point */
+      case OP_NE:   /* so until I figure something out, no support  */
       case OP_BOR:
       case OP_BEOR:
       case OP_BAND:
