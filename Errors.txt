@@ -91,3 +91,7 @@ E0090: floating point exceeds range of Color Computer
 E0091: negative exponents for integers not supported
 E0092: operator not supported for floats
 E0093: factorial not defined for negative numbers
+E0094: value not defined
+E0095: %s: not enough data
+E0096: size can't be 0
+E0097: %s: contains no data

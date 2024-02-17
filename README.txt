@@ -421,11 +421,19 @@ non-standard pesudo operation for most 6809 assemblers.
 
 		Form Double Byte
 
-	INCBIN "filename"
+	INCBIN "filename"[,offset[,length]]
 
 		(Non-standard) Include verbatim the given file into the
 		program.  No interpretation of the contents is done on the
-		input file.
+		input file.  If the offset (defaults to 0) is given, copy
+		the contents of the file from that location onward.  If the
+		length isn't given, then the contents from the offset to the
+		end of the file is done.
+
+		If the length is negative, then the "end of file" is
+		considered the total size of the file minus the absolute
+		value of the given length and the length is recalculated
+		from the offset and this modified length of the file.
 
 	INCLUDE "filename"
 

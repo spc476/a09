@@ -1321,10 +1321,14 @@ static bool pseudo_include(struct opcdata *opd)
 static bool pseudo_incbin(struct opcdata *opd)
 {
   assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
   
   struct buffer  filename;
   FILE          *fp;
-  bool           fill = false;
+  int            c;
+  long           fsize;
+  long           start = 0;
+  long           len   = 0;
   
   if (!parse_string(opd->a09,&filename,opd->buffer))
     return false;
@@ -1332,37 +1336,106 @@ static bool pseudo_incbin(struct opcdata *opd)
   assert(filename.widx < sizeof(filename.buf));
   filename.buf[filename.widx++] = '\0';
   
-  if (opd->pass == 1)
+  /*-------------------------------------------
+  ; check for starting offset and length
+  ;--------------------------------------------*/
+  
+  c = skip_space(opd->buffer);
+  if (c == ',')
   {
-    fp = fopen(filename.buf,"rb");
-    if (fp == NULL)
-      return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
-    if (fseek(fp,0,SEEK_END) == -1)
-      return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
-    long fsize = ftell(fp);
-    if (fsize < 0)
-      return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
-    if (fsize > UINT16_MAX - opd->a09->pc)
-      return message(opd->a09,MSG_ERROR,"E0043: %s: file too big",filename.buf);
-    opd->data   = true;
-    opd->datasz = fsize;
-    fclose(fp);
-    add_file_dep(opd->a09,filename.buf);
+    struct value v;
+    if (!expr(&v,opd->a09,opd->buffer,opd->pass))
+      return false;
+    if ((opd->pass == 2) && !v.defined)
+      return message(opd->a09,MSG_ERROR,"E0094: value not defined");
+    start = v.value;
+    
+    c = skip_space(opd->buffer);
+    if (c == ',')
+    {
+      bool neg = false;
+      
+      c = skip_space(opd->buffer);
+      if (c == '-')
+        neg = true;
+      else
+        opd->buffer->ridx--;
+        
+      if (!expr(&v,opd->a09,opd->buffer,opd->pass))
+        return false;
+      if ((opd->pass == 2) && !v.defined)
+        return message(opd->a09,MSG_ERROR,"E0094: value not defined");
+      if (v.value == 0)
+        return message(opd->a09,MSG_ERROR,"E0096: size can't be 0");
+      len = v.value;
+      if (neg)
+        len = -len;
+    }
   }
+  
+  fp = fopen(filename.buf,"rb");
+  if (fp == NULL)
+    return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
+  if (fseek(fp,0,SEEK_END) == -1)
+    return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
+  fsize = ftell(fp);
+  if (fsize < 0)
+    return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
+  
+  if (fsize == 0)
+    return message(opd->a09,MSG_ERROR,"E0097: %s: contains no data",filename.buf);
+    
+  if (start >= fsize)
+    return message(opd->a09,MSG_ERROR,"E0095: %s: not enough data",filename.buf);
+    
+  if (len == 0)
+    len = fsize - start;
+  else if (len > 0)
+  {
+    if (len > fsize - start)
+      return message(opd->a09,MSG_ERROR,"E0095: %s: not enough data",filename.buf);
+  }
+  else
+  {
+    len = (fsize + len) - start; /* len is < 0, so the + */
+    if (len <= 0)
+      return message(opd->a09,MSG_ERROR,"E0095: %s: not enough data",filename.buf);
+  }
+  
+  if (len > UINT16_MAX - opd->a09->pc)
+    return message(opd->a09,MSG_ERROR,"E0043: %s: file too big",filename.buf);
+    
+  assert(len   > 0);
+  assert(start < fsize);
+  assert(start + len <= fsize);
+  
+  opd->data   = true;
+  opd->datasz = len;
+  
+  if (opd->pass == 1)
+    add_file_dep(opd->a09,filename.buf);
   else if (opd->pass == 2)
   {
-    char   buffer[BUFSIZ];
     size_t bsz;
+    bool   fill = false;
     
-    fp = fopen(filename.buf,"rb");
-    if (fp == NULL)
+    if (fseek(fp,start,SEEK_SET) == -1)
       return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
       
     do
     {
-      bsz = fread(buffer,1,sizeof(buffer),fp);
+      assert(len >= 0);
+      
+      char   buffer[BUFSIZ];
+      size_t amount = min(sizeof(buffer),(size_t)len);
+      bsz           = fread(buffer,1,amount,fp);
+      
       if (ferror(fp))
         return message(opd->a09,MSG_ERROR,"E0044: %s: failed reading",filename.buf);
+        
+      assert(amount <= (unsigned)len);
+      len -= (long)amount;
+      
       if (!fill)
       {
         opd->sz   = min(bsz,sizeof(opd->bytes));
@@ -1376,11 +1449,10 @@ static bool pseudo_incbin(struct opcdata *opd)
         if (!opd->a09->format.def.data_write(&opd->a09->format,opd,buffer,bsz))
           return false;
       }
-      opd->datasz += bsz;
     } while (bsz > 0);
-    fclose(fp);
   }
   
+  fclose(fp);
   return true;
 }
 
