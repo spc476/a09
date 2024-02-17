@@ -272,7 +272,7 @@ static bool fvalue(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int p
       else
       {
         float v = 1.0f;
-        while(pv->value.f > 0.0)
+        while(pv->value.f > 0.0f)
         {
           v = v * pv->value.f;
           pv->value.f = pv->value.f - 1.0f;
