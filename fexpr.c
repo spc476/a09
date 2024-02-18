@@ -53,6 +53,17 @@ static bool feval(
                   bool                    fdouble
 )
 {
+  static char const *const toper[] =
+  {
+    [OP_EQ]   = "=",
+    [OP_NE]   = "<>",
+    [OP_BOR]  = "|",
+    [OP_BEOR] = "^",
+    [OP_BAND] = "&",
+    [OP_SHR]  = ">>",
+    [OP_SHR]  = "<<",
+  };
+  
   assert(a09 != NULL);
   assert(v1  != NULL);
   assert(v2  != NULL);
@@ -76,7 +87,7 @@ static bool feval(
       case OP_BEOR:
       case OP_BAND:
       case OP_SHR:
-      case OP_SHL:  return message(a09,MSG_ERROR,"E0092: operator not supported for floats");
+      case OP_SHL:  return message(a09,MSG_ERROR,"E0092: operator '%s' not supported for floats",toper[op]);
       case OP_SUB:  v1->value.d = v1->value.d -  v2->value.d; break;
       case OP_ADD:  v1->value.d = v1->value.d +  v2->value.d; break;
       case OP_MUL:  v1->value.d = v1->value.d *  v2->value.d; break;
@@ -110,7 +121,7 @@ static bool feval(
       case OP_BEOR:
       case OP_BAND:
       case OP_SHR:
-      case OP_SHL:  return message(a09,MSG_ERROR,"E0092: operator not supported for floats");
+      case OP_SHL:  return message(a09,MSG_ERROR,"E0092: operator '%s' not supported for floats",toper[op]);
       case OP_SUB:  v1->value.f = v1->value.f -  v2->value.f; break;
       case OP_ADD:  v1->value.f = v1->value.f +  v2->value.f; break;
       case OP_MUL:  v1->value.f = v1->value.f *  v2->value.f; break;

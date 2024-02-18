@@ -89,7 +89,7 @@ E0088: stack size must be between 2 and 4096
 E0089: can only set outside a .TEST directive
 E0090: floating point exceeds range of Color Computer
 E0091: negative exponents for integers not supported
-E0092: operator not supported for floats
+E0092: operator '%s' not supported for floats
 E0093: factorial not defined for negative numbers
 E0094: value not defined
 E0095: %s: not enough data
