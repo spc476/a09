@@ -134,7 +134,7 @@ bool fdefault_test(union format *fmt,struct opcdata *opd)
     char                 c;
     
     if (!read_line(opd->a09->in,&opd->a09->inbuf))
-      return true;
+      return false;
       
     opd->a09->lnum++;
     print_list(opd->a09,opd,false); // XXX extra line in list file
