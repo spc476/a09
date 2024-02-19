@@ -2066,7 +2066,7 @@ struct opcode const *op_find(char const *name)
     { ".ASSERT" , pseudo__assert , 0x00 , 0x00 , false } , // test
     { ".CODE"   , pseudo__code   , 0x00 , 0x00 , false } ,
     { ".DP"     , pseudo__dp     , 0x00 , 0x00 , false } ,
-    { ".ENDTST" , pseudo__endtst , 0x01 , 0x00 , false } , // test
+    { ".ENDTST" , pseudo__endtst , 0x00 , 0x00 , false } , // test
     { ".FLOAT"  , pseudo__float  , 0x00 , 0x00 , false } ,
     { ".FLOATD" , pseudo__float  , 0x01 , 0x00 , false } ,
     { ".NOTEST" , pseudo__notest , 0x00 , 0x00 , false } , // test

@@ -20,6 +20,8 @@
 *
 ****************************************************************************/
 
+#include <string.h>
+
 #include "a09.h"
 
 /**************************************************************************/
@@ -147,7 +149,7 @@ bool fdefault_test(union format *fmt,struct opcdata *opd)
     opd->a09->inbuf.ridx--;
     if (!parse_op(&opd->a09->inbuf,&op))
       return message(opd->a09,MSG_ERROR,"E0003: unknown opcode");
-    if (op->opcode == 1)
+    if (memcmp(op->name,".ENDTST",8) == 0)
       return true;
       
     //print_list(opd->a09,opd,false); // XXX missing line in list file
