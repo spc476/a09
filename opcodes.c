@@ -2016,7 +2016,7 @@ static bool pseudo__float(struct opcdata *opd)
     
     if ((opd->op->opcode == 0) && !opd->a09->fdecb)
     {
-      if (!fexpr(&fv,opd->a09,opd->buffer,opd->pass,false))
+      if (!rexpr(&fv,opd->a09,opd->buffer,opd->pass,false))
         return false;
       opd->datasz += sizeof(float);
       
@@ -2028,7 +2028,7 @@ static bool pseudo__float(struct opcdata *opd)
     }
     else
     {
-      if (!fexpr(&fv,opd->a09,opd->buffer,opd->pass,true))
+      if (!rexpr(&fv,opd->a09,opd->buffer,opd->pass,true))
         return false;
       opd->datasz += sizeof(double);
       

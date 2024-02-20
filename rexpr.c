@@ -45,7 +45,7 @@
 
 /**************************************************************************/
 
-static bool feval(
+static bool reval(
                   struct a09    *         a09,
                   struct fvalue *restrict v1,
                   enum operator           op,
@@ -146,7 +146,7 @@ static bool feval(
 
 /**************************************************************************/
 
-static bool fvalue(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool fdouble)
+static bool rvalue(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool fdouble)
 {
   assert(pv     != NULL);
   assert(a09    != NULL);
@@ -300,7 +300,7 @@ static bool fvalue(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int p
 
 /**************************************************************************/
 
-static bool ffactor(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool fdouble)
+static bool rfactor(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool fdouble)
 {
   assert(pv     != NULL);
   assert(a09    != NULL);
@@ -328,7 +328,7 @@ static bool ffactor(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int 
     if (c == '\0')
       return message(a09,MSG_ERROR,"E0010: unexpected end of input");
     buffer->ridx--;
-    if (!fexpr(pv,a09,buffer,pass,fdouble))
+    if (!rexpr(pv,a09,buffer,pass,fdouble))
       return false;
     c = skip_space(buffer);
     if (c != ')')
@@ -337,7 +337,7 @@ static bool ffactor(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int 
   else
   {
     buffer->ridx--;
-    if (!fvalue(pv,a09,buffer,pass,fdouble))
+    if (!rvalue(pv,a09,buffer,pass,fdouble))
       return false;
   }
   
@@ -354,7 +354,7 @@ static bool ffactor(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int 
 
 /**************************************************************************/
 
-bool fexpr(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool fdouble)
+bool rexpr(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool fdouble)
 {
   struct optable const *op;
   struct fvalue         vstack[15];
@@ -367,7 +367,7 @@ bool fexpr(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool
   assert(buffer != NULL);
   assert((pass == 1) || (pass == 2));
   
-  if (!ffactor(&vstack[--vsp],a09,buffer,pass,fdouble))
+  if (!rfactor(&vstack[--vsp],a09,buffer,pass,fdouble))
     return false;
     
   while(true)
@@ -384,7 +384,7 @@ bool fexpr(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool
       {
         if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
           return message(a09,MSG_ERROR,"E0065: Internal error---expression parser mismatch");
-        if (!feval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp],fdouble))
+        if (!reval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp],fdouble))
           return false;
         vsp++;
         osp++;
@@ -399,7 +399,7 @@ bool fexpr(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool
     
     if (vsp == 0)
       return message(a09,MSG_ERROR,"E0066: expression too complex");
-    if (!ffactor(&vstack[--vsp],a09,buffer,pass,fdouble))
+    if (!rfactor(&vstack[--vsp],a09,buffer,pass,fdouble))
       return false;
   }
   
@@ -407,7 +407,7 @@ bool fexpr(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool
   {
     if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
       return message(a09,MSG_ERROR,"E0065: Internal error---expression parser mismatch");
-    if (!feval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp],fdouble))
+    if (!reval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp],fdouble))
       return false;
     vsp++;
     osp++;
