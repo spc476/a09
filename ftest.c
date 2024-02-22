@@ -2284,7 +2284,7 @@ bool format_test_init(struct a09 *a09)
     return true;
   }
   else
-    return false;
+    return message(a09,MSG_ERROR,"E0046: out of memory");
 }
 
 /**************************************************************************/
