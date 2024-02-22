@@ -2251,8 +2251,6 @@ bool format_test_init(struct a09 *a09)
   struct testdata *data = malloc(sizeof(struct testdata));
   if (data != NULL)
   {
-    memset(&data->dis,0,sizeof(data->dis));
-    
     data->a09       = a09;
     data->corefile  = NULL;
     data->Asserts   = NULL;
