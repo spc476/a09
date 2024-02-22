@@ -61,7 +61,7 @@ static bool reval(
     [OP_BEOR] = "^",
     [OP_BAND] = "&",
     [OP_SHR]  = ">>",
-    [OP_SHR]  = "<<",
+    [OP_SHL]  = "<<",
   };
   
   assert(a09 != NULL);
