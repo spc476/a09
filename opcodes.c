@@ -933,25 +933,28 @@ static bool op_pshpul(struct opcdata *opd)
   if (c == '\0')
     return false;
     
-  opd->buffer->ridx--;
-  
-  while(!isspace(c) && (c != ';') && (c != '0'))
+  if (c != '-')
   {
-    struct indexregs const *reg;
+    opd->buffer->ridx--;
     
-    if (!sop_findreg(&reg,&opd->buffer->buf[opd->buffer->ridx],skip))
-      return message(opd->a09,MSG_ERROR,"E0031: bad register name for PSH/PUL");
-    opd->buffer->ridx += reg->reg[0];
-    operand |= reg->pushpull;
-    c = skip_space(opd->buffer);
-    if (c == '\0')
-      break;
-    if (c == ';')
-      break;
-    if (c != ',')
-      return message(opd->a09,MSG_ERROR,"E0032: missing comma in register list");
+    while(!isspace(c) && (c != ';') && (c != '0'))
+    {
+      struct indexregs const *reg;
+      
+      if (!sop_findreg(&reg,&opd->buffer->buf[opd->buffer->ridx],skip))
+        return message(opd->a09,MSG_ERROR,"E0031: bad register name for PSH/PUL");
+      opd->buffer->ridx += reg->reg[0];
+      operand |= reg->pushpull;
+      c = skip_space(opd->buffer);
+      if (c == '\0')
+        break;
+      if (c == ';')
+        break;
+      if (c != ',')
+        return message(opd->a09,MSG_ERROR,"E0032: missing comma in register list");
+    }
   }
-  
+    
   opd->bytes[opd->sz++] = opd->op->opcode;
   opd->bytes[opd->sz++] = operand;
   return true;

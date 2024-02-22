@@ -144,8 +144,8 @@ numbers can be used to separate groups.  Some examples:
 	$FF		hexadecimal
 	$F_ff_3		hexadecimal
 
-  There is also a special form of value for use with the ANDCC, ORCC and
-CWAI instructions.  Instead of an immediate value, like:
+  There is a special form of value for use with the ANDCC, ORCC and CWAI
+instructions.  Instead of an immediate value, like:
 
 	ORCC	#$50	; disable interrupts
 	ANDCC	#$AF	; enable interrupts
@@ -172,6 +172,16 @@ flags are:
 	H	half-carry
 	F	fast interrupt
 	E	entire state
+
+  There is a special form of value for use with the PSHS/PULS/PSHU/PULU
+instructions.  Instead of a list of registers, you can specify no registers
+at all:
+
+	PSHS	-
+	PULU	-
+
+  This generates an operand byte of 0.  This can be useful if you need a
+5-cycle NOP instruction.
 
   The list of supported pseudo operations---if label "Non-standard", it's a
 non-standard pesudo operation for most 6809 assemblers.
