@@ -29,6 +29,19 @@
 
 #include "a09.h"
 
+struct format_srec
+{
+  char const    *S0file;
+  uint16_t       addr;
+  uint16_t       exec;
+  size_t         recsize;
+  size_t         idx;
+  bool           endf;
+  bool           execf;
+  bool           override;
+  unsigned char  buffer[252];
+};
+
 /**************************************************************************/
 
 char const format_srec_usage[] =
@@ -72,17 +85,18 @@ static void write_record(
 
 /**************************************************************************/
 
-static bool fsrec_cmdline(union format *fmt,struct a09 *a09,int argc,int *pi,char *argv[])
+static bool fsrec_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,char *argv[])
 {
-  assert(fmt  != NULL);
-  assert(a09  != NULL);
-  assert(argc >  0);
-  assert(pi   != NULL);
-  assert(*pi  >  0);
-  assert(argv != NULL);
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_SREC);
+  assert(a09          != NULL);
+  assert(argc         >  0);
+  assert(pi           != NULL);
+  assert(*pi          >  0);
+  assert(argv         != NULL);
   
-  struct format_srec *format = &fmt->srec;
+  struct format_srec *format = fmt->data;
   
   switch(argv[*pi][1])
   {
@@ -121,16 +135,17 @@ static bool fsrec_cmdline(union format *fmt,struct a09 *a09,int argc,int *pi,cha
 
 /**************************************************************************/
 
-static bool fsrec_pass_start(union format *fmt,struct a09 *a09,int pass)
+static bool fsrec_pass_start(struct format *fmt,struct a09 *a09,int pass)
 {
-  assert(fmt != NULL);
-  assert(a09 != NULL);
-  assert((pass == 1) || (pass == 2));
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_SREC);
+  assert(a09          != NULL);
+  assert((pass == 1) || (pass == 2));
   
   if (pass == 2)
   {
-    struct format_srec *format = &fmt->srec;
+    struct format_srec *format = fmt->data;
     
     if (format->S0file != NULL)
     {
@@ -152,16 +167,17 @@ static bool fsrec_pass_start(union format *fmt,struct a09 *a09,int pass)
 
 /**************************************************************************/
 
-static bool fsrec_pass_end(union format *fmt,struct a09 *a09,int pass)
+static bool fsrec_pass_end(struct format *fmt,struct a09 *a09,int pass)
 {
-  assert(fmt != NULL);
-  assert(a09 != NULL);
-  assert((pass == 1) || (pass == 2));
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_SREC);
+  assert(a09          != NULL);
+  assert((pass == 1) || (pass == 2));
   
   if (pass == 2)
   {
-    struct format_srec *format = &fmt->srec;
+    struct format_srec *format = fmt->data;
     
     if (!format->endf)
     {
@@ -178,20 +194,21 @@ static bool fsrec_pass_end(union format *fmt,struct a09 *a09,int pass)
 /**************************************************************************/
 
 static bool fsrec_end(
-        union format        *fmt,
+        struct format       *fmt,
         struct opcdata      *opd,
         struct symbol const *sym
 )
 {
-  assert(fmt != NULL);
-  assert(opd != NULL);
-  assert(sym != NULL);
-  assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_SREC);
+  assert(opd          != NULL);
+  assert(sym          != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 2)
   {
-    struct format_srec *format = &fmt->srec;
+    struct format_srec *format = fmt->data;
     
     if (format->endf)
       return message(opd->a09,MSG_ERROR,"E0056: END section already written");
@@ -212,21 +229,22 @@ static bool fsrec_end(
 /**************************************************************************/
 
 static bool fsrec_org(
-        union format   *fmt,
+        struct format  *fmt,
         struct opcdata *opd,
         uint16_t        start,
         uint16_t        last
 )
 {
-  assert(fmt != NULL);
-  assert(opd != NULL);
-  assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_SREC);
+  assert(opd          != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
   (void)last;
   
   if (opd->pass == 2)
   {
-    struct format_srec *format = &fmt->srec;
+    struct format_srec *format = fmt->data;
     
     if (format->idx > 0)
     {
@@ -244,28 +262,30 @@ static bool fsrec_org(
 /**************************************************************************/
 
 static bool write_data(
-        struct format_srec *format,
-        FILE               *out,
-        void const         *ptr,
-        size_t              len
+        struct format *format,
+        FILE          *out,
+        void const    *ptr,
+        size_t         len
 )
 {
-  assert(format != NULL);
-  assert(out    != NULL);
-  assert(ptr    != NULL);
+  assert(format          != NULL);
+  assert(format->data    != NULL);
   assert(format->backend == BACKEND_SREC);
+  assert(out             != NULL);
+  assert(ptr             != NULL);
   
-  char const *buffer = ptr;
+  struct format_srec *data   = format->data;
+  char const         *buffer = ptr;
   
   for (size_t i = 0 ; i < len ; i++)
   {
-    if (format->idx == format->recsize)
+    if (data->idx == data->recsize)
     {
-      write_record(out,'1',format->addr,format->buffer,format->recsize);
-      format->addr += format->recsize;
-      format->idx   = 0;
+      write_record(out,'1',data->addr,data->buffer,data->recsize);
+      data->addr += data->recsize;
+      data->idx   = 0;
     }
-    format->buffer[format->idx++] = buffer[i];
+    data->buffer[data->idx++] = buffer[i];
   }
   
   return true;
@@ -273,48 +293,51 @@ static bool write_data(
 
 /**************************************************************************/
 
-static bool fsrec_inst_write(union format *fmt,struct opcdata *opd)
+static bool fsrec_inst_write(struct format *fmt,struct opcdata *opd)
 {
-  assert(fmt       != NULL);
-  assert(opd       != NULL);
-  assert(opd->pass == 2);
-  assert(!opd->data);
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_SREC);
+  assert(opd          != NULL);
+  assert(opd->pass    == 2);
+  assert(!opd->data);
   
-  return write_data(&fmt->srec,opd->a09->out,opd->bytes,opd->sz);
+  return write_data(fmt,opd->a09->out,opd->bytes,opd->sz);
 }
 
 /**************************************************************************/
 
 static bool fsrec_data_write(
-        union format   *fmt,
+        struct format  *fmt,
         struct opcdata *opd,
         char const     *buffer,
         size_t          len
 )
 {
-  assert(fmt       != NULL);
-  assert(opd       != NULL);
-  assert(buffer    != NULL);
-  assert(opd->pass == 2);
-  assert(opd->data);
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_SREC);
+  assert(opd          != NULL);
+  assert(buffer       != NULL);
+  assert(opd->pass    == 2);
+  assert(opd->data);
   
-  return write_data(&fmt->srec,opd->a09->out,buffer,len);
+  return write_data(fmt,opd->a09->out,buffer,len);
 }
 
 /**************************************************************************/
 
-static bool fsrec_align(union format *fmt,struct opcdata *opd)
+static bool fsrec_align(struct format *fmt,struct opcdata *opd)
 {
-  assert(fmt != NULL);
-  assert(opd != NULL);
-  assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_SREC);
+  assert(opd          != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 2)
   {
-    struct format_srec *format = &fmt->srec;
+    struct format_srec *format = fmt->data;
     
     for (size_t i = 0 ; i < opd->datasz ; i++)
     {
@@ -333,16 +356,17 @@ static bool fsrec_align(union format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool fsrec_rmb(union format *fmt,struct opcdata *opd)
+static bool fsrec_rmb(struct format *fmt,struct opcdata *opd)
 {
-  assert(fmt != NULL);
-  assert(opd != NULL);
-  assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_SREC);
+  assert(opd          != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 2)
   {
-    struct format_srec *format = &fmt->srec;
+    struct format_srec *format = fmt->data;
     
     for (size_t i = 0 ; i < opd->value.value ; i++)
     {
@@ -361,40 +385,52 @@ static bool fsrec_rmb(union format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-bool format_srec_init(struct format_srec *fmt,struct a09 *a09)
+bool format_srec_init(struct a09 *a09)
 {
-  assert(fmt != NULL);
-  assert(a09 != NULL);
-  (void)a09;
+  static struct format const callbacks =
+  {
+    .backend    = BACKEND_SREC,
+    .cmdline    = fsrec_cmdline,
+    .pass_start = fsrec_pass_start,
+    .pass_end   = fsrec_pass_end,
+    .inst_write = fsrec_inst_write,
+    .data_write = fsrec_data_write,
+    .opt        = fdefault,
+    .dp         = fdefault,
+    .code       = fdefault,
+    .align      = fsrec_align,
+    .end        = fsrec_end,
+    .org        = fsrec_org,
+    .rmb        = fsrec_rmb,
+    .setdp      = fdefault,
+    .test       = fdefault_test,
+    .tron       = fdefault,
+    .troff      = fdefault,
+    .Assert     = fdefault,
+    .endtst     = fdefault,
+    .fini       = fdefault_fini,
+    .data       = NULL,
+  };
   
-  fmt->backend    = BACKEND_SREC;
-  fmt->cmdline    = fsrec_cmdline;
-  fmt->pass_start = fsrec_pass_start;
-  fmt->pass_end   = fsrec_pass_end;
-  fmt->inst_write = fsrec_inst_write;
-  fmt->data_write = fsrec_data_write;
-  fmt->opt        = fdefault;
-  fmt->dp         = fdefault;
-  fmt->code       = fdefault;
-  fmt->align      = fsrec_align;
-  fmt->end        = fsrec_end;
-  fmt->org        = fsrec_org;
-  fmt->rmb        = fsrec_rmb;
-  fmt->setdp      = fdefault;
-  fmt->test       = fdefault_test;
-  fmt->tron       = fdefault;
-  fmt->troff      = fdefault;
-  fmt->Assert     = fdefault;
-  fmt->endtst     = fdefault;
-  fmt->fini       = fdefault_fini;
-  fmt->addr       = 0;
-  fmt->exec       = 0;
-  fmt->recsize    = 34;
-  fmt->idx        = 0;
-  fmt->endf       = false;
-  fmt->execf      = false;
-  fmt->override   = false;
-  return true;
+  assert(a09 != NULL);
+  
+  struct format_srec *data = malloc(sizeof(struct format_srec));
+  if (data != NULL)
+  {
+    data->S0file     = NULL;
+    data->addr       = 0;
+    data->exec       = 0;
+    data->recsize    = 34;
+    data->idx        = 0;
+    data->endf       = false;
+    data->execf      = false;
+    data->override   = false;
+    a09->format      = callbacks;
+    a09->format.data = data;
+    return true;
+  }
+  else
+    return false;
 }
 
 /**************************************************************************/

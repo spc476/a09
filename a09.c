@@ -498,7 +498,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
       a09->pc += opd.sz;
       
     if ((pass == 2) && (opd.sz > 0) && (opd.datasz == 0) && a09->obj)
-      return a09->format.def.inst_write(&a09->format,&opd);
+      return a09->format.inst_write(&a09->format,&opd);
   }
   
   return rc;
@@ -520,7 +520,7 @@ bool assemble_pass(struct a09 *a09,int pass)
   a09->label = (label){ .s = 0 , .text = { '\0' } };
   
   message(a09,MSG_DEBUG,"Pass %d",pass);
-  if (!a09->format.def.pass_start(&a09->format,a09,pass))
+  if (!a09->format.pass_start(&a09->format,a09,pass))
     return false;
     
   while(!feof(a09->in))
@@ -532,7 +532,7 @@ bool assemble_pass(struct a09 *a09,int pass)
       return false;
   }
   
-  if (!a09->format.def.pass_end(&a09->format,a09,pass))
+  if (!a09->format.pass_end(&a09->format,a09,pass))
     return false;
     
   a09->label = saved;
@@ -639,22 +639,22 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
                return message(a09,MSG_ERROR,"E0068: missing option argument");
              else if (strcmp(format,"bin") == 0)
              {
-               if (!format_bin_init(&a09->format.bin,a09))
+               if (!format_bin_init(a09))
                  return -1;
              }
              else if (strcmp(format,"rsdos") == 0)
              {
-               if (!format_rsdos_init(&a09->format.rsdos,a09))
+               if (!format_rsdos_init(a09))
                  return -1;
              }
              else if (strcmp(format,"srec") == 0)
              {
-               if (!format_srec_init(&a09->format.srec,a09))
+               if (!format_srec_init(a09))
                  return -1;
              }
              else if (strcmp(format,"test") == 0)
              {
-               if (!format_test_init(&a09->format.test,a09))
+               if (!format_test_init(a09))
                  return -1;
              }
              else
@@ -669,7 +669,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              return -1;
              
         default:
-             if (!a09->format.def.cmdline(&a09->format,a09,argc,&i,argv))
+             if (!a09->format.cmdline(&a09->format,a09,argc,&i,argv))
                return -1;
       }
     }
@@ -750,7 +750,7 @@ static int cleanup(struct a09 *a09,bool success)
     remove(a09->outfile);
   }
   
-  a09->format.def.fini(&a09->format,a09);
+  a09->format.fini(&a09->format,a09);
   
   symbol_freetable(a09->symtab);
   for (size_t i = 0 ; i < a09->ndeps ; i++)
@@ -763,9 +763,9 @@ static int cleanup(struct a09 *a09,bool success)
 
 int main(int argc,char *argv[])
 {
-  int         fi;
-  bool        rc;
-  struct a09  a09 =
+  int        fi;
+  bool       rc;
+  struct a09 a09 =
   {
     .infile    = argv[0],
     .outfile   = "a09.obj",
@@ -788,7 +788,7 @@ int main(int argc,char *argv[])
     .inbuf     = { .buf = {0}, .widx = 0, .ridx = 0 },
   };
   
-  format_bin_init(&a09.format.bin,&a09);
+  format_bin_init(&a09);
   fi = parse_command(argc,argv,&a09);
   
   if (fi == -1)

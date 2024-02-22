@@ -33,7 +33,7 @@ char const format_bin_usage[] = "";
 
 /**************************************************************************/
 
-static bool fbin_align(union format *fmt,struct opcdata *opd)
+static bool fbin_align(struct format *fmt,struct opcdata *opd)
 {
   assert(fmt != NULL);
   assert(opd != NULL);
@@ -52,37 +52,41 @@ static bool fbin_align(union format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool fbin_org(union format *fmt,struct opcdata *opd,uint16_t start,uint16_t last)
+static bool fbin_org(struct format *format,struct opcdata *opd,uint16_t start,uint16_t last)
 {
-  assert(fmt != NULL);
-  assert(opd != NULL);
+  assert(format != NULL);
+  assert(opd    != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
-  assert(fmt->backend == BACKEND_BIN);
-  
-  struct format_bin *format = &fmt->bin;
+  assert(format->backend == BACKEND_BIN);
   
   if (opd->pass == 2)
   {
-    if (format->first)
+    /*----------------------------------------------------------------------
+    ; format->data is used as a flag; if NULL, it's false, if not NULL, it's
+    ; true.  It saves a memory allocation.
+    ;-----------------------------------------------------------------------*/
+    
+    if (format->data)
     {
       uint16_t delta = start - last;
       if (fseek(opd->a09->out,delta,SEEK_CUR) == -1)
         return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
     }
     
-    format->first = true;
+    format->data = format;
   }
   return true;
 }
 
 /**************************************************************************/
 
-static bool fbin_rmb(union format *fmt,struct opcdata *opd)
+static bool fbin_rmb(struct format *format,struct opcdata *opd)
 {
-  (void)fmt;
+  assert(format != NULL);
   assert(opd != NULL);
   assert((opd->pass == 1 ) || (opd->pass == 2));
-  assert(fmt->backend == BACKEND_BIN);
+  assert(format->backend == BACKEND_BIN);
+  (void)format;
   
   if (opd->pass == 2)
   {
@@ -94,33 +98,36 @@ static bool fbin_rmb(union format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-bool format_bin_init(struct format_bin *fmt,struct a09 *a09)
+bool format_bin_init(struct a09 *a09)
 {
-  assert(fmt != NULL);
-  assert(a09 != NULL);
-  (void)a09;
+  static struct format const callbacks =
+  {
+    .backend    = BACKEND_BIN,
+    .cmdline    = fdefault_cmdline,
+    .pass_start = fdefault_pass,
+    .pass_end   = fdefault_pass,
+    .inst_write = fdefault_inst_write,
+    .data_write = fdefault_data_write,
+    .opt        = fdefault,
+    .dp         = fdefault,
+    .code       = fdefault,
+    .align      = fbin_align,
+    .end        = fdefault_end,
+    .org        = fbin_org,
+    .rmb        = fbin_rmb,
+    .setdp      = fdefault,
+    .test       = fdefault_test,
+    .tron       = fdefault,
+    .troff      = fdefault,
+    .Assert     = fdefault,
+    .endtst     = fdefault,
+    .fini       = fdefault_fini,
+    .data       = NULL,
+  };
   
-  fmt->backend    = BACKEND_BIN;
-  fmt->cmdline    = fdefault_cmdline;
-  fmt->pass_start = fdefault_pass;
-  fmt->pass_end   = fdefault_pass;
-  fmt->inst_write = fdefault_inst_write;
-  fmt->data_write = fdefault_data_write;
-  fmt->opt        = fdefault;
-  fmt->dp         = fdefault;
-  fmt->code       = fdefault;
-  fmt->align      = fbin_align;
-  fmt->end        = fdefault_end;
-  fmt->org        = fbin_org;
-  fmt->rmb        = fbin_rmb;
-  fmt->setdp      = fdefault;
-  fmt->test       = fdefault_test;
-  fmt->tron       = fdefault;
-  fmt->troff      = fdefault;
-  fmt->Assert     = fdefault;
-  fmt->endtst     = fdefault;
-  fmt->fini       = fdefault_fini;
-  fmt->first      = false;
+  assert(a09 != NULL);
+  a09->format      = callbacks;
+  a09->format.data = NULL;
   return true;
 }
 

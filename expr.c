@@ -324,7 +324,7 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
     pv->value = -pv->value;
   else if (not)
     pv->value = ~pv->value;
-  
+    
   return true;
 }
 

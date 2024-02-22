@@ -152,7 +152,7 @@ static bool rvalue(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int p
   assert(a09    != NULL);
   assert(buffer != NULL);
   assert((pass == 1) || (pass == 2));
-
+  
   char c   = skip_space(buffer);
   bool rc  = true;
   
@@ -250,7 +250,7 @@ static bool rvalue(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int p
     return message(a09,MSG_ERROR,"E0006: not a value");
     
   /*---------------------------------------------------------------------
-  ; Check for an exclamation mark, which we're using to denote factorial. 
+  ; Check for an exclamation mark, which we're using to denote factorial.
   ; 0! is 1 (by definition).  A negative number is an error.
   ;----------------------------------------------------------------------*/
   
@@ -263,7 +263,7 @@ static bool rvalue(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int p
         return message(a09,MSG_ERROR,"E0093: factorial not defined for negative numbers");
       else if (pv->value.d == 0.0)
         pv->value.d = 1.0;
-      else 
+      else
       {
         double v = 1.0;
         while(pv->value.d > 0.0)
@@ -313,7 +313,7 @@ static bool rfactor(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int 
   char c = skip_space(buffer);
   if (c == '\0')
     return message(a09,MSG_ERROR,"E0010: unexpected end of input");
-  
+    
   if (c == '-')
   {
     neg = true;

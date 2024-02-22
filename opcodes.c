@@ -1061,7 +1061,7 @@ static bool pseudo_rmb(struct opcdata *opd)
   opd->data   = true;
   opd->datasz = opd->value.value;
   if (opd->a09->obj)
-    return opd->a09->format.def.rmb(&opd->a09->format,opd);
+    return opd->a09->format.rmb(&opd->a09->format,opd);
   else
     return true;
 }
@@ -1082,7 +1082,7 @@ static bool pseudo_org(struct opcdata *opd)
   opd->a09->pc = opd->value.value;
   
   if (opd->a09->obj)
-    return opd->a09->format.def.org(&opd->a09->format,opd,opd->value.value,last);
+    return opd->a09->format.org(&opd->a09->format,opd,opd->value.value,last);
   else
     return true;
 }
@@ -1095,7 +1095,7 @@ static bool pseudo_setdp(struct opcdata *opd)
   if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
     return false;
   opd->a09->dp = value_lsb(opd->a09,opd->value.value,opd->pass);
-  return opd->a09->format.def.setdp(&opd->a09->format,opd);
+  return opd->a09->format.setdp(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
@@ -1122,7 +1122,7 @@ static bool pseudo_end(struct opcdata *opd)
     return message(opd->a09,MSG_ERROR,"E0052: missing label for END");
   if (opd->pass == 2)
     sym->refs++;
-  return opd->a09->format.def.end(&opd->a09->format,opd,sym);
+  return opd->a09->format.end(&opd->a09->format,opd,sym);
 }
 
 /**************************************************************************/
@@ -1151,7 +1151,7 @@ static bool pseudo_fcb(struct opcdata *opd)
         opd->bytes[opd->sz++] = byte;
       if (opd->a09->obj)
       {
-        if (!opd->a09->format.def.data_write(&opd->a09->format,opd,(char *)&byte,1))
+        if (!opd->a09->format.data_write(&opd->a09->format,opd,(char *)&byte,1))
           return false;
       }
     }
@@ -1198,7 +1198,7 @@ static bool pseudo_fdb(struct opcdata *opd)
       }
       if (opd->a09->obj)
       {
-        if (!opd->a09->format.def.data_write(&opd->a09->format,opd,(char *)word,2))
+        if (!opd->a09->format.data_write(&opd->a09->format,opd,(char *)word,2))
           return false;
       }
     }
@@ -1235,7 +1235,7 @@ static bool pseudo_fcc(struct opcdata *opd)
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (opd->a09->obj)
     {
-      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
+      if (!opd->a09->format.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
         return false;
     }
   }
@@ -1264,7 +1264,7 @@ static bool pseudo_ascii(struct opcdata *opd)
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (opd->a09->obj)
     {
-      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
+      if (!opd->a09->format.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
         return false;
     }
   }
@@ -1381,7 +1381,7 @@ static bool pseudo_incbin(struct opcdata *opd)
   fsize = ftell(fp);
   if (fsize < 0)
     return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
-  
+    
   if (fsize == 0)
     return message(opd->a09,MSG_ERROR,"E0097: %s: contains no data",filename.buf);
     
@@ -1446,7 +1446,7 @@ static bool pseudo_incbin(struct opcdata *opd)
       
       if (opd->a09->obj)
       {
-        if (!opd->a09->format.def.data_write(&opd->a09->format,opd,buffer,bsz))
+        if (!opd->a09->format.data_write(&opd->a09->format,opd,buffer,bsz))
           return false;
       }
     } while (bsz > 0);
@@ -1545,7 +1545,7 @@ static bool pseudo__code(struct opcdata *opd)
   
   if (opd->pass == 1)
     message(opd->a09,MSG_WARNING,"W9999: FEATURE NOT FINISHED");
-  return opd->a09->format.def.code(&opd->a09->format,opd);
+  return opd->a09->format.code(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
@@ -1557,7 +1557,7 @@ static bool pseudo__dp(struct opcdata *opd)
   
   if (opd->pass == 1)
     message(opd->a09,MSG_WARNING,"W9999: FEATURE NOT FINISHED");
-  return opd->a09->format.def.dp(&opd->a09->format,opd);
+  return opd->a09->format.dp(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
@@ -1583,7 +1583,7 @@ static bool pseudo_align(struct opcdata *opd)
   opd->data   = true;
   opd->datasz = opd->value.value - rem;
   
-  return opd->a09->format.def.align(&opd->a09->format,opd);
+  return opd->a09->format.align(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
@@ -1611,7 +1611,7 @@ static bool pseudo_fcs(struct opcdata *opd)
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (opd->a09->obj)
     {
-      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
+      if (!opd->a09->format.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
         return false;
     }
   }
@@ -1627,7 +1627,7 @@ static bool pseudo__assert(struct opcdata *opd)
   assert(opd->a09 != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  return opd->a09->format.def.Assert(&opd->a09->format,opd);
+  return opd->a09->format.Assert(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
@@ -1638,7 +1638,7 @@ static bool pseudo__endtst(struct opcdata *opd)
   assert(opd->a09 != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  return opd->a09->format.def.endtst(&opd->a09->format,opd);
+  return opd->a09->format.endtst(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
@@ -1660,7 +1660,7 @@ static bool pseudo__test(struct opcdata *opd)
   assert(opd->a09 != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  return opd->a09->format.def.test(&opd->a09->format,opd);
+  return opd->a09->format.test(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
@@ -1671,7 +1671,7 @@ static bool pseudo__troff(struct opcdata *opd)
   assert(opd->a09 != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  return opd->a09->format.def.troff(&opd->a09->format,opd);
+  return opd->a09->format.troff(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
@@ -1682,7 +1682,7 @@ static bool pseudo__tron(struct opcdata *opd)
   assert(opd->a09 != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  return opd->a09->format.def.tron(&opd->a09->format,opd);
+  return opd->a09->format.tron(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
@@ -1715,7 +1715,7 @@ static bool pseudo__opt(struct opcdata *opd)
   if (c != '*')
   {
     opd->buffer->ridx--;
-    return opd->a09->format.def.opt(&opd->a09->format,opd);
+    return opd->a09->format.opt(&opd->a09->format,opd);
   }
   
   c = skip_space(opd->buffer);
@@ -1882,7 +1882,7 @@ static bool write_single(struct opcdata *opd,float val)
     opd->bytes[opd->sz] = be[i];
   if (opd->a09->obj)
   {
-    if (!opd->a09->format.def.data_write(&opd->a09->format,opd,be,sizeof(be)))
+    if (!opd->a09->format.data_write(&opd->a09->format,opd,be,sizeof(be)))
       return false;
   }
   return true;
@@ -1969,7 +1969,7 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
       
     if (opd->a09->obj)
     {
-      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,decbfloat,sizeof(decbfloat)))
+      if (!opd->a09->format.data_write(&opd->a09->format,opd,decbfloat,sizeof(decbfloat)))
         return false;
     }
   }
@@ -1986,7 +1986,7 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
       opd->bytes[opd->sz] = be[i];
     if (opd->a09->obj)
     {
-      if (!opd->a09->format.def.data_write(&opd->a09->format,opd,be,sizeof(be)))
+      if (!opd->a09->format.data_write(&opd->a09->format,opd,be,sizeof(be)))
         return false;
     }
 #else

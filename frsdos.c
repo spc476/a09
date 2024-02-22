@@ -23,10 +23,19 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <assert.h>
 
 #include "a09.h"
+
+struct format_rsdos
+{
+  long     section_hdr;
+  long     section_start;
+  uint16_t entry;
+  bool     endf;
+};
 
 /**************************************************************************/
 
@@ -118,26 +127,29 @@ static bool block_zero_write(
 
 /**************************************************************************/
 
-static bool frsdos_align(union format *fmt,struct opcdata *opd)
+static bool frsdos_align(struct format *fmt,struct opcdata *opd)
 {
-  assert(fmt != NULL);
-  assert(opd != NULL);
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_RSDOS);
-  return block_zero_write(&fmt->rsdos,opd,opd->datasz);
+  assert(opd          != NULL);
+  
+  return block_zero_write(fmt->data,opd,opd->datasz);
 }
 
 /**************************************************************************/
 
-static bool frsdos_end(union format *fmt,struct opcdata *opd,struct symbol const *sym)
+static bool frsdos_end(struct format *fmt,struct opcdata *opd,struct symbol const *sym)
 {
-  assert(fmt != NULL);
-  assert(opd != NULL);
-  assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_RSDOS);
+  assert(opd          != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 2)
   {
-    struct format_rsdos *format = &fmt->rsdos;
+    struct format_rsdos *format = fmt->data;
     unsigned char        hdr[5];
     
     if (format->endf)
@@ -171,17 +183,19 @@ static bool frsdos_end(union format *fmt,struct opcdata *opd,struct symbol const
 
 /**************************************************************************/
 
-static bool frsdos_org(union format *fmt,struct opcdata *opd,uint16_t start,uint16_t last)
+static bool frsdos_org(struct format *fmt,struct opcdata *opd,uint16_t start,uint16_t last)
 {
-  assert(fmt != NULL);
-  assert(opd != NULL);
-  assert((opd->pass == 1) || (opd->pass == 2));
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_RSDOS);
+  assert(opd          != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
   (void)last;
   
   if (opd->pass == 2)
   {
-    struct format_rsdos *format = &fmt->rsdos;
+    struct format_rsdos *format = fmt->data;
     long                 pos    = ftell(opd->a09->out);
     unsigned char        hdr[5];
     
@@ -209,47 +223,60 @@ static bool frsdos_org(union format *fmt,struct opcdata *opd,uint16_t start,uint
 
 /**************************************************************************/
 
-static bool frsdos_rmb(union format *fmt,struct opcdata *opd)
+static bool frsdos_rmb(struct format *fmt,struct opcdata *opd)
 {
-  assert(fmt != NULL);
-  assert(opd != NULL);
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_RSDOS);
-  return block_zero_write(&fmt->rsdos,opd,opd->value.value);
+  assert(opd          != NULL);
+  return block_zero_write(fmt->data,opd,opd->value.value);
 }
 
 /**************************************************************************/
 
-bool format_rsdos_init(struct format_rsdos *fmt,struct a09 *a09)
+bool format_rsdos_init(struct a09 *a09)
 {
-  assert(fmt != NULL);
+  static struct format const callbacks =
+  {
+    .backend       = BACKEND_RSDOS,
+    .cmdline       = fdefault_cmdline,
+    .pass_start    = fdefault_pass,
+    .pass_end      = fdefault_pass,
+    .inst_write    = fdefault_inst_write,
+    .data_write    = fdefault_data_write,
+    .opt           = fdefault,
+    .dp            = fdefault,
+    .code          = fdefault,
+    .align         = frsdos_align,
+    .end           = frsdos_end,
+    .org           = frsdos_org,
+    .rmb           = frsdos_rmb,
+    .setdp         = fdefault,
+    .test          = fdefault_test,
+    .tron          = fdefault,
+    .troff         = fdefault,
+    .Assert        = fdefault,
+    .endtst        = fdefault,
+    .fini          = fdefault_fini,
+    .data          = NULL,
+  };
+  
   assert(a09 != NULL);
   
-  a09->fdecb         = true;
-  fmt->backend       = BACKEND_RSDOS;
-  fmt->cmdline       = fdefault_cmdline;
-  fmt->pass_start    = fdefault_pass;
-  fmt->pass_end      = fdefault_pass;
-  fmt->inst_write    = fdefault_inst_write;
-  fmt->data_write    = fdefault_data_write;
-  fmt->opt           = fdefault;
-  fmt->dp            = fdefault;
-  fmt->code          = fdefault;
-  fmt->align         = frsdos_align;
-  fmt->end           = frsdos_end;
-  fmt->org           = frsdos_org;
-  fmt->rmb           = frsdos_rmb;
-  fmt->setdp         = fdefault;
-  fmt->test          = fdefault_test;
-  fmt->tron          = fdefault;
-  fmt->troff         = fdefault;
-  fmt->Assert        = fdefault;
-  fmt->endtst        = fdefault;
-  fmt->fini          = fdefault_fini;
-  fmt->section_hdr   = 0;
-  fmt->section_start = 0;
-  fmt->entry         = 0;
-  fmt->endf          = false;
-  return true;
+  struct format_rsdos *data = malloc(sizeof(struct format_rsdos));
+  if (data != NULL)
+  {
+    data->section_hdr   = 0;
+    data->section_start = 0;
+    data->entry         = 0;
+    data->endf          = false;
+    a09->format         = callbacks;
+    a09->format.data    = data;
+    a09->fdecb          = true;
+    return true;
+  }
+  else
+    return false;
 }
 
 /**************************************************************************/

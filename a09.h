@@ -122,152 +122,30 @@ struct a09;
 struct opcdata;
 struct symbol;
 struct testdata;
-union  format;
 
-struct format_default
+struct format
 {
   enum backend backend;
-  bool (*cmdline)   (union format *,struct a09 *,int,int *,char *[]);
-  bool (*pass_start)(union format *,struct a09 *,int);
-  bool (*pass_end)  (union format *,struct a09 *,int);
-  bool (*inst_write)(union format *,struct opcdata *);
-  bool (*data_write)(union format *,struct opcdata *,char const *,size_t);
-  bool (*opt)       (union format *,struct opcdata *);
-  bool (*dp)        (union format *,struct opcdata *);
-  bool (*code)      (union format *,struct opcdata *);
-  bool (*align)     (union format *,struct opcdata *);
-  bool (*end)       (union format *,struct opcdata *,struct symbol const *);
-  bool (*org)       (union format *,struct opcdata *,uint16_t,uint16_t);
-  bool (*rmb)       (union format *,struct opcdata *);
-  bool (*setdp)     (union format *,struct opcdata *);
-  bool (*test)      (union format *,struct opcdata *);
-  bool (*tron)      (union format *,struct opcdata *);
-  bool (*troff)     (union format *,struct opcdata *);
-  bool (*Assert)    (union format *,struct opcdata *);
-  bool (*endtst)    (union format *,struct opcdata *);
-  bool (*fini)      (union format *,struct a09 *);
-};
-
-struct format_bin
-{
-  enum backend backend;
-  bool (*cmdline)   (union format *,struct a09 *,int,int *,char *[]);
-  bool (*pass_start)(union format *,struct a09 *,int);
-  bool (*pass_end)  (union format *,struct a09 *,int);
-  bool (*inst_write)(union format *,struct opcdata *);
-  bool (*data_write)(union format *,struct opcdata *,char const *,size_t);
-  bool (*opt)       (union format *,struct opcdata *);
-  bool (*dp)        (union format *,struct opcdata *);
-  bool (*code)      (union format *,struct opcdata *);
-  bool (*align)     (union format *,struct opcdata *);
-  bool (*end)       (union format *,struct opcdata *,struct symbol const *);
-  bool (*org)       (union format *,struct opcdata *,uint16_t,uint16_t);
-  bool (*rmb)       (union format *,struct opcdata *);
-  bool (*setdp)     (union format *,struct opcdata *);
-  bool (*test)      (union format *,struct opcdata *);
-  bool (*tron)      (union format *,struct opcdata *);
-  bool (*troff)     (union format *,struct opcdata *);
-  bool (*Assert)    (union format *,struct opcdata *);
-  bool (*endtst)    (union format *,struct opcdata *);
-  bool (*fini)      (union format *,struct a09 *);
-  bool   first;
-};
-
-struct format_rsdos
-{
-  enum backend backend;
-  bool (*cmdline)   (union format *,struct a09 *,int,int *,char *[]);
-  bool (*pass_start)(union format *,struct a09 *,int);
-  bool (*pass_end)  (union format *,struct a09 *,int);
-  bool (*inst_write)(union format *,struct opcdata *);
-  bool (*data_write)(union format *,struct opcdata *,char const *,size_t);
-  bool (*opt)       (union format *,struct opcdata *);
-  bool (*dp)        (union format *,struct opcdata *);
-  bool (*code)      (union format *,struct opcdata *);
-  bool (*align)     (union format *,struct opcdata *);
-  bool (*end)       (union format *,struct opcdata *,struct symbol const *);
-  bool (*org)       (union format *,struct opcdata *,uint16_t,uint16_t);
-  bool (*rmb)       (union format *,struct opcdata *);
-  bool (*setdp)     (union format *,struct opcdata *);
-  bool (*test)      (union format *,struct opcdata *);
-  bool (*tron)      (union format *,struct opcdata *);
-  bool (*troff)     (union format *,struct opcdata *);
-  bool (*Assert)    (union format *,struct opcdata *);
-  bool (*endtst)    (union format *,struct opcdata *);
-  bool (*fini)      (union format *,struct a09 *);
-  long     section_hdr;
-  long     section_start;
-  bool     endf;
-  uint16_t entry;
-};
-
-struct format_srec
-{
-  enum backend backend;
-  bool (*cmdline)   (union format *,struct a09 *,int,int *,char *[]);
-  bool (*pass_start)(union format *,struct a09 *,int);
-  bool (*pass_end)  (union format *,struct a09 *,int);
-  bool (*inst_write)(union format *,struct opcdata *);
-  bool (*data_write)(union format *,struct opcdata *,char const *,size_t);
-  bool (*opt)       (union format *,struct opcdata *);
-  bool (*dp)        (union format *,struct opcdata *);
-  bool (*code)      (union format *,struct opcdata *);
-  bool (*align)     (union format *,struct opcdata *);
-  bool (*end)       (union format *,struct opcdata *,struct symbol const *);
-  bool (*org)       (union format *,struct opcdata *,uint16_t,uint16_t);
-  bool (*rmb)       (union format *,struct opcdata *);
-  bool (*setdp)     (union format *,struct opcdata *);
-  bool (*test)      (union format *,struct opcdata *);
-  bool (*tron)      (union format *,struct opcdata *);
-  bool (*troff)     (union format *,struct opcdata *);
-  bool (*Assert)    (union format *,struct opcdata *);
-  bool (*endtst)    (union format *,struct opcdata *);
-  bool (*fini)      (union format *,struct a09 *);
-  char const    *S0file;
-  uint16_t       addr;
-  uint16_t       exec;
-  size_t         recsize;
-  size_t         idx;
-  bool           endf;
-  bool           execf;
-  bool           override;
-  unsigned char  buffer[252];
-};
-
-struct format_test
-{
-  enum backend backend;
-  bool (*cmdline)   (union format *,struct a09 *,int,int *,char *[]);
-  bool (*pass_start)(union format *,struct a09 *,int);
-  bool (*pass_end)  (union format *,struct a09 *,int);
-  bool (*inst_write)(union format *,struct opcdata *);
-  bool (*data_write)(union format *,struct opcdata *,char const *,size_t);
-  bool (*opt)       (union format *,struct opcdata *);
-  bool (*dp)        (union format *,struct opcdata *);
-  bool (*code)      (union format *,struct opcdata *);
-  bool (*align)     (union format *,struct opcdata *);
-  bool (*end)       (union format *,struct opcdata *,struct symbol const *);
-  bool (*org)       (union format *,struct opcdata *,uint16_t,uint16_t);
-  bool (*rmb)       (union format *,struct opcdata *);
-  bool (*setdp)     (union format *,struct opcdata *);
-  bool (*test)      (union format *,struct opcdata *);
-  bool (*tron)      (union format *,struct opcdata *);
-  bool (*troff)     (union format *,struct opcdata *);
-  bool (*Assert)    (union format *,struct opcdata *);
-  bool (*endtst)    (union format *,struct opcdata *);
-  bool (*fini)      (union format *,struct a09 *);
-  bool             intest;
-  struct testdata *data;
-};
-
-union format
-{
-  enum backend          backend;
-  struct format_default def;
-  struct format_bin     bin;
-  struct format_rsdos   rsdos;
-  struct format_srec    srec;
-  struct format_test    test;
+  bool (*cmdline)   (struct format *,struct a09 *,int,int *,char *[]);
+  bool (*pass_start)(struct format *,struct a09 *,int);
+  bool (*pass_end)  (struct format *,struct a09 *,int);
+  bool (*inst_write)(struct format *,struct opcdata *);
+  bool (*data_write)(struct format *,struct opcdata *,char const *,size_t);
+  bool (*opt)       (struct format *,struct opcdata *);
+  bool (*dp)        (struct format *,struct opcdata *);
+  bool (*code)      (struct format *,struct opcdata *);
+  bool (*align)     (struct format *,struct opcdata *);
+  bool (*end)       (struct format *,struct opcdata *,struct symbol const *);
+  bool (*org)       (struct format *,struct opcdata *,uint16_t,uint16_t);
+  bool (*rmb)       (struct format *,struct opcdata *);
+  bool (*setdp)     (struct format *,struct opcdata *);
+  bool (*test)      (struct format *,struct opcdata *);
+  bool (*tron)      (struct format *,struct opcdata *);
+  bool (*troff)     (struct format *,struct opcdata *);
+  bool (*Assert)    (struct format *,struct opcdata *);
+  bool (*endtst)    (struct format *,struct opcdata *);
+  bool (*fini)      (struct format *,struct a09 *);
+  void  *data;
 };
 
 struct a09
@@ -280,7 +158,7 @@ struct a09
   FILE          *in;
   FILE          *out;
   FILE          *list;
-  union format   format;
+  struct format  format;
   struct buffer  inbuf;
   size_t         lnum;
   tree__s       *symtab;
@@ -415,19 +293,19 @@ extern bool                  rexpr              (struct fvalue *,struct a09 *,st
 extern int                   symstrcmp          (void const *restrict,void const *restrict);
 extern struct symbol        *symbol_add         (struct a09 *,label const *,uint16_t);
 extern void                  symbol_freetable   (tree__s *);
-extern bool                  format_bin_init    (struct format_bin   *,struct a09 *);
-extern bool                  format_rsdos_init  (struct format_rsdos *,struct a09 *);
-extern bool                  format_srec_init   (struct format_srec  *,struct a09 *);
-extern bool                  format_test_init   (struct format_test  *,struct a09 *);
-extern bool                  fdefault           (union format *,struct opcdata *);
-extern bool                  fdefault_end       (union format *,struct opcdata *,struct symbol const *);
-extern bool                  fdefault_org       (union format *,struct opcdata *,uint16_t,uint16_t);
-extern bool                  fdefault_cmdline   (union format *,struct a09 *,int,int *,char *[]);
-extern bool                  fdefault_pass      (union format *,struct a09 *,int);
-extern bool                  fdefault_inst_write(union format *,struct opcdata *);
-extern bool                  fdefault_data_write(union format *,struct opcdata *,char const *,size_t);
-extern bool                  fdefault_test      (union format *,struct opcdata *);
-extern bool                  fdefault_fini      (union format *,struct a09 *);
+extern bool                  format_bin_init    (struct a09 *);
+extern bool                  format_rsdos_init  (struct a09 *);
+extern bool                  format_srec_init   (struct a09 *);
+extern bool                  format_test_init   (struct a09 *);
+extern bool                  fdefault           (struct format *,struct opcdata *);
+extern bool                  fdefault_end       (struct format *,struct opcdata *,struct symbol const *);
+extern bool                  fdefault_org       (struct format *,struct opcdata *,uint16_t,uint16_t);
+extern bool                  fdefault_cmdline   (struct format *,struct a09 *,int,int *,char *[]);
+extern bool                  fdefault_pass      (struct format *,struct a09 *,int);
+extern bool                  fdefault_inst_write(struct format *,struct opcdata *);
+extern bool                  fdefault_data_write(struct format *,struct opcdata *,char const *,size_t);
+extern bool                  fdefault_test      (struct format *,struct opcdata *);
+extern bool                  fdefault_fini      (struct format *,struct a09 *);
 
 /**************************************************************************/
 

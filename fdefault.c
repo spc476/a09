@@ -20,13 +20,14 @@
 *
 ****************************************************************************/
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "a09.h"
 
 /**************************************************************************/
 
-bool fdefault_cmdline(union format *fmt,struct a09 *a09,int argc,int *pi,char *argv[])
+bool fdefault_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,char *argv[])
 {
   (void)fmt;
   (void)a09;
@@ -38,7 +39,7 @@ bool fdefault_cmdline(union format *fmt,struct a09 *a09,int argc,int *pi,char *a
 
 /**************************************************************************/
 
-bool fdefault_pass(union format *fmt,struct a09 *a09,int pass)
+bool fdefault_pass(struct format *fmt,struct a09 *a09,int pass)
 {
   (void)fmt;
   (void)pass;
@@ -48,7 +49,7 @@ bool fdefault_pass(union format *fmt,struct a09 *a09,int pass)
 
 /**************************************************************************/
 
-bool fdefault(union format *fmt,struct opcdata *opd)
+bool fdefault(struct format *fmt,struct opcdata *opd)
 {
   (void)fmt;
   (void)opd;
@@ -57,7 +58,7 @@ bool fdefault(union format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-bool fdefault_end(union format *fmt,struct opcdata *opd,struct symbol const *sym)
+bool fdefault_end(struct format *fmt,struct opcdata *opd,struct symbol const *sym)
 {
   (void)fmt;
   (void)opd;
@@ -67,7 +68,7 @@ bool fdefault_end(union format *fmt,struct opcdata *opd,struct symbol const *sym
 
 /**************************************************************************/
 
-bool fdefault_org(union format *fmt,struct opcdata *opd,uint16_t start,uint16_t last)
+bool fdefault_org(struct format *fmt,struct opcdata *opd,uint16_t start,uint16_t last)
 {
   (void)fmt;
   (void)opd;
@@ -78,7 +79,7 @@ bool fdefault_org(union format *fmt,struct opcdata *opd,uint16_t start,uint16_t 
 
 /**************************************************************************/
 
-bool fdefault_inst_write(union format *fmt,struct opcdata *opd)
+bool fdefault_inst_write(struct format *fmt,struct opcdata *opd)
 {
   (void)fmt;
   assert(opd       != NULL);
@@ -97,7 +98,7 @@ bool fdefault_inst_write(union format *fmt,struct opcdata *opd)
 /**************************************************************************/
 
 bool fdefault_data_write(
-        union format   *fmt,
+        struct format  *fmt,
         struct opcdata *opd,
         char const     *buffer,
         size_t          len
@@ -120,7 +121,7 @@ bool fdefault_data_write(
 
 /**************************************************************************/
 
-bool fdefault_test(union format *fmt,struct opcdata *opd)
+bool fdefault_test(struct format *fmt,struct opcdata *opd)
 {
   (void)fmt;
   assert(opd      != NULL);
@@ -159,10 +160,19 @@ bool fdefault_test(union format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-bool fdefault_fini(union format *fmt,struct a09 *a09)
+bool fdefault_fini(struct format *fmt,struct a09 *a09)
 {
-  (void)fmt;
+  assert(fmt != NULL);
   (void)a09;
+  
+  /*-----------------------------------------------------------------------
+  ; The bin backend uses fmt->data as a flag, NOT a pointer, so we have to
+  ; special case this here.  Sigh.
+  ;------------------------------------------------------------------------*/
+  
+  if (fmt->data != NULL)
+    if (fmt->data != fmt)
+      free(fmt->data);
   return true;
 }
 
