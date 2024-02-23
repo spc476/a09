@@ -1972,7 +1972,7 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
       
     if (opd->a09->obj)
     {
-      if (!opd->a09->format.data_write(&opd->a09->format,opd,decbfloat,sizeof(decbfloat)))
+      if (!opd->a09->format.data_write(&opd->a09->format,opd,decbfloat,dfs))
         return false;
     }
   }
@@ -2033,7 +2033,10 @@ static bool pseudo__float(struct opcdata *opd)
     {
       if (!rexpr(&fv,opd->a09,opd->buffer,opd->pass,true))
         return false;
-      opd->datasz += sizeof(double);
+      if (opd->a09->fdecb)
+        opd->datasz += 5;
+      else
+        opd->datasz += sizeof(double);
       
       if (opd->pass == 2)
       {
