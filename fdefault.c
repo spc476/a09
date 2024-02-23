@@ -68,17 +68,6 @@ bool fdefault_end(struct format *fmt,struct opcdata *opd,struct symbol const *sy
 
 /**************************************************************************/
 
-bool fdefault_org(struct format *fmt,struct opcdata *opd,uint16_t start,uint16_t last)
-{
-  (void)fmt;
-  (void)opd;
-  (void)start;
-  (void)last;
-  return true;
-}
-
-/**************************************************************************/
-
 bool fdefault_inst_write(struct format *fmt,struct opcdata *opd)
 {
   (void)fmt;

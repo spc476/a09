@@ -183,15 +183,13 @@ static bool frsdos_end(struct format *fmt,struct opcdata *opd,struct symbol cons
 
 /**************************************************************************/
 
-static bool frsdos_org(struct format *fmt,struct opcdata *opd,uint16_t start,uint16_t last)
+static bool frsdos_org(struct format *fmt,struct opcdata *opd)
 {
   assert(fmt          != NULL);
   assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_RSDOS);
   assert(opd          != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
-  
-  (void)last;
   
   if (opd->pass == 2)
   {
@@ -205,8 +203,8 @@ static bool frsdos_org(struct format *fmt,struct opcdata *opd,uint16_t start,uin
     hdr[0] = 0;
     hdr[1] = 0;
     hdr[2] = 0;
-    hdr[3] = start >> 8;
-    hdr[4] = start & 255;
+    hdr[3] = opd->value.value >> 8;
+    hdr[4] = opd->value.value & 255;
     
     if (pos > 0)
       if (!update_section_size(format,opd))
@@ -218,6 +216,8 @@ static bool frsdos_org(struct format *fmt,struct opcdata *opd,uint16_t start,uin
     format->section_hdr   = pos;
     format->section_start = ftell(opd->a09->out);
   }
+  
+  opd->a09->pc = opd->value.value;
   return true;
 }
 

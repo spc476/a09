@@ -1843,9 +1843,7 @@ static bool ftest_align(struct format *fmt,struct opcdata *opd)
 
 static bool ftest_org(
         struct format   *fmt,
-        struct opcdata *opd,
-        uint16_t        start,
-        uint16_t        last
+        struct opcdata *opd
 )
 {
   assert(fmt          != NULL);
@@ -1854,14 +1852,13 @@ static bool ftest_org(
   assert(opd          != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  (void)last;
-  
   if (opd->pass == 2)
   {
     struct testdata *data = fmt->data;
-    data->addr            = start;
+    data->addr            = opd->value.value;
   }
   
+  opd->a09->pc = opd->value.value;
   return true;
 }
 

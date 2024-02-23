@@ -1073,21 +1073,19 @@ static bool pseudo_rmb(struct opcdata *opd)
 
 static bool pseudo_org(struct opcdata *opd)
 {
-  uint16_t last;
-  
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (!parse_dirext(opd))
     return message(opd->a09,MSG_ERROR,"E0039: missing value for ORG");
     
-  last         = opd->a09->pc;
-  opd->a09->pc = opd->value.value;
-  
   if (opd->a09->obj)
-    return opd->a09->format.org(&opd->a09->format,opd,opd->value.value,last);
+    return opd->a09->format.org(&opd->a09->format,opd);
   else
+  {
+    opd->a09->pc = opd->value.value;
     return true;
+  }
 }
 
 /**************************************************************************/

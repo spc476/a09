@@ -52,7 +52,7 @@ static bool fbin_align(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool fbin_org(struct format *format,struct opcdata *opd,uint16_t start,uint16_t last)
+static bool fbin_org(struct format *format,struct opcdata *opd)
 {
   assert(format != NULL);
   assert(opd    != NULL);
@@ -68,13 +68,15 @@ static bool fbin_org(struct format *format,struct opcdata *opd,uint16_t start,ui
     
     if (format->data)
     {
-      uint16_t delta = start - last;
+      uint16_t delta = opd->value.value - opd->a09->pc;
       if (fseek(opd->a09->out,delta,SEEK_CUR) == -1)
         return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
     }
     
     format->data = format;
   }
+  
+  opd->a09->pc = opd->value.value;
   return true;
 }
 

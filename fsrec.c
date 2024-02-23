@@ -230,9 +230,7 @@ static bool fsrec_end(
 
 static bool fsrec_org(
         struct format  *fmt,
-        struct opcdata *opd,
-        uint16_t        start,
-        uint16_t        last
+        struct opcdata *opd
 )
 {
   assert(fmt          != NULL);
@@ -240,8 +238,7 @@ static bool fsrec_org(
   assert(fmt->backend == BACKEND_SREC);
   assert(opd          != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
-  (void)last;
-  
+
   if (opd->pass == 2)
   {
     struct format_srec *format = fmt->data;
@@ -253,9 +250,10 @@ static bool fsrec_org(
     }
     
     if (!format->override)
-      format->addr = start;
+      format->addr = opd->value.value;
   }
   
+  opd->a09->pc = opd->value.value;
   return true;
 }
 
