@@ -54,7 +54,6 @@ static unsigned char value_lsb(struct a09 *a09,uint16_t value,int pass)
   
   if ((pass == 2) && (value >= 256) && (value <= 65407))
     message(a09,MSG_WARNING,"W0004: 16-bit value truncated to 8 bits");
-    
   return value & 255;
 }
 
