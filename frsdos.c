@@ -59,7 +59,11 @@ static bool update_section_size(struct format_rsdos *format,struct opcdata *opd)
     return message(opd->a09,MSG_ERROR,"E0054: Internal error---no header written?");
   size = pos - format->section_start;
   if (size == 0)
-    return message(opd->a09,MSG_ERROR,"E0057: segment has no data");
+  {
+    if (fseek(opd->a09->out,format->section_hdr,SEEK_SET) == -1)
+      return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
+    return true;
+  }
   if (size > UINT16_MAX)
     return message(opd->a09,MSG_ERROR,"E0055: object size too large");
   if (fseek(opd->a09->out,format->section_hdr + 1,SEEK_SET) == -1)
