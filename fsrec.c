@@ -291,34 +291,15 @@ static bool write_data(
 
 /**************************************************************************/
 
-static bool fsrec_inst_write(struct format *fmt,struct opcdata *opd)
+static bool fsrec_write(struct format *fmt,struct opcdata *opd,void const *buffer,size_t len,bool instruction)
 {
   assert(fmt          != NULL);
   assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_SREC);
   assert(opd          != NULL);
   assert(opd->pass    == 2);
-  assert(!opd->data);
-  
-  return write_data(fmt,opd->a09->out,opd->bytes,opd->sz);
-}
-
-/**************************************************************************/
-
-static bool fsrec_data_write(
-        struct format  *fmt,
-        struct opcdata *opd,
-        char const     *buffer,
-        size_t          len
-)
-{
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_SREC);
-  assert(opd          != NULL);
   assert(buffer       != NULL);
-  assert(opd->pass    == 2);
-  assert(opd->data);
+  (void)instruction;
   
   return write_data(fmt,opd->a09->out,buffer,len);
 }
@@ -391,8 +372,7 @@ bool format_srec_init(struct a09 *a09)
     .cmdline    = fsrec_cmdline,
     .pass_start = fsrec_pass_start,
     .pass_end   = fsrec_pass_end,
-    .inst_write = fsrec_inst_write,
-    .data_write = fsrec_data_write,
+    .write      = fsrec_write,
     .opt        = fdefault,
     .dp         = fdefault,
     .code       = fdefault,

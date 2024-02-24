@@ -1541,35 +1541,12 @@ static bool ftest_pass_end(struct format *fmt,struct a09 *a09,int pass)
 
 /**************************************************************************/
 
-static bool ftest_inst_write(struct format *fmt,struct opcdata *opd)
-{
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_TEST);
-  assert(opd          != NULL);
-  assert(opd->pass    == 2);
-  
-  struct testdata *data = fmt->data;
-  memcpy(&data->memory[data->addr],opd->bytes,opd->sz);
-  
-  for (size_t i = 0 ; i < opd->sz ; i++)
-  {
-    data->prot[data->addr].exec  = true;
-    data->prot[data->addr].read  = true;
-    data->prot[data->addr].tron |= data->tron;
-    data->addr++;
-  }
-  
-  return true;
-}
-
-/**************************************************************************/
-
-static bool ftest_data_write(
+static bool ftest_write(
         struct format   *fmt,
         struct opcdata *opd,
-        char const     *buffer,
-        size_t          len
+        void const     *buffer,
+        size_t          len,
+        bool            instruction
 )
 {
   assert(fmt          != NULL);
@@ -1587,8 +1564,10 @@ static bool ftest_data_write(
   for (size_t i = 0 ; i < len ; i++)
   {
     data->prot[data->addr].read   = true;
-    data->prot[data->addr].write  = true;
-    data->prot[data->addr++].tron |= data->tron;
+    data->prot[data->addr].write  = !instruction;
+    data->prot[data->addr].exec   = instruction;
+    data->prot[data->addr].tron |= data->tron;
+    data->addr++;
   }
   
   return true;
@@ -2199,8 +2178,7 @@ bool format_test_init(struct a09 *a09)
     .cmdline    = ftest_cmdline,
     .pass_start = ftest_pass_start,
     .pass_end   = ftest_pass_end,
-    .inst_write = ftest_inst_write,
-    .data_write = ftest_data_write,
+    .write      = ftest_write,
     .opt        = ftest_opt,
     .dp         = fdefault,
     .code       = fdefault,

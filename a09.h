@@ -48,6 +48,12 @@ enum
   WORD,
 };
 
+enum
+{
+  DATA,
+  INSTRUCTION
+};
+
 enum backend
 {
   BACKEND_BIN,
@@ -129,8 +135,7 @@ struct format
   bool (*cmdline)   (struct format *,struct a09 *,int,int *,char *[]);
   bool (*pass_start)(struct format *,struct a09 *,int);
   bool (*pass_end)  (struct format *,struct a09 *,int);
-  bool (*inst_write)(struct format *,struct opcdata *);
-  bool (*data_write)(struct format *,struct opcdata *,char const *,size_t);
+  bool (*write)     (struct format *,struct opcdata *,void const *,size_t,bool);
   bool (*opt)       (struct format *,struct opcdata *);
   bool (*dp)        (struct format *,struct opcdata *);
   bool (*code)      (struct format *,struct opcdata *);
@@ -301,8 +306,7 @@ extern bool                  fdefault           (struct format *,struct opcdata 
 extern bool                  fdefault_end       (struct format *,struct opcdata *,struct symbol const *);
 extern bool                  fdefault_cmdline   (struct format *,struct a09 *,int,int *,char *[]);
 extern bool                  fdefault_pass      (struct format *,struct a09 *,int);
-extern bool                  fdefault_inst_write(struct format *,struct opcdata *);
-extern bool                  fdefault_data_write(struct format *,struct opcdata *,char const *,size_t);
+extern bool                  fdefault_write     (struct format *,struct opcdata *,void const *,size_t,bool);
 extern bool                  fdefault_test      (struct format *,struct opcdata *);
 extern bool                  fdefault_fini      (struct format *,struct a09 *);
 

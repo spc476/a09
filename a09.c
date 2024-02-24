@@ -498,7 +498,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
       a09->pc += opd.sz;
       
     if ((pass == 2) && (opd.sz > 0) && (opd.datasz == 0) && a09->obj)
-      return a09->format.inst_write(&a09->format,&opd);
+      return a09->format.write(&a09->format,&opd,opd.bytes,opd.sz,INSTRUCTION);
   }
   
   return rc;

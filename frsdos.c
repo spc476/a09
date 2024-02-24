@@ -247,23 +247,7 @@ static bool frsdos_rmb(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool frsdos_inst_write(struct format *fmt,struct opcdata *opd)
-{
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_RSDOS);
-  assert(opd          != NULL);
-  assert(opd->pass    == 2);
-  
-  struct format_rsdos *format = fmt->data;
-  if (!format->org)
-    return message(opd->a09,MSG_ERROR,"E0057: ORG directive missing\n");
-  return fdefault_inst_write(fmt,opd);
-}
-
-/**************************************************************************/
-
-static bool frsdos_data_write(struct format *fmt,struct opcdata *opd,char const *buffer,size_t len)
+static bool frsdos_write(struct format *fmt,struct opcdata *opd,void const *buffer,size_t len,bool instruction)
 {
   assert(fmt          != NULL);
   assert(fmt->data    != NULL);
@@ -275,7 +259,7 @@ static bool frsdos_data_write(struct format *fmt,struct opcdata *opd,char const 
   struct format_rsdos *format = fmt->data;
   if (!format->org)
     return message(opd->a09,MSG_ERROR,"E0057: ORG directive missing\n");
-  return fdefault_data_write(fmt,opd,buffer,len);
+  return fdefault_write(fmt,opd,buffer,len,instruction);
 }
 
 /**************************************************************************/
@@ -288,8 +272,7 @@ bool format_rsdos_init(struct a09 *a09)
     .cmdline       = fdefault_cmdline,
     .pass_start    = fdefault_pass,
     .pass_end      = fdefault_pass,
-    .inst_write    = frsdos_inst_write,
-    .data_write    = frsdos_data_write,
+    .write         = frsdos_write,
     .opt           = fdefault,
     .dp            = fdefault,
     .code          = fdefault,

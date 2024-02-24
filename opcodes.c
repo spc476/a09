@@ -1151,7 +1151,7 @@ static bool pseudo_fcb(struct opcdata *opd)
         opd->bytes[opd->sz++] = byte;
       if (opd->a09->obj)
       {
-        if (!opd->a09->format.data_write(&opd->a09->format,opd,(char *)&byte,1))
+        if (!opd->a09->format.write(&opd->a09->format,opd,&byte,1,DATA))
           return false;
       }
     }
@@ -1198,7 +1198,7 @@ static bool pseudo_fdb(struct opcdata *opd)
       }
       if (opd->a09->obj)
       {
-        if (!opd->a09->format.data_write(&opd->a09->format,opd,(char *)word,2))
+        if (!opd->a09->format.write(&opd->a09->format,opd,word,2,DATA))
           return false;
       }
     }
@@ -1235,7 +1235,7 @@ static bool pseudo_fcc(struct opcdata *opd)
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (opd->a09->obj)
     {
-      if (!opd->a09->format.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
+      if (!opd->a09->format.write(&opd->a09->format,opd,textstring.buf,textstring.widx,DATA))
         return false;
     }
   }
@@ -1264,7 +1264,7 @@ static bool pseudo_ascii(struct opcdata *opd)
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (opd->a09->obj)
     {
-      if (!opd->a09->format.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
+      if (!opd->a09->format.write(&opd->a09->format,opd,textstring.buf,textstring.widx,DATA))
         return false;
     }
   }
@@ -1446,7 +1446,7 @@ static bool pseudo_incbin(struct opcdata *opd)
       
       if (opd->a09->obj)
       {
-        if (!opd->a09->format.data_write(&opd->a09->format,opd,buffer,bsz))
+        if (!opd->a09->format.write(&opd->a09->format,opd,buffer,bsz,DATA))
           return false;
       }
     } while (bsz > 0);
@@ -1611,7 +1611,7 @@ static bool pseudo_fcs(struct opcdata *opd)
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (opd->a09->obj)
     {
-      if (!opd->a09->format.data_write(&opd->a09->format,opd,textstring.buf,textstring.widx))
+      if (!opd->a09->format.write(&opd->a09->format,opd,textstring.buf,textstring.widx,DATA))
         return false;
     }
   }
@@ -1882,7 +1882,7 @@ static bool write_single(struct opcdata *opd,float val)
     opd->bytes[opd->sz] = be[i];
   if (opd->a09->obj)
   {
-    if (!opd->a09->format.data_write(&opd->a09->format,opd,be,sizeof(be)))
+    if (!opd->a09->format.write(&opd->a09->format,opd,be,sizeof(be),DATA))
       return false;
   }
   return true;
@@ -1969,7 +1969,7 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
       
     if (opd->a09->obj)
     {
-      if (!opd->a09->format.data_write(&opd->a09->format,opd,decbfloat,dfs))
+      if (!opd->a09->format.write(&opd->a09->format,opd,decbfloat,dfs,DATA))
         return false;
     }
   }
@@ -1986,7 +1986,7 @@ static bool write_double(struct opcdata *opd,double val,bool unpacked)
       opd->bytes[opd->sz] = be[i];
     if (opd->a09->obj)
     {
-      if (!opd->a09->format.data_write(&opd->a09->format,opd,be,sizeof(be)))
+      if (!opd->a09->format.write(&opd->a09->format,opd,be,sizeof(be),DATA))
         return false;
     }
 #else
