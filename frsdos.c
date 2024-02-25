@@ -317,7 +317,7 @@ static bool frsdos_float(struct format *fmt,struct opcdata *opd)
       uint64_t x;
       
       memcpy(&x,&fv.value.d,sizeof(double));
-      uint64_t frac = (x & 0x000FFFFFFFFFFFFFuLL) << 11;
+      uint64_t frac = (x & 0x000FFFFFFFFFFFFFuLL);
       bool     sign = (x >> 63) != 0;
       int      exp  = (int)((x >> 52) & 0x7FFuLL);
       size_t   dfs  = 5;
@@ -330,10 +330,10 @@ static bool frsdos_float(struct format *fmt,struct opcdata *opd)
         return message(opd->a09,MSG_ERROR,"E0090: floating point exceeds range of Color Computer");
         
       decbfloat[0] = exp;
-      decbfloat[1] = (frac >> 56) & 255;
-      decbfloat[2] = (frac >> 48) & 255;
-      decbfloat[3] = (frac >> 40) & 255;
-      decbfloat[4] = (frac >> 32) & 255;
+      decbfloat[1] = (frac >> 45) & 255;
+      decbfloat[2] = (frac >> 37) & 255;
+      decbfloat[3] = (frac >> 29) & 255;
+      decbfloat[4] = (frac >> 21) & 255;
       
       if (opd->op->opcode == 1) /* .FLOATD maps to unpacked on DECB */
       {
