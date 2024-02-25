@@ -788,6 +788,15 @@ int main(int argc,char *argv[])
     .inbuf     = { .buf = {0}, .widx = 0, .ridx = 0 },
   };
   
+  /*----------------------------------------------------------
+  ; Let's just check some assumptions we're making around here
+  ;-----------------------------------------------------------*/
+  
+  assert(CHAR_BIT          == 8);	            /* byte addressability */
+  assert(sizeof(uint32_t)  == sizeof(float));       /* IEEE-754 float */
+  assert(sizeof(uint64_t)  == sizeof(double));      /* IEEE-754 double */
+  assert((unsigned char)-1 == (unsigned char)0xFF); /* 2s complement */
+  
   format_bin_init(&a09);
   fi = parse_command(argc,argv,&a09);
   
