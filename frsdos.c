@@ -267,7 +267,7 @@ static bool frsdos_write(struct format *fmt,struct opcdata *opd,void const *buff
 
 static bool frsdos_float(struct format *fmt,struct opcdata *opd)
 {
-  assert(fmt          != NULL);
+  (void)fmt;
   assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_RSDOS);
   assert(opd          != NULL);
