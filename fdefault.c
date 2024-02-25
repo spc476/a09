@@ -157,14 +157,14 @@ bool fdefault_float(struct format *fmt,struct opcdata *opd)
       opd->datasz += sizeof(float);
       if (opd->pass == 2)
       {
-        uint32_t i;
+        uint32_t x;
         char     buf[sizeof(float)];
         
-        memcpy(&i,&fv.value.f,sizeof(float));
-        buf[0] = (i >> 24) & 255;
-        buf[1] = (i >> 16) & 255;
-        buf[2] = (i >>  8) & 255;
-        buf[3] = (i      ) & 255;
+        memcpy(&x,&fv.value.f,sizeof(float));
+        buf[0] = (x >> 24) & 255;
+        buf[1] = (x >> 16) & 255;
+        buf[2] = (x >>  8) & 255;
+        buf[3] = (x      ) & 255;
         for (size_t i = 0 ; (opd->sz < sizeof(opd->bytes)) && (i < sizeof(buf)) ; i++ , opd->sz++)
           opd->bytes[opd->sz] = buf[i];
         if (opd->a09->obj)
@@ -179,18 +179,18 @@ bool fdefault_float(struct format *fmt,struct opcdata *opd)
       opd->datasz += sizeof(double);
       if (opd->pass == 2)
       {
-        uint64_t i;
+        uint64_t x;
         char     buf[sizeof(double)];
         
-        memcpy(&i,&fv.value.d,sizeof(double));
-        buf[0] = (i >> 56) & 255;
-        buf[1] = (i >> 48) & 255;
-        buf[2] = (i >> 40) & 255;
-        buf[3] = (i >> 32) & 255;
-        buf[4] = (i >> 24) & 255;
-        buf[5] = (i >> 16) & 255;
-        buf[6] = (i >>  8) & 255;
-        buf[7] = (i      ) & 255;
+        memcpy(&x,&fv.value.d,sizeof(double));
+        buf[0] = (x >> 56) & 255;
+        buf[1] = (x >> 48) & 255;
+        buf[2] = (x >> 40) & 255;
+        buf[3] = (x >> 32) & 255;
+        buf[4] = (x >> 24) & 255;
+        buf[5] = (x >> 16) & 255;
+        buf[6] = (x >>  8) & 255;
+        buf[7] = (x      ) & 255;
         for (size_t i = 0 ; (opd->sz < sizeof(opd->bytes)) && (i < sizeof(buf)) ; i++ , opd->sz++)
           opd->bytes[opd->sz] = buf[i];
         if (opd->a09->obj)
