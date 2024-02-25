@@ -122,6 +122,7 @@ bool format_bin_init(struct a09 *a09)
     .troff      = fdefault,
     .Assert     = fdefault,
     .endtst     = fdefault,
+    .Float      = fdefault_float,
     .fini       = fdefault_fini,
     .data       = NULL,
   };

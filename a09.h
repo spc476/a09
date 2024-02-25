@@ -149,6 +149,7 @@ struct format
   bool (*troff)     (struct format *,struct opcdata *);
   bool (*Assert)    (struct format *,struct opcdata *);
   bool (*endtst)    (struct format *,struct opcdata *);
+  bool (*Float)     (struct format *,struct opcdata *);
   bool (*fini)      (struct format *,struct a09 *);
   void  *data;
 };
@@ -174,7 +175,6 @@ struct a09
   bool           debug;
   bool           mkdeps;
   bool           obj;
-  bool           fdecb;
 };
 
 struct symbol
@@ -308,6 +308,7 @@ extern bool                  fdefault_cmdline   (struct format *,struct a09 *,in
 extern bool                  fdefault_pass      (struct format *,struct a09 *,int);
 extern bool                  fdefault_write     (struct format *,struct opcdata *,void const *,size_t,bool);
 extern bool                  fdefault_test      (struct format *,struct opcdata *);
+extern bool                  fdefault_float     (struct format *,struct opcdata *);
 extern bool                  fdefault_fini      (struct format *,struct a09 *);
 
 /**************************************************************************/

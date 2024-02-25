@@ -133,6 +133,82 @@ bool fdefault_test(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
+bool fdefault_float(struct format *fmt,struct opcdata *opd)
+{
+  (void)fmt;
+  assert(opd         != NULL);
+  assert(opd->a09    != NULL);
+  assert(opd->buffer != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  opd->data = true;
+  
+  while(true)
+  {
+    struct fvalue fv;
+    
+    skip_space(opd->buffer);
+    opd->buffer->ridx--;
+    
+    if (opd->op->opcode == 0)
+    {
+      if (!rexpr(&fv,opd->a09,opd->buffer,opd->pass,false))
+        return false;
+      opd->datasz += sizeof(float);
+      if (opd->pass == 2)
+      {
+        uint32_t i;
+        char     buf[sizeof(float)];
+        
+        memcpy(&i,&fv.value.f,sizeof(float));
+        buf[0] = (i >> 24) & 255;
+        buf[1] = (i >> 16) & 255;
+        buf[2] = (i >>  8) & 255;
+        buf[3] = (i      ) & 255;
+        for (size_t i = 0 ; (opd->sz < sizeof(opd->bytes)) && (i < sizeof(buf)) ; i++ , opd->sz++)
+          opd->bytes[opd->sz] = buf[i];
+        if (opd->a09->obj)
+          if (!opd->a09->format.write(&opd->a09->format,opd,buf,sizeof(buf),DATA))
+            return false;
+      }
+    }
+    else
+    {
+      if (!rexpr(&fv,opd->a09,opd->buffer,opd->pass,true))
+        return false;
+      opd->datasz += sizeof(double);
+      if (opd->pass == 2)
+      {
+        uint64_t i;
+        char     buf[sizeof(double)];
+        
+        memcpy(&i,&fv.value.d,sizeof(double));
+        buf[0] = (i >> 56) & 255;
+        buf[1] = (i >> 48) & 255;
+        buf[2] = (i >> 40) & 255;
+        buf[3] = (i >> 32) & 255;
+        buf[4] = (i >> 24) & 255;
+        buf[5] = (i >> 16) & 255;
+        buf[6] = (i >>  8) & 255;
+        buf[7] = (i      ) & 255;
+        for (size_t i = 0 ; (opd->sz < sizeof(opd->bytes)) && (i < sizeof(buf)) ; i++ , opd->sz++)
+          opd->bytes[opd->sz] = buf[i];
+        if (opd->a09->obj)
+          if (!opd->a09->format.write(&opd->a09->format,opd,buf,sizeof(buf),DATA))
+            return false;
+      }
+    }
+       
+    char c = skip_space(opd->buffer);
+    if ((c == ';') || (c == '\0'))
+      return true;
+    if (c != ',')
+      return message(opd->a09,MSG_ERROR,"E0034: missing comma");
+  }
+}
+
+/**************************************************************************/
+
 bool fdefault_fini(struct format *fmt,struct a09 *a09)
 {
   assert(fmt != NULL);

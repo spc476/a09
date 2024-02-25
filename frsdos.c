@@ -25,6 +25,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <math.h>
 #include <assert.h>
 
 #include "a09.h"
@@ -212,7 +213,7 @@ static bool frsdos_org(struct format *fmt,struct opcdata *opd)
     
     if (!update_section_size(format,opd))
       return false;
-    
+      
     pos = ftell(opd->a09->out);
     if (pos == -1)
       return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
@@ -264,6 +265,102 @@ static bool frsdos_write(struct format *fmt,struct opcdata *opd,void const *buff
 
 /**************************************************************************/
 
+static bool frsdos_float(struct format *fmt,struct opcdata *opd)
+{
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
+  assert(fmt->backend == BACKEND_RSDOS);
+  assert(opd          != NULL);
+  assert(opd->a09     != NULL);
+  assert(opd->buffer  != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  opd->data = true;
+  
+  while(true)
+  {
+    struct fvalue fv;
+    skip_space(opd->buffer);
+    opd->buffer->ridx--;
+    
+    if (!rexpr(&fv,opd->a09,opd->buffer,opd->pass,true))
+      return false;
+    if (opd->pass == 2)
+    {
+      /*----------------------------------------------------------------------
+      ; The IEEE-754 double (which pretty much all systems use these days) is
+      ; formatted as:
+      ;
+      ;           [s:1] [exp:11 (biased by 1023)] [frac:52]
+      ;
+      ; The floating point format for the Color Computer is:
+      ;
+      ;           [exp:8 (biased by 129)] [s:1] [frac:31]
+      ;
+      ; Both assume the floating point fraction has a leading 1 and thus,
+      ; it's not part of the actual storage format.  So all we have to do
+      ; is kind of massage the bits around a bit.
+      ;
+      ; One wrinkle in this is the unpacked floating point format used on the
+      ; Color Computer.  It's one byte longer:
+      ;
+      ;           [exp:8 (biased by 129)] [frac:32] [s:8]
+      ;
+      ; NOTE: The floating point system on the Color Computer doesn't have the
+      ;       concepts of +-inf or NaN---those will generate an error.
+      ;----------------------------------------------------------------------*/
+      
+      if (!isnormal(fv.value.d) && (fv.value.d != 0.0))
+        return message(opd->a09,MSG_ERROR,"E0090: floating point exceeds range of Color Computer");
+        
+      char     decbfloat[6];
+      uint64_t x;
+      
+      memcpy(&x,&fv.value.d,sizeof(double));
+      uint64_t frac = (x & 0x000FFFFFFFFFFFFFuLL) << 11;
+      bool     sign = (x >> 63) != 0;
+      int      exp  = (int)((x >> 52) & 0x7FFuLL);
+      size_t   dfs  = 5;
+      
+      assert(exp < 0x7FF);
+      assert((exp > 0) || ((exp == 0) && (frac == 0)));
+      if (exp > 0)
+        exp = exp - 1023 + 129; /* unbias from IEEE-754 to DECB float */
+      if (exp > 255)
+        return message(opd->a09,MSG_ERROR,"E0090: floating point exceeds range of Color Computer");
+        
+      decbfloat[0] = exp;
+      decbfloat[1] = (frac >> 56) & 255;
+      decbfloat[2] = (frac >> 48) & 255;
+      decbfloat[3] = (frac >> 40) & 255;
+      decbfloat[4] = (frac >> 32) & 255;
+      
+      if (opd->op->opcode == 1) /* .FLOATD maps to unpacked on DECB */
+      {
+        dfs++;
+        decbfloat[5]  = sign * 255;
+        decbfloat[1] |= 0x80;
+      }
+      else
+        decbfloat[1] |= sign ? 0x80 : 0x00;
+        
+      for (size_t i = 0 ; (opd->sz < sizeof(opd->bytes)) && (i < dfs) ; i++,opd->sz++)
+        opd->bytes[opd->sz] = decbfloat[i];
+      if (opd->a09->obj)
+        if (!opd->a09->format.write(&opd->a09->format,opd,decbfloat,dfs,DATA))
+          return false;
+    }
+    
+    char c = skip_space(opd->buffer);
+    if ((c == ';') || (c == '\0'))
+      return true;
+    if (c != ',')
+      return message(opd->a09,MSG_ERROR,"E0034: missing comma");
+  }
+}
+
+/**************************************************************************/
+
 bool format_rsdos_init(struct a09 *a09)
 {
   static struct format const callbacks =
@@ -286,6 +383,7 @@ bool format_rsdos_init(struct a09 *a09)
     .troff         = fdefault,
     .Assert        = fdefault,
     .endtst        = fdefault,
+    .Float         = frsdos_float,
     .fini          = fdefault_fini,
     .data          = NULL,
   };
@@ -302,7 +400,6 @@ bool format_rsdos_init(struct a09 *a09)
     data->org           = false;
     a09->format         = callbacks;
     a09->format.data    = data;
-    a09->fdecb          = true;
     return true;
   }
   else
