@@ -318,7 +318,7 @@ static bool frsdos_float(struct format *fmt,struct opcdata *opd)
       
       memcpy(&x,&fv.value.d,sizeof(double));
       uint64_t frac = (x & 0x000FFFFFFFFFFFFFuLL);
-      bool     sign = (x >> 63) != 0;
+      bool     sign = (int64_t)x < 0;
       int      exp  = (int)((x >> 52) & 0x7FFuLL);
       size_t   dfs  = 5;
       
