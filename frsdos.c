@@ -275,16 +275,20 @@ static bool frsdos_float(struct format *fmt,struct opcdata *opd)
   assert(opd->buffer  != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  opd->data = true;
+  size_t dfs = opd->op->opcode == 1 ? 6 : 5;
+  opd->data  = true;
   
   while(true)
   {
     struct fvalue fv;
+
     skip_space(opd->buffer);
     opd->buffer->ridx--;
     
     if (!rexpr(&fv,opd->a09,opd->buffer,opd->pass,true))
       return false;
+    opd->datasz += dfs;
+    
     if (opd->pass == 2)
     {
       /*----------------------------------------------------------------------
@@ -320,7 +324,6 @@ static bool frsdos_float(struct format *fmt,struct opcdata *opd)
       uint64_t frac = (x & 0x000FFFFFFFFFFFFFuLL);
       bool     sign = (int64_t)x < 0;
       int      exp  = (int)((x >> 52) & 0x7FFuLL);
-      size_t   dfs  = 5;
       
       assert(exp < 0x7FF);
       assert((exp > 0) || ((exp == 0) && (frac == 0)));
@@ -337,7 +340,6 @@ static bool frsdos_float(struct format *fmt,struct opcdata *opd)
       
       if (opd->op->opcode == 1) /* .FLOATD maps to unpacked on DECB */
       {
-        dfs++;
         decbfloat[5]  = sign * 255;
         decbfloat[1] |= 0x80;
       }
