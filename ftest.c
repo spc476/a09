@@ -153,6 +153,7 @@ struct testdata
   tree__s         *Asserts;
   struct unittest *units;
   size_t           nunits;
+  unsigned long    icount;
   mc6809__t        cpu;
   mc6809dis__t     dis;
   uint16_t         addr;
@@ -688,11 +689,12 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
            break;
            
       case VM_TIMEON:
-           cpu->cycles = 0;
+           cpu->cycles  = 0;
+           data->icount = 0;
            break;
            
       case VM_TIMEOFF:
-           printf("%s: cycles=%lu\n",test->tag,cpu->cycles);
+           printf("%s: cycles=%lu instructions=%lu cpi=%.2f\n",test->tag,cpu->cycles,data->icount,(double)cpu->cycles/(double)data->icount);
            break;
            
       case VM_FALSE:
@@ -1510,6 +1512,7 @@ static bool ftest_pass_end(struct format *fmt,struct a09 *a09,int pass)
           }
         }
         
+        data->icount++;
         rc = mc6809_step(&data->cpu);
       }
       while((rc == 0) && (data->cpu.S.w != data->sp));
@@ -2232,6 +2235,7 @@ bool format_test_init(struct a09 *a09)
     data->Asserts   = NULL;
     data->units     = NULL;
     data->nunits    = 0;
+    data->icount    = 0;
     data->cpu.user  = data;
     data->cpu.read  = ft_cpu_read;
     data->cpu.write = ft_cpu_write;
