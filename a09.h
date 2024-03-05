@@ -127,7 +127,6 @@ struct buffer
 struct a09;
 struct opcdata;
 struct symbol;
-struct testdata;
 
 struct format
 {
