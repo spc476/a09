@@ -194,7 +194,7 @@ static bool rvalue(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int p
     else
       pv->value.f = val;
   }
-  else if ((c == '+') || (c == '-') || isdigit(c))
+  else if (isdigit(c))
   {
     char *p;
     

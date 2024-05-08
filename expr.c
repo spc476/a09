@@ -160,11 +160,8 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
   assert(buffer != NULL);
   assert((pass == 1) || (pass == 2));
   
-  bool neg  = false;
-  bool not  = false;
-  char c    = skip_space(buffer);
-  bool rc   = true;
-  
+  char c      = skip_space(buffer);
+  bool rc     = true;
   pv->defined = true; /* optimistic setting */
   
   if (c == '*')
@@ -173,19 +170,6 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
     return true;
   }
   
-  if (c == '-')
-  {
-    neg = true;
-    c = buffer->buf[buffer->ridx++];
-  }
-  else if (c == '~')
-  {
-    not = true;
-    c = buffer->buf[buffer->ridx++];
-  }
-  else if (c == '+')
-    c = buffer->buf[buffer->ridx++];
-    
   if (c == '$')
     rc = s2num(a09,&pv->value,buffer,16);
   else if (c == '&')
@@ -244,11 +228,6 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
     
   if (!rc)
     return message(a09,MSG_ERROR,"E0006: not a value");
-    
-  if (neg)
-    pv->value = -pv->value;
-  else if (not)
-    pv->value = ~pv->value;
     
   return rc;
 }
