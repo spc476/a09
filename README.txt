@@ -709,3 +709,6 @@ The test backend
 	-r
 
 		Run the tests in a random order.
+
+NOTE: the test backend will NOT generate an output file even if the -o
+option is used.  It will generate a listing file.

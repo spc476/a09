@@ -1380,6 +1380,8 @@ static bool ftest_pass_start(struct format *fmt,struct a09 *a09,int pass)
   
   struct testdata *test = fmt->data;
   test->intest          = false;
+  if (pass == 1)
+    a09->outfile = "/dev/null";
   return true;
 }
 
