@@ -28,6 +28,19 @@
 
 #include "a09.h"
 
+/**************************************************************************
+* Checking assumptions at compile time.  Technique from
+* https://jorenar.com/blog/less-known-c#compile-time-assumption-checking-using-enums
+***************************************************************************/
+
+enum
+{
+  BYTE_ADDRESSABILITY = 1 / (CHAR_BIT         == 8),
+  TWOS_COMPLEMENT     = 1 / (SCHAR_MIN        == -128),
+  IEEE_754_FLOAT      = 1 / (sizeof(uint32_t) == sizeof(float)),
+  IEEE_754_DOUBLE     = 1 / (sizeof(uint64_t) == sizeof(double)),
+};
+
 /**************************************************************************/
 
 char const MSG_DEBUG[]   = "debug";
@@ -786,15 +799,6 @@ int main(int argc,char *argv[])
     .obj       = true,
     .inbuf     = { .buf = {0}, .widx = 0, .ridx = 0 },
   };
-  
-  /*----------------------------------------------------------
-  ; Let's just check some assumptions we're making around here
-  ;-----------------------------------------------------------*/
-  
-  assert(CHAR_BIT          == 8);	            /* byte addressability */
-  assert(sizeof(uint32_t)  == sizeof(float));       /* IEEE-754 float */
-  assert(sizeof(uint64_t)  == sizeof(double));      /* IEEE-754 double */
-  assert(SCHAR_MIN         == -128);                /* 2s complement */
   
   format_bin_init(&a09);
   fi = parse_command(argc,argv,&a09);
