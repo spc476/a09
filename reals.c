@@ -106,8 +106,6 @@ bool freal_ieee(struct format *fmt,struct opcdata *opd)
 bool freal_msfp(struct format *fmt,struct opcdata *opd)
 {
   (void)fmt;
-//  assert(fmt->data    != NULL);
-//  assert(fmt->backend == BACKEND_RSDOS);
   assert(opd          != NULL);
   assert(opd->a09     != NULL);
   assert(opd->buffer  != NULL);
