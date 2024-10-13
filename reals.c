@@ -175,7 +175,7 @@ bool freal_msfp(struct format *fmt,struct opcdata *opd)
       decbfloat[3] = (frac >> 29) & 255;
       decbfloat[4] = (frac >> 21) & 255;
       
-      if (opd->op->opcode == 1) /* .FLOATD maps to unpacked on DECB */
+      if (opd->op->opcode == 1)
         message(opd->a09,MSG_WARNING,"W0019: double floats not supported, using single float");
 
       decbfloat[1] |= sign ? 0x80 : 0x00;
