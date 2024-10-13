@@ -275,8 +275,7 @@ static bool frsdos_float(struct format *fmt,struct opcdata *opd)
   assert(opd->buffer  != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  size_t dfs = opd->op->opcode == 1 ? 6 : 5;
-  opd->data  = true;
+  opd->data = true;
   
   while(true)
   {
@@ -287,7 +286,7 @@ static bool frsdos_float(struct format *fmt,struct opcdata *opd)
     
     if (!rexpr(&fv,opd->a09,opd->buffer,opd->pass,true))
       return false;
-    opd->datasz += dfs;
+    opd->datasz += 5;
     
     if (opd->pass == 2)
     {
@@ -312,6 +311,8 @@ static bool frsdos_float(struct format *fmt,struct opcdata *opd)
       ;
       ; NOTE: The floating point system on the Color Computer doesn't have the
       ;       concepts of +-inf or NaN---those will generate an error.
+      ;
+      ;	      The unpacked floating point format is not supported.
       ;----------------------------------------------------------------------*/
       
       if (!isnormal(fv.value.d) && (fv.value.d != 0.0))
@@ -339,17 +340,14 @@ static bool frsdos_float(struct format *fmt,struct opcdata *opd)
       decbfloat[4] = (frac >> 21) & 255;
       
       if (opd->op->opcode == 1) /* .FLOATD maps to unpacked on DECB */
-      {
-        decbfloat[5]  = sign * 255;
-        decbfloat[1] |= 0x80;
-      }
-      else
-        decbfloat[1] |= sign ? 0x80 : 0x00;
-        
-      for (size_t i = 0 ; (opd->sz < sizeof(opd->bytes)) && (i < dfs) ; i++,opd->sz++)
+        message(opd->a09,MSG_WARNING,"W0019: double floats not supported, using single float");
+
+      decbfloat[1] |= sign ? 0x80 : 0x00;
+      
+      for (size_t i = 0 ; (opd->sz < sizeof(opd->bytes)) && (i < 5) ; i++,opd->sz++)
         opd->bytes[opd->sz] = decbfloat[i];
       if (opd->a09->obj)
-        if (!opd->a09->format.write(&opd->a09->format,opd,decbfloat,dfs,DATA))
+        if (!opd->a09->format.write(&opd->a09->format,opd,decbfloat,5,DATA))
           return false;
     }
     
