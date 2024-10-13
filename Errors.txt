@@ -95,3 +95,4 @@ E0094: value not defined
 E0095: %s: not enough data
 E0096: size can't be 0
 E0097: %s: contains no data
+E0098: Real format '%.*s' not supported

@@ -208,21 +208,15 @@ non-standard pesudo operation for most 6809 assemblers.
 		a value generated from Color Basic itself, but may be "close
 		enough" to be useful.
 
-		There currently is no way to force the Color Basic format
-		for the test backend.
-
 	.FLOATD float-expr [, float-expr ... ]
 
 		Format a floating point number.  For all backends except for
 		the rsdos one, this will format a 64-bit IEEE-754 floating
 		point number, which can be used with the MC6839.  For the
-		rsdos backend, this will generate the Color Basic unpacked
-		floating point format (48 bits).  There may be some
-		differences with a vlaue generated from Color Basic itself,
-		but may be "close enough" to be useful.
-
-		There current is no way to force the Color Basic format for
-		the test backend.
+		rsdos backend, this will generate the Color Basic floating
+		point format (40 bits) but will generate a warning.  There
+		may be some differences with a vlaue generated from Color
+		Basic itself, but may be "close enough" to be useful.
 
 	.NOTEST
 
@@ -264,6 +258,12 @@ non-standard pesudo operation for most 6809 assemblers.
 				actually generating data in the output file.
 				Symbols, however, are defined.  Default
 				value is TRUE.
+
+			.OPT * REAL ('IEEE' | 'MSFP')
+
+				Generate floating point values per the
+				IEEE-754 ('IEEE') format, or the Microsoft
+				('MSFP') floating point format.
 
 		The following options are only used by the TEST backend.
 		They are otherwise ignored by other backends.  The following
@@ -570,6 +570,15 @@ be potential problems.  The defined warnings are:
 		The .OPT TEST STACK <address> directive can only appear
 		outside a .TEST directive.
 
+	W0018
+
+		The .OPT TEST STACKSIZE <size> directive can only appear
+		outside a .TEST directive.
+
+	W0019
+
+		The given floating point format is not supported.
+
   Individual warnings can be supressed by using the appropritate command
 line option.
 
@@ -578,18 +587,23 @@ They are:
 
 	bin	binary backend
 
-		The resulting output is a memory image.
+		The resulting output is a memory image.  The default
+		floating point format is IEEE-754.
 
 	rsdos	Radio Shack TRS-80 Color Computer format
 
-		The resulting output can be loaded by Color Basic using
-		the CLOADM or LOADM BASIC command.
+		The resulting output can be loaded by Color Basic using the
+		CLOADM or LOADM BASIC command.  The defualt floating point
+		format is the Microsoft 8-bit floating point format.
 
 	srec	Motorola S-Record output
 
-		A text format.
+		A text format.  The default floating point format is
+		IEEE-754.
 
 	test	The unit test backend.
+
+		The default floating point format is IEEE-754.
 
   The following command line options are supported:
 

@@ -1777,6 +1777,21 @@ static bool pseudo__opt(struct opcdata *opd)
     return true;
   }
   
+  else if ((tmp.s == 4) && (memcmp(tmp.text,"REAL",4) == 0))
+  {
+    c = skip_space(opd->buffer);
+    read_label(opd->buffer,&tmp,c);
+    upper_label(&tmp);
+    if ((tmp.s == 4) && (memcmp(tmp.text,"IEEE",4) == 0))
+      opd->a09->format.Float = freal_ieee;
+    else if ((tmp.s == 4) && (memcmp(tmp.text,"MSFP",4) == 0))
+      opd->a09->format.Float = freal_msfp;
+    else
+      return message(opd->a09,MSG_ERROR,"E0098: Real format '%.*s' not supported",(int)tmp.s,tmp.text);
+      
+    return true;
+  }
+  
   else
     return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
 }
