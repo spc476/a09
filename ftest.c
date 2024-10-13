@@ -2197,7 +2197,7 @@ bool format_test_init(struct a09 *a09)
     .troff      = ftest_troff,
     .Assert     = ftest_Assert,
     .endtst     = ftest_endtst,
-    .Float      = fdefault_float,
+    .Float      = freal_ieee,
     .fini       = ftest_fini,
     .data       = NULL,
   };
