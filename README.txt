@@ -259,11 +259,13 @@ non-standard pesudo operation for most 6809 assemblers.
 				Symbols, however, are defined.  Default
 				value is TRUE.
 
-			.OPT * REAL ('IEEE' | 'MSFP')
+			.OPT * REAL ('IEEE' | 'MSFP' | 'LBFP' )
 
 				Generate floating point values per the
-				IEEE-754 ('IEEE') format, or the Microsoft
-				('MSFP') floating point format.
+				IEEE-754 ('IEEE') format, the Microsoft
+				('MSFP') floating point format, or the
+				rather obscure format used by Lennart
+				Benschop.
 
 		The following options are only used by the TEST backend.
 		They are otherwise ignored by other backends.  The following

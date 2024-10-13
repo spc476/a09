@@ -18,6 +18,36 @@
 *
 *   Comments, questions and criticisms can be sent to: sean@conman.org
 *
+* ---------------------------------------------------------------------
+*
+* The IEEE-754 double (which pretty much all systems use these days) is
+* formatted as:
+*
+*           [s:1] [exp:11 (biased by 1023)] [frac:52]
+*
+* There is the MC6839 ROM, a position independent from Motorola, which
+* supports IEEE-754 floats.  It's 8K, so it's fairly large as 6809 libraries
+* go, but it does a good, if slow, job of supporting IEEE-754.
+*
+* The floating point format for the Color Computer (written by Microsoft)
+* is:
+*
+*           [exp:8 (biased by 129)] [s:1] [frac:31]
+*
+* Both assume the floating point fraction has a leading 1 and thus, it's not
+* part of the actual storage format.  So all we have to do is kind of
+* massage the bits around a bit.
+*
+* There is a third floating point library I found for the 6809, found here:
+*
+*	https://lennartb.home.xs4all.nl/m6809.html
+*
+* The only difference between this and the Microsoft floating point format,
+* is the exponent bias---it uses $80 instead of $81.
+*
+* NOTE: The floating point system on the Color Computer doesn't have the
+*       concepts of +-inf or NaN---those will generate an error.
+*
 ****************************************************************************/
 
 #include <math.h>
@@ -103,13 +133,14 @@ bool freal_ieee(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-bool freal_msfp(struct format *fmt,struct opcdata *opd)
+static bool freal_40b(struct format *fmt,struct opcdata *opd,int bias)
 {
   (void)fmt;
   assert(opd          != NULL);
   assert(opd->a09     != NULL);
   assert(opd->buffer  != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  assert((bias == 128) || (bias == 129));
   
   opd->data = true;
   
@@ -126,31 +157,6 @@ bool freal_msfp(struct format *fmt,struct opcdata *opd)
     
     if (opd->pass == 2)
     {
-      /*----------------------------------------------------------------------
-      ; The IEEE-754 double (which pretty much all systems use these days) is
-      ; formatted as:
-      ;
-      ;           [s:1] [exp:11 (biased by 1023)] [frac:52]
-      ;
-      ; The floating point format for the Color Computer is:
-      ;
-      ;           [exp:8 (biased by 129)] [s:1] [frac:31]
-      ;
-      ; Both assume the floating point fraction has a leading 1 and thus,
-      ; it's not part of the actual storage format.  So all we have to do
-      ; is kind of massage the bits around a bit.
-      ;
-      ; One wrinkle in this is the unpacked floating point format used on the
-      ; Color Computer.  It's one byte longer:
-      ;
-      ;           [exp:8 (biased by 129)] [frac:32] [s:8]
-      ;
-      ; NOTE: The floating point system on the Color Computer doesn't have the
-      ;       concepts of +-inf or NaN---those will generate an error.
-      ;
-      ;	      The unpacked floating point format is not supported.
-      ;----------------------------------------------------------------------*/
-      
       if (!isnormal(fv.value.d) && (fv.value.d != 0.0))
         return message(opd->a09,MSG_ERROR,"E0090: floating point exceeds range of Color Computer");
         
@@ -165,7 +171,7 @@ bool freal_msfp(struct format *fmt,struct opcdata *opd)
       assert(exp < 0x7FF);
       assert((exp > 0) || ((exp == 0) && (frac == 0)));
       if (exp > 0)
-        exp = exp - 1023 + 129; /* unbias from IEEE-754 to DECB float */
+        exp = exp - 1023 + bias; /* unbias from IEEE-754 to DECB float */
       if (exp > 255)
         return message(opd->a09,MSG_ERROR,"E0090: floating point exceeds range of Color Computer");
         
@@ -193,6 +199,32 @@ bool freal_msfp(struct format *fmt,struct opcdata *opd)
     if (c != ',')
       return message(opd->a09,MSG_ERROR,"E0034: missing comma");
   }
+}
+
+/**************************************************************************/
+
+bool freal_msfp(struct format *fmt,struct opcdata *opd)
+{
+  (void)fmt;
+  assert(opd          != NULL);
+  assert(opd->a09     != NULL);
+  assert(opd->buffer  != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  return freal_40b(fmt,opd,129);
+}
+
+/**************************************************************************/
+
+bool freal_lbfp(struct format *fmt,struct opcdata *opd)
+{
+  (void)fmt;
+  assert(opd          != NULL);
+  assert(opd->a09     != NULL);
+  assert(opd->buffer  != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+
+  return freal_40b(fmt,opd,128);
 }
 
 /**************************************************************************/

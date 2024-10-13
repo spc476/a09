@@ -311,6 +311,7 @@ extern bool                  fdefault_float     (struct format *,struct opcdata 
 extern bool                  fdefault_fini      (struct format *,struct a09 *);
 extern bool                  freal_ieee         (struct format *,struct opcdata *);
 extern bool                  freal_msfp         (struct format *,struct opcdata *);
+extern bool                  freal_lbfp         (struct format *,struct opcdata *);
 
 /**************************************************************************/
 

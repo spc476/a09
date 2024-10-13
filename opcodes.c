@@ -1786,6 +1786,8 @@ static bool pseudo__opt(struct opcdata *opd)
       opd->a09->format.Float = freal_ieee;
     else if ((tmp.s == 4) && (memcmp(tmp.text,"MSFP",4) == 0))
       opd->a09->format.Float = freal_msfp;
+    else if ((tmp.s == 4) && (memcmp(tmp.text,"LBFP",4) == 0))
+      opd->a09->format.Float = freal_lbfp;
     else
       return message(opd->a09,MSG_ERROR,"E0098: Real format '%.*s' not supported",(int)tmp.s,tmp.text);
       
