@@ -61,19 +61,11 @@ static bool fbin_org(struct format *format,struct opcdata *opd)
   
   if (opd->pass == 2)
   {
-    /*----------------------------------------------------------------------
-    ; format->data is used as a flag; if NULL, it's false, if not NULL, it's
-    ; true.  It saves a memory allocation.
-    ;-----------------------------------------------------------------------*/
-    
-    if (format->data)
-    {
-      uint16_t delta = opd->value.value - opd->a09->pc;
-      if (fseek(opd->a09->out,delta,SEEK_CUR) == -1)
-        return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
-    }
-    
-    format->data = format;
+    if (opd->value.value < opd->a09->pc)
+      return message(opd->a09,MSG_ERROR,"E0099: ORG to lower memory not supported in bin format");
+    uint16_t delta = opd->value.value - opd->a09->pc;
+    if (fseek(opd->a09->out,delta,SEEK_CUR) == -1)
+      return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
   }
   
   opd->a09->pc = opd->value.value;
