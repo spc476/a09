@@ -97,3 +97,4 @@ E0096: size can't be 0
 E0097: %s: contains no data
 E0098: Real format '%.*s' not supported
 E0099: ORG to lower memory not supported in bin format
+E0100: Can't reserve 0 bytes of memory

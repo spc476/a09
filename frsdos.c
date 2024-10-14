@@ -243,6 +243,9 @@ static bool frsdos_rmb(struct format *fmt,struct opcdata *opd)
   assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_RSDOS);
   assert(opd          != NULL);
+  
+  if (opd->value.value == 0)
+    return message(opd->a09,MSG_ERROR,"E0100: Can't reserve 0 bytes of memory");
   return block_zero_write(fmt->data,opd,opd->value.value);
 }
 
