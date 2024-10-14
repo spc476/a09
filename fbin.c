@@ -61,11 +61,20 @@ static bool fbin_org(struct format *format,struct opcdata *opd)
   
   if (opd->pass == 2)
   {
-    if (opd->value.value < opd->a09->pc)
-      return message(opd->a09,MSG_ERROR,"E0099: ORG to lower memory not supported in bin format");
-    uint16_t delta = opd->value.value - opd->a09->pc;
-    if (fseek(opd->a09->out,delta,SEEK_CUR) == -1)
-      return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
+    /*-------------------------------------------------------------------
+    ; format->data is being used as a flag to do seeks *after* the first
+    ; write to the output file.  That is all.  (Why yes, I did question this
+    ; when I came across this to make a change, and found out the hard way
+    ; what I was doing back in the past).
+    ;--------------------------------------------------------------------*/
+    
+    if (format->data)
+    {
+      long int delta = opd->value.value - opd->a09->pc;
+      if (fseek(opd->a09->out,delta,SEEK_CUR) == -1)
+        return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
+    }
+    format->data = format;
   }
   
   opd->a09->pc = opd->value.value;
