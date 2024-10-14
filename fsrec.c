@@ -348,7 +348,7 @@ static bool fsrec_rmb(struct format *fmt,struct opcdata *opd)
     struct format_srec *format = fmt->data;
     
     if (opd->value.value == 0)
-      return message(opd->a09,MSG_ERROR,"E0100: Can't reserve 0 bytes of memory");
+      return message(opd->a09,MSG_ERROR,"E0099: Can't reserve 0 bytes of memory");
       
     for (size_t i = 0 ; i < opd->value.value ; i++)
     {

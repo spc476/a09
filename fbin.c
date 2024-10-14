@@ -94,7 +94,7 @@ static bool fbin_rmb(struct format *format,struct opcdata *opd)
   if (opd->pass == 2)
   {
     if (opd->value.value == 0)
-      return message(opd->a09,MSG_ERROR,"E0100: Can't reserve 0 bytes of memory");
+      return message(opd->a09,MSG_ERROR,"E0099: Can't reserve 0 bytes of memory");
     if (fseek(opd->a09->out,opd->value.value,SEEK_CUR) == -1)
       return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
   }
