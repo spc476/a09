@@ -200,6 +200,7 @@ static inline struct Assert *tree2Assert(tree__s *tree)
 char const format_test_usage[] =
         "\n"
         "Test format options:\n"
+        "\t-A addr\t\taddress of test code (default=0xE000)\n"
         "\t-D file\t\tcore file (of 6809 VM) name\n"
         "\t-E range\tmark memory as code (see below)\n"
         "\t-F byte\t\tfill memory with value (default=0x01, illegal inst)\n"
@@ -335,6 +336,11 @@ static bool ftest_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,ch
          data->rndorder = true;
          break;
          
+    case 'A':
+         if (!cmd_uint16_t(&data->inittestpc,pi,argc,argv,0,65535u))
+           return message(a09,MSG_ERROR,"E0069: address exceeds address space");
+          break;
+          
     default:
          usage(argv[0]);
          return false;
@@ -1800,6 +1806,19 @@ static bool ftest_opt(struct format *fmt,struct opcdata *opd)
       if (data->intest)
         return message(opd->a09,MSG_ERROR,"E0089: can only set outside a .TEST directive");
       data->rndorder = true;
+    }
+    
+    else if ((tmp.s == 9) && (memcmp(tmp.text,"LOADTESTS",9) == 0))
+    {
+      struct value addr;
+      
+      if (!expr(&addr,opd->a09,opd->buffer,opd->pass))
+        return false;
+        
+      if (data->intest)
+        return message(opd->a09,MSG_ERROR,"E0100: Can only assign test code outside a .TEST directive");
+      
+      data->inittestpc = addr.value;
     }
     
     else

@@ -324,6 +324,13 @@ non-standard pesudo operation for most 6809 assemblers.
 				directive, given the nature of the
 				assembler.
 
+			.OPT TEST LOADTESTS address
+
+				Set the starting address for assembling test
+				cases.  This directive can ONLY appear
+				outside of a .TEST directive, given the
+				nature of the assembler.
+
 	.TEST ["name"]
 
 		Define a unit test if using the test backend.  Any 6809 code
@@ -681,6 +688,10 @@ The SREC backend
 		values are 1 to 252, with 34 being the default.
 
 The test backend
+	-A address
+
+		Use the address for assembling the unit tests in the
+		emulated 6809.  The default value for this is $E000.
 
 	-D file
 
