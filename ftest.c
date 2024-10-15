@@ -159,6 +159,9 @@ struct testdata
   uint16_t         addr;
   uint16_t         sp;
   uint16_t         stacksize;
+  uint16_t         inittestpc;
+  uint16_t         testpc;
+  uint16_t         resumepc;
   uint8_t          fill;
   bool             tron;
   bool             timing;
@@ -1380,6 +1383,8 @@ static bool ftest_pass_start(struct format *fmt,struct a09 *a09,int pass)
   
   struct testdata *test = fmt->data;
   test->intest          = false;
+  test->testpc          = test->inittestpc;
+  test->resumepc        = 0x0000;
   if (pass == 1)
     a09->outfile = "/dev/null";
   return true;
@@ -1891,6 +1896,13 @@ static bool ftest_test(struct format *fmt,struct opcdata *opd)
     return message(opd->a09,MSG_ERROR,"E0078: cannot nest .TEST");
   data->intest = true;
   
+  data->resumepc   = opd->a09->pc;
+  opd->value.value = data->testpc;
+  if (!ftest_org(fmt,opd))
+    return false;
+    
+  message(opd->a09,MSG_DEBUG,"test resume=%04X new=%04X",data->resumepc,data->testpc);
+  
   if (opd->pass == 2)
   {
     char c;
@@ -1916,6 +1928,7 @@ static bool ftest_test(struct format *fmt,struct opcdata *opd)
     }
     else
       return message(opd->a09,MSG_ERROR,"E0060: syntax error");
+      
     data->nunits++;
   }
   return true;
@@ -2112,6 +2125,12 @@ static bool ftest_endtst(struct format *fmt,struct opcdata *opd)
   if (!test->intest)
     return message(opd->a09,MSG_ERROR,"E0079: no matching .TEST");
     
+  test->testpc     = opd->a09->pc;
+  opd->value.value = test->resumepc;
+  if (!ftest_org(fmt,opd))
+    return false;
+  message(opd->a09,MSG_DEBUG,"endtst pc=%04X",opd->a09->pc);
+  
   test->intest = false;
   return true;
 }
@@ -2235,28 +2254,31 @@ bool format_test_init(struct a09 *a09)
   struct testdata *data = malloc(sizeof(struct testdata));
   if (data != NULL)
   {
-    data->a09       = a09;
-    data->corefile  = NULL;
-    data->Asserts   = NULL;
-    data->units     = NULL;
-    data->nunits    = 0;
-    data->icount    = 0;
-    data->cpu.user  = data;
-    data->cpu.read  = ft_cpu_read;
-    data->cpu.write = ft_cpu_write;
-    data->cpu.fault = ft_cpu_fault;
-    data->dis.user  = data;
-    data->dis.read  = ft_dis_read;
-    data->dis.fault = ft_dis_fault;
-    data->addr      = 0;
-    data->sp        = 0xFFF0;
+    data->a09        = a09;
+    data->corefile   = NULL;
+    data->Asserts    = NULL;
+    data->units      = NULL;
+    data->nunits     = 0;
+    data->icount     = 0;
+    data->cpu.user   = data;
+    data->cpu.read   = ft_cpu_read;
+    data->cpu.write  = ft_cpu_write;
+    data->cpu.fault  = ft_cpu_fault;
+    data->dis.user   = data;
+    data->dis.read   = ft_dis_read;
+    data->dis.fault  = ft_dis_fault;
+    data->addr       = 0;
+    data->sp         = 0xFFF0;
     data->stacksize = 1024;
-    data->fill      = 0x01; // illegal instruction
-    data->tron      = false;
-    data->timing    = false;
-    data->rndorder  = false;
-    data->errbuf[0] = '\0';
-    data->intest    = false;
+    data->inittestpc = 0xE000;
+    data->testpc     = 0xE000;
+    data->resumepc   = 0x0000;
+    data->fill       = 0x01; // illegal instruction
+    data->tron       = false;
+    data->timing     = false;
+    data->rndorder   = false;
+    data->errbuf[0]  = '\0';
+    data->intest     = false;
     
     memset(data->memory,data->fill,sizeof(data->memory));
     memset(data->prot,0,sizeof(data->prot));
