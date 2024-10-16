@@ -1582,7 +1582,7 @@ static bool ftest_write(
     data->prot[data->addr].read   = true;
     data->prot[data->addr].write  = !instruction;
     data->prot[data->addr].exec   = instruction;
-    data->prot[data->addr].tron |= data->tron;
+    data->prot[data->addr].tron  |= data->tron;
     data->addr++;
   }
   
