@@ -1669,7 +1669,7 @@ static bool ftest_opt(struct format *fmt,struct opcdata *opd)
         message(opd->a09,MSG_WARNING,"W0018: cannot assign the stack size within .TEST directive");
         
       if ((size.value < 2) || (size.value > 4096))
-        return message(a09,MSG_ERROR,"E0088: stack size must be between 2 and 4096");
+        return message(opd->a09,MSG_ERROR,"E0088: stack size must be between 2 and 4096");
         
       data->stacksize = size.value;
     }
