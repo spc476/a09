@@ -173,6 +173,8 @@ struct testdata
 {
   struct a09      *a09;
   bool            (*fmtwrite)(struct format *,struct opcdata *,void const *,size_t,bool);
+  bool            (*fmtrmb)  (struct format *,struct opcdata *);
+  bool            (*fmtalign)(struct format *,struct opcdata *);
   tree__s         *Asserts;
   struct unittest *units;
   size_t           nunits;
@@ -1701,21 +1703,24 @@ static bool ftest_opt(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-bool test_align(struct opcdata *opd)
+static bool ftest_align(struct format *fmt,struct opcdata *opd)
 {
+  assert(fmt             != NULL);
   assert(opd             != NULL);
   assert(opd->a09        != NULL);
   assert(opd->a09->tests != NULL);
   assert(opd->a09->runtests);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  if (opd->pass == 2)
-  {
-    struct testdata *data = opd->a09->tests;
-    data->addr += opd->datasz;
-  }
+  struct testdata *data = opd->a09->tests;
   
-  return true;
+  if (opd->pass == 2)
+    data->addr += opd->datasz;
+  
+  if (!data->intest)
+    return opd->a09->tests->fmtalign(fmt,opd);
+  else
+    return true;
 }
 
 /**************************************************************************/
@@ -1740,18 +1745,19 @@ bool test_org(struct opcdata *opd)
 
 /**************************************************************************/
 
-bool test_rmb(struct opcdata *opd)
+static bool ftest_rmb(struct format *fmt,struct opcdata *opd)
 {
-  assert(opd != NULL);
+  assert(fmt             != NULL);
+  assert(opd             != NULL);
   assert(opd->a09        != NULL);
   assert(opd->a09->tests != NULL);
   assert(opd->a09->runtests);
   assert((opd->pass == 1) || (opd->pass == 2));
   
+  struct testdata *data = opd->a09->tests;
+  
   if (opd->pass == 2)
   {
-    struct testdata *data = opd->a09->tests;
-    
     if (opd->value.value == 0)
       return message(opd->a09,MSG_ERROR,"E0099: Can't reserve 0 bytes of memory");
       
@@ -1764,7 +1770,10 @@ bool test_rmb(struct opcdata *opd)
     data->addr += opd->value.value;
   }
   
-  return true;
+  if (!data->intest)
+    return opd->a09->tests->fmtrmb(fmt,opd);
+  else
+    return true;
 }
 
 /**************************************************************************/
@@ -2097,6 +2106,8 @@ bool test_init(struct a09 *a09)
   {
     a09->tests->a09        = a09;
     a09->tests->fmtwrite   = a09->format.write;
+    a09->tests->fmtrmb     = a09->format.rmb;
+    a09->tests->fmtalign   = a09->format.align;
     a09->tests->Asserts    = NULL;
     a09->tests->units      = NULL;
     a09->tests->nunits     = 0;
@@ -2122,6 +2133,8 @@ bool test_init(struct a09 *a09)
     a09->tests->intest     = false;
     
     a09->format.write      = ftest_write;
+    a09->format.rmb        = ftest_rmb;
+    a09->format.align      = ftest_align;
     a09->format.opt        = ftest_opt;
     a09->format.test       = ftest_test;
     a09->format.tron       = ftest_tron;

@@ -1062,9 +1062,6 @@ static bool pseudo_rmb(struct opcdata *opd)
     return false;
   opd->data   = true;
   opd->datasz = opd->value.value;
-  if (opd->a09->runtests)
-    if (!test_rmb(opd))
-      return false;
   if (opd->a09->obj)
     return opd->a09->format.rmb(&opd->a09->format,opd);
   else
@@ -1590,10 +1587,6 @@ static bool pseudo_align(struct opcdata *opd)
   opd->data   = true;
   opd->datasz = opd->value.value - rem;
   
-  if (opd->a09->runtests)
-    if (!test_align(opd))
-      return false;
-      
   return opd->a09->format.align(&opd->a09->format,opd);
 }
 
