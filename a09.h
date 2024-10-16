@@ -126,6 +126,7 @@ struct buffer
 struct a09;
 struct opcdata;
 struct symbol;
+struct testdata;
 
 struct format
 {
@@ -154,25 +155,28 @@ struct format
 
 struct a09
 {
-  char const    *infile;
-  char const    *outfile;
-  char const    *listfile;
-  char         **deps;
-  size_t         ndeps;
-  FILE          *in;
-  FILE          *out;
-  FILE          *list;
-  struct format  format;
-  struct buffer  inbuf;
-  size_t         lnum;
-  tree__s       *symtab;
-  unsigned char  nowarn[10000 / CHAR_BIT];
-  label          label;
-  uint16_t       pc;
-  unsigned char  dp;
-  bool           debug;
-  bool           mkdeps;
-  bool           obj;
+  char const       *infile;
+  char const       *outfile;
+  char const       *listfile;
+  char const       *corefile;
+  char            **deps;
+  size_t            ndeps;
+  FILE             *in;
+  FILE             *out;
+  FILE             *list;
+  struct testdata  *tests;
+  struct format     format;
+  struct buffer     inbuf;
+  size_t            lnum;
+  tree__s          *symtab;
+  unsigned char     nowarn[10000 / CHAR_BIT];
+  label             label;
+  uint16_t          pc;
+  unsigned char     dp;
+  bool              debug;
+  bool              mkdeps;
+  bool              obj;
+  bool              runtests;
 };
 
 struct symbol

@@ -582,6 +582,7 @@ void usage(char const *prog)
   fprintf(
            stderr,
            "usage: %s [options] [files...]\n"
+           "\t-D file\t\tcore file (of 6809 VM) name (only if -t specified)\n"
            "\t-M\t\tgenerate Makefile dependencies on stdout\n"
            "\t-d\t\tdebug output\n"
            "\t-f format\toutput format (bin)\n"
@@ -589,6 +590,7 @@ void usage(char const *prog)
            "\t-l listfile\tlist filename\n"
            "\t-n Wxxxx\tsupress the given warnings\n"
            "\t-o filename\toutput filename\n"
+           "\t-t\t\trun tests\n"
            "\n"
            "\tformats: bin rsdos srec\n"
            "%s"
@@ -620,6 +622,14 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       
       switch(argv[i][1])
       {
+        case 'D':
+             if ((a09->corefile = cmd_opt(&i,argc,argv)) == NULL)
+             {
+               message(a09,MSG_ERROR,"E0068: missing option argument");
+               return -1;
+             }
+             break;
+             
         case 'M':
              a09->mkdeps = true;
              break;
@@ -647,7 +657,10 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              format = cmd_opt(&i,argc,argv);
              
              if (format == NULL)
-               return message(a09,MSG_ERROR,"E0068: missing option argument");
+             {
+               message(a09,MSG_ERROR,"E0068: missing option argument");
+               return -1;
+             }
              else if (strcmp(format,"bin") == 0)
              {
                if (!format_bin_init(a09))
@@ -673,6 +686,10 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
         case 'h':
              usage(argv[0]);
              return -1;
+             
+        case 't':
+             a09->runtests = true;
+             break;
              
         default:
              if (!a09->format.cmdline(&a09->format,a09,argc,&i,argv))
@@ -776,6 +793,8 @@ int main(int argc,char *argv[])
     .infile    = argv[0],
     .outfile   = "a09.obj",
     .listfile  = NULL,
+    .corefile  = NULL,
+    .tests     = NULL,
     .deps      = NULL,
     .ndeps     = 0,
     .in        = NULL,
