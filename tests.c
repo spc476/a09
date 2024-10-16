@@ -172,7 +172,7 @@ struct Assert
 struct testdata
 {
   struct a09      *a09;
-  const char      *corefile;
+  bool            (*fmtwrite)(struct format *,struct opcdata *,void const *,size_t,bool);
   tree__s         *Asserts;
   struct unittest *units;
   size_t           nunits;
@@ -216,160 +216,6 @@ static inline struct Assert *tree2Assert(tree__s *tree)
 #if defined(__clang__)
 #  pragma clang diagnostic pop "-Wcast-align"
 #endif
-}
-
-/**************************************************************************/
-
-char const format_test_usage[] =
-        "\n"
-        "Test format options:\n"
-        "\t-A addr\t\taddress of test code (default=0xE000)\n"
-        "\t-D file\t\tcore file (of 6809 VM) name\n"
-        "\t-E range\tmark memory as code (see below)\n"
-        "\t-F byte\t\tfill memory with value (default=0x01, illegal inst)\n"
-        "\t-R range\tmark memory read-only (see below)\n"
-        "\t-S addr\t\taddress of system stack and string pool (default=0xFFF0)\n"
-        "\t-T range\ttrace execution of code (see below)\n"
-        "\t-W range\tmark memory write-only (see below)\n"
-        "\t-Z size\t\tsize of system stack (min=2, max=4096, default=1024)\n"
-        "\t-r\t\trandomize the testing order\n"
-        "\n"
-        "NOTE:\tmemory ranges can be specified as:\n"
-        "\t\t<low-address>[ '-' <high-address>]\n"
-        "\tmultiple ranges can be specified, separated by a comma\n"
-        "\tBy default, memory has no permissions (addresses outside of\n"
-        "\tassembled file), read/execute or read/write, but never trace\n"
-        "\tby default.  You can also enable tracing with the .TRON\n"
-        "\tdirective.\n"
-        ;
-        
-/**************************************************************************/
-
-static bool range(
-        struct a09     *a09,
-        struct memprot *mem,
-        int            *pi,
-        int             argc,
-        char           *argv[],
-        struct memprot  prot
-)
-{
-  assert(mem  != NULL);
-  assert(pi   != NULL);
-  assert(argc >  0);
-  assert(argv != NULL);
-  assert(*pi  >  0);
-  assert(*pi  <  argc);
-  
-  unsigned long int  low;
-  unsigned long int  high;
-  char              *r = cmd_opt(pi,argc,argv);
-  
-  if (r == NULL)
-    return message(a09,MSG_ERROR,"E0068: missing option argument");
-    
-  while(*r)
-  {
-    low = strtoul(r,&r,0);
-    if (*r == '-')
-    {
-      r++;
-      high = strtoul(r,&r,0);
-    }
-    else
-      high = low;
-      
-    if ((low > 65535u) || (high > 65535u))
-      return message(a09,MSG_ERROR,"E0069: address exceeds address space");
-      
-    for ( ; low <= high ; low++)
-    {
-      mem[low].read  |= prot.read;
-      mem[low].write |= prot.write;
-      mem[low].exec  |= prot.exec;
-      mem[low].tron  |= prot.tron;
-      mem[low].check |= prot.check;
-    }
-    
-    if (*r == ',')
-      r++;
-  }
-  
-  return true;
-}
-
-/**************************************************************************/
-
-static bool ftest_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,char *argv[])
-{
-  assert(fmt  != NULL);
-  assert(a09  != NULL);
-  assert(argc >  0);
-  assert(pi   != NULL);
-  assert(*pi  >  0);
-  assert(argv != NULL);
-  assert(fmt->backend == BACKEND_TEST);
-  
-  struct testdata *data = fmt->data;
-  
-  switch(argv[*pi][1])
-  {
-    case 'S':
-         if (!cmd_uint16_t(&data->sp,pi,argc,argv,0,65535u))
-           return message(a09,MSG_ERROR,"E0069: address exceeds address space");
-         break;
-         
-    case 'D':
-         if ((data->corefile = cmd_opt(pi,argc,argv)) == NULL)
-           return message(a09,MSG_ERROR,"E0068: missing option argument");
-         break;
-         
-    case 'F':
-         if (!cmd_uint8_t(&data->fill,pi,argc,argv,0,255))
-           return message(a09,MSG_ERROR,"E0072: byte should be 0..255");
-         memset(data->memory,data->fill,sizeof(data->memory));
-         break;
-         
-    case 'R':
-         if (!range(a09,data->prot,pi,argc,argv,(struct memprot){ .read = true , .write = false , .exec = false , .tron = false , .check = false }))
-           return false;
-         break;
-         
-    case 'W':
-         if (!range(a09,data->prot,pi,argc,argv,(struct memprot){ .read = false , .write = true , .exec = false , .tron = false , .check = false }))
-           return false;
-         break;
-         
-    case 'E':
-         if (!range(a09,data->prot,pi,argc,argv,(struct memprot){ .read = false , .write = false , .exec = true , .tron = false , .check = false }))
-           return false;
-         break;
-         
-    case 'T':
-         if (!range(a09,data->prot,pi,argc,argv,(struct memprot){ .read = false , .write = false , .exec = false , .tron = true , .check = false }))
-           return false;
-         break;
-         
-    case 'Z':
-         if (!cmd_uint16_t(&data->stacksize,pi,argc,argv,2,4096))
-           return message(a09,MSG_ERROR,"E0088: stack size must be between 2 and 4096");
-         break;
-         
-    case 'r':
-         data->rndorder = true;
-         break;
-         
-    case 'A':
-         if (!cmd_uint16_t(&data->inittestpc,pi,argc,argv,0,65535u))
-           return message(a09,MSG_ERROR,"E0069: address exceeds address space");
-          break;
-          
-    default:
-         usage(argv[0]);
-         return false;
-  }
-  
-  return true;
 }
 
 /**************************************************************************/
@@ -1401,36 +1247,32 @@ static bool ft_compile(
 
 /**************************************************************************/
 
-static bool ftest_pass_start(struct format *fmt,struct a09 *a09,int pass)
+bool test_pass_start(struct a09 *a09,int pass)
 {
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_TEST);
+  assert(a09        != NULL);
+  assert(a09->tests != NULL);
+  assert(a09->runtests);
   assert((pass == 1) || (pass == 2));
-  (void)a09;
   (void)pass;
   
-  struct testdata *test = fmt->data;
+  struct testdata *test = a09->tests;
   test->intest          = false;
   test->testpc          = test->inittestpc;
   test->resumepc        = 0x0000;
-  if (pass == 1)
-    a09->outfile = "/dev/null";
   return true;
 }
 
 /**************************************************************************/
 
-static bool ftest_pass_end(struct format *fmt,struct a09 *a09,int pass)
+bool test_pass_end(struct a09 *a09,int pass)
 {
-  assert(fmt         != NULL);
-  assert(fmt->data   != NULL);
-  assert(fmt->backend == BACKEND_TEST);
-  assert(a09          != NULL);
+  assert(a09        != NULL);
+  assert(a09->tests != NULL);
+  assert(a09->runtests);
   assert((pass == 1) || (pass == 2));
   (void)pass;
   
-  struct testdata *data = fmt->data;
+  struct testdata *data = a09->tests;
   
   if (data->intest)
     return message(a09,MSG_ERROR,"E0077: missing .ENDTST directive");
@@ -1581,23 +1423,22 @@ static bool ftest_pass_end(struct format *fmt,struct a09 *a09,int pass)
 /**************************************************************************/
 
 static bool ftest_write(
-        struct format   *fmt,
+        struct format  *fmt,
         struct opcdata *opd,
         void const     *buffer,
         size_t          len,
         bool            instruction
 )
 {
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_TEST);
-  assert(opd          != NULL);
-  assert(buffer       != NULL);
-  assert(opd->pass    == 2);
+  assert(fmt             != NULL);
+  assert(opd             != NULL);
+  assert(buffer          != NULL);
+  assert(opd->pass       == 2);
+  assert(opd->a09        != NULL);
+  assert(opd->a09->tests != NULL);
+  assert(opd->a09->runtests);
   
-  (void)opd;
-  
-  struct testdata *data = fmt->data;
+  struct testdata *data = opd->a09->tests;
   
   memcpy(&data->memory[data->addr],buffer,len);
   for (size_t i = 0 ; i < len ; i++)
@@ -1609,22 +1450,26 @@ static bool ftest_write(
     data->addr++;
   }
   
-  return true;
+  if (!data->intest)
+    return opd->a09->tests->fmtwrite(fmt,opd,buffer,len,instruction);
+  else
+    return true;
 }
 
 /**************************************************************************/
 
 static bool ftest_opt(struct format *fmt,struct opcdata *opd)
 {
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_TEST);
-  assert(opd          != NULL);
+  (void)fmt;
+  assert(opd             != NULL);
+  assert(opd->a09        != NULL);
+  assert(opd->a09->tests != NULL);
+  assert(opd->a09->runtests);
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 2)
   {
-    struct testdata *data = fmt->data;
+    struct testdata *data = opd->a09->tests;
     char             c    = skip_space(opd->buffer);
     label            tmp;
     
@@ -1844,6 +1689,9 @@ static bool ftest_opt(struct format *fmt,struct opcdata *opd)
       data->inittestpc = addr.value;
     }
     
+    else if ((tmp.s == 5) && (memcmp(tmp.text,"DEBUG",5) == 0))
+      return message(opd->a09,MSG_DEBUG,"OPT TEST DEBUG");
+      
     else
       return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
   }
@@ -1853,17 +1701,17 @@ static bool ftest_opt(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool ftest_align(struct format *fmt,struct opcdata *opd)
+bool test_align(struct opcdata *opd)
 {
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_TEST);
-  assert(opd          != NULL);
+  assert(opd             != NULL);
+  assert(opd->a09        != NULL);
+  assert(opd->a09->tests != NULL);
+  assert(opd->a09->runtests);
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 2)
   {
-    struct testdata *data = fmt->data;
+    struct testdata *data = opd->a09->tests;
     data->addr += opd->datasz;
   }
   
@@ -1872,20 +1720,17 @@ static bool ftest_align(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool ftest_org(
-        struct format   *fmt,
-        struct opcdata *opd
-)
+bool test_org(struct opcdata *opd)
 {
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_TEST);
-  assert(opd          != NULL);
+  assert(opd             != NULL);
+  assert(opd->a09        != NULL);
+  assert(opd->a09->tests != NULL);
+  assert(opd->a09->runtests);
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 2)
   {
-    struct testdata *data = fmt->data;
+    struct testdata *data = opd->a09->tests;
     data->addr            = opd->value.value;
   }
   
@@ -1895,17 +1740,17 @@ static bool ftest_org(
 
 /**************************************************************************/
 
-static bool ftest_rmb(struct format *fmt,struct opcdata *opd)
+bool test_rmb(struct opcdata *opd)
 {
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_TEST);
-  assert(opd          != NULL);
+  assert(opd != NULL);
+  assert(opd->a09        != NULL);
+  assert(opd->a09->tests != NULL);
+  assert(opd->a09->runtests);
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 2)
   {
-    struct testdata *data = fmt->data;
+    struct testdata *data = opd->a09->tests;
     
     if (opd->value.value == 0)
       return message(opd->a09,MSG_ERROR,"E0099: Can't reserve 0 bytes of memory");
@@ -1926,21 +1771,22 @@ static bool ftest_rmb(struct format *fmt,struct opcdata *opd)
 
 static bool ftest_test(struct format *fmt,struct opcdata *opd)
 {
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_TEST);
-  assert(opd          != NULL);
+  (void)fmt;
+  assert(opd             != NULL);
+  assert(opd->a09->tests != NULL);
+  assert(opd->a09->runtests);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  struct testdata *data = fmt->data;
+  struct testdata *data = opd->a09->tests;
   
   if (data->intest)
     return message(opd->a09,MSG_ERROR,"E0078: cannot nest .TEST");
-  data->intest = true;
-  
+    
+  data->intest     = true;
   data->resumepc   = opd->a09->pc;
   opd->value.value = data->testpc;
-  if (!ftest_org(fmt,opd))
+  
+  if (!test_org(opd))
     return false;
     
   message(opd->a09,MSG_DEBUG,"test resume=%04X new=%04X",data->resumepc,data->testpc);
@@ -1992,15 +1838,16 @@ static bool ft_timingp(struct buffer *buffer)
 
 static bool ftest_tron(struct format *fmt,struct opcdata *opd)
 {
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_TEST);
-  assert(opd          != NULL);
+  (void)fmt;
+  assert(opd             != NULL);
+  assert(opd->a09        != NULL);
+  assert(opd->a09->tests != NULL);
+  assert(opd->a09->runtests);
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 2)
   {
-    struct testdata *data = fmt->data;
+    struct testdata *data = opd->a09->tests;
     
     if (ft_timingp(opd->buffer))
     {
@@ -2053,15 +1900,16 @@ static bool ftest_tron(struct format *fmt,struct opcdata *opd)
 
 static bool ftest_troff(struct format *fmt,struct opcdata *opd)
 {
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_TEST);
-  assert(opd          != NULL);
+  (void)fmt;
+  assert(opd             != NULL);
+  assert(opd->a09        != NULL);
+  assert(opd->a09->tests != NULL);
+  assert(opd->a09->runtests);
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 2)
   {
-    struct testdata *data = fmt->data;
+    struct testdata *data = opd->a09->tests;
     
     if (data->timing || ft_timingp(opd->buffer))
     {
@@ -2113,15 +1961,16 @@ static bool ftest_troff(struct format *fmt,struct opcdata *opd)
 
 static bool ftest_Assert(struct format *fmt,struct opcdata *opd)
 {
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_TEST);
-  assert(opd != NULL);
+  (void)fmt;
+  assert(opd             != NULL);
+  assert(opd->a09        != NULL);
+  assert(opd->a09->tests != NULL);
+  assert(opd->a09->runtests);
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 2)
   {
-    struct testdata    *data       = fmt->data;
+    struct testdata    *data       = opd->a09->tests;
     data->prot[opd->a09->pc].check = true;
     struct Assert *Assert          = get_Assert(opd->a09,data,opd->a09->pc);
     
@@ -2156,20 +2005,22 @@ static bool ftest_Assert(struct format *fmt,struct opcdata *opd)
 
 static bool ftest_endtst(struct format *fmt,struct opcdata *opd)
 {
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_TEST);
-  assert(opd != NULL);
+  (void)fmt;
+  assert(opd             != NULL);
+  assert(opd->a09        != NULL);
+  assert(opd->a09->tests != NULL);
+  assert(opd->a09->runtests);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  struct testdata *test = fmt->data;
+  struct testdata *test = opd->a09->tests;
   
   if (!test->intest)
     return message(opd->a09,MSG_ERROR,"E0079: no matching .TEST");
     
   test->testpc     = opd->a09->pc;
   opd->value.value = test->resumepc;
-  if (!ftest_org(fmt,opd))
+  
+  if (!test_org(opd))
     return false;
   message(opd->a09,MSG_DEBUG,"endtst pc=%04X",opd->a09->pc);
   
@@ -2195,19 +2046,17 @@ static void free_Asserts(tree__s *tree)
 
 /**************************************************************************/
 
-static bool ftest_fini(struct format *fmt,struct a09 *a09)
+bool test_fini(struct a09 *a09)
 {
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_TEST);
-  assert(a09          != NULL);
-  (void)a09;
+  assert(a09        != NULL);
+  assert(a09->tests != NULL);
+  assert(a09->runtests);
   
-  struct testdata *data = fmt->data;
+  struct testdata *data = a09->tests;
   
-  if (data->corefile)
+  if (a09->corefile)
   {
-    FILE *fp = fopen(data->corefile,"wb");
+    FILE *fp = fopen(a09->corefile,"wb");
     if (fp != NULL)
     {
       fwrite(data->memory,1,65536u,fp);
@@ -2228,7 +2077,7 @@ static bool ftest_fini(struct format *fmt,struct a09 *a09)
       fclose(fp);
     }
     else
-      message(a09,MSG_ERROR,"E0070: %s: %s",data->corefile,strerror(errno));
+      message(a09,MSG_ERROR,"E0070: %s: %s",a09->corefile,strerror(errno));
   }
   
   free_Asserts(data->Asserts);
@@ -2239,72 +2088,53 @@ static bool ftest_fini(struct format *fmt,struct a09 *a09)
 
 /**************************************************************************/
 
-bool format_test_init(struct a09 *a09)
+bool test_init(struct a09 *a09)
 {
-  static struct format const callbacks =
-  {
-    .backend    = BACKEND_TEST,
-    .cmdline    = ftest_cmdline,
-    .pass_start = ftest_pass_start,
-    .pass_end   = ftest_pass_end,
-    .write      = ftest_write,
-    .opt        = ftest_opt,
-    .dp         = fdefault,
-    .code       = fdefault,
-    .align      = ftest_align,
-    .end        = fdefault_end,
-    .org        = ftest_org,
-    .rmb        = ftest_rmb,
-    .setdp      = fdefault,
-    .test       = ftest_test,
-    .tron       = ftest_tron,
-    .troff      = ftest_troff,
-    .Assert     = ftest_Assert,
-    .endtst     = ftest_endtst,
-    .Float      = freal_ieee,
-    .fini       = ftest_fini,
-    .data       = NULL,
-  };
-  
   assert(a09 != NULL);
   
-  struct testdata *data = malloc(sizeof(struct testdata));
-  if (data != NULL)
+  a09->tests = malloc(sizeof(struct testdata));
+  if (a09->tests != NULL)
   {
-    data->a09        = a09;
-    data->corefile   = NULL;
-    data->Asserts    = NULL;
-    data->units      = NULL;
-    data->nunits     = 0;
-    data->icount     = 0;
-    data->cpu.user   = data;
-    data->cpu.read   = ft_cpu_read;
-    data->cpu.write  = ft_cpu_write;
-    data->cpu.fault  = ft_cpu_fault;
-    data->dis.user   = data;
-    data->dis.read   = ft_dis_read;
-    data->dis.fault  = ft_dis_fault;
-    data->addr       = 0;
-    data->sp         = 0xFFF0;
-    data->stacksize = 1024;
-    data->inittestpc = 0xE000;
-    data->testpc     = 0xE000;
-    data->resumepc   = 0x0000;
-    data->fill       = 0x01; // illegal instruction
-    data->tron       = false;
-    data->timing     = false;
-    data->rndorder   = false;
-    data->errbuf[0]  = '\0';
-    data->intest     = false;
+    a09->tests->a09        = a09;
+    a09->tests->fmtwrite   = a09->format.write;
+    a09->tests->Asserts    = NULL;
+    a09->tests->units      = NULL;
+    a09->tests->nunits     = 0;
+    a09->tests->icount     = 0;
+    a09->tests->cpu.user   = a09->tests;
+    a09->tests->cpu.read   = ft_cpu_read;
+    a09->tests->cpu.write  = ft_cpu_write;
+    a09->tests->cpu.fault  = ft_cpu_fault;
+    a09->tests->dis.user   = a09->tests;
+    a09->tests->dis.read   = ft_dis_read;
+    a09->tests->dis.fault  = ft_dis_fault;
+    a09->tests->addr       = 0;
+    a09->tests->sp         = 0xFFF0;
+    a09->tests->stacksize = 1024;
+    a09->tests->inittestpc = 0xE000;
+    a09->tests->testpc     = 0xE000;
+    a09->tests->resumepc   = 0x0000;
+    a09->tests->fill       = 0x01; // illegal instruction
+    a09->tests->tron       = false;
+    a09->tests->timing     = false;
+    a09->tests->rndorder   = false;
+    a09->tests->errbuf[0]  = '\0';
+    a09->tests->intest     = false;
     
-    memset(data->memory,data->fill,sizeof(data->memory));
-    memset(data->prot,0,sizeof(data->prot));
+    a09->format.write      = ftest_write;
+    a09->format.opt        = ftest_opt;
+    a09->format.test       = ftest_test;
+    a09->format.tron       = ftest_tron;
+    a09->format.troff      = ftest_troff;
+    a09->format.Assert     = ftest_Assert;
+    a09->format.endtst     = ftest_endtst;
+    
+    memset(a09->tests->memory,a09->tests->fill,sizeof(a09->tests->memory));
+    memset(a09->tests->prot,0,sizeof(a09->tests->prot));
     for (size_t addr = MC6809_VECTOR_SWI3 ; addr <= MC6809_VECTOR_RESET + 1 ; addr++)
-      data->prot[addr].read = true;
-    mc6809_reset(&data->cpu);
+      a09->tests->prot[addr].read = true;
+    mc6809_reset(&a09->tests->cpu);
     
-    a09->format      = callbacks;
-    a09->format.data = data;
     return true;
   }
   else

@@ -1062,6 +1062,9 @@ static bool pseudo_rmb(struct opcdata *opd)
     return false;
   opd->data   = true;
   opd->datasz = opd->value.value;
+  if (opd->a09->runtests)
+    if (!test_rmb(opd))
+      return false;
   if (opd->a09->obj)
     return opd->a09->format.rmb(&opd->a09->format,opd);
   else
@@ -1078,6 +1081,10 @@ static bool pseudo_org(struct opcdata *opd)
   if (!parse_dirext(opd))
     return message(opd->a09,MSG_ERROR,"E0039: missing value for ORG");
     
+  if (opd->a09->runtests)
+    if (!test_org(opd))
+      return false;
+      
   if (opd->a09->obj)
     return opd->a09->format.org(&opd->a09->format,opd);
   else
@@ -1583,6 +1590,10 @@ static bool pseudo_align(struct opcdata *opd)
   opd->data   = true;
   opd->datasz = opd->value.value - rem;
   
+  if (opd->a09->runtests)
+    if (!test_align(opd))
+      return false;
+      
   return opd->a09->format.align(&opd->a09->format,opd);
 }
 
@@ -1794,6 +1805,9 @@ static bool pseudo__opt(struct opcdata *opd)
     return true;
   }
   
+  else if ((tmp.s == 5) && (memcmp(tmp.text,"DEBUG",5) == 0))
+    return message(opd->a09,MSG_DEBUG,".OPT * DEBUG");
+    
   else
     return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
 }

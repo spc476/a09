@@ -533,6 +533,11 @@ bool assemble_pass(struct a09 *a09,int pass)
   a09->label = (label){ .s = 0 , .text = { '\0' } };
   
   message(a09,MSG_DEBUG,"Pass %d",pass);
+  
+  if (a09->runtests)
+    if (!test_pass_start(a09,pass))
+      return false;
+      
   if (!a09->format.pass_start(&a09->format,a09,pass))
     return false;
     
@@ -548,6 +553,10 @@ bool assemble_pass(struct a09 *a09,int pass)
   if (!a09->format.pass_end(&a09->format,a09,pass))
     return false;
     
+  if (a09->runtests)
+    if (!test_pass_end(a09,pass))
+      return false;
+      
   a09->label = saved;
   return true;
 }
@@ -764,6 +773,7 @@ static int cleanup(struct a09 *a09,bool success)
 {
   assert(a09 != NULL);
   
+  if (a09->runtests)    test_fini(a09);
   if (a09->out != NULL) fclose(a09->out);
   if (a09->out != NULL) fclose(a09->in);
   
@@ -809,6 +819,7 @@ int main(int argc,char *argv[])
     .debug     = false,
     .mkdeps    = false,
     .obj       = true,
+    .runtests  = false,
     .inbuf     = { .buf = {0}, .widx = 0, .ridx = 0 },
   };
   
@@ -824,6 +835,10 @@ int main(int argc,char *argv[])
     return cleanup(&a09,false);
   }
   
+  if (a09.runtests)
+    if (!test_init(&a09))
+      return cleanup(&a09,false);
+      
   a09.infile = add_file_dep(&a09,argv[fi]);
   a09.in     = fopen(a09.infile,"r");
   if (a09.in == NULL)
