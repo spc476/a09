@@ -69,7 +69,7 @@ E0068: missing option argument
 E0069: address exceeds address space
 E0070: %s: %s
 E0071: string too long
-E0072: byte should be 0..255
+E0072:
 E0073: bad register
 E0074: not enough space for expression
 E0075: can't negate or complement a string
