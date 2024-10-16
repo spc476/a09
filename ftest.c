@@ -107,6 +107,29 @@ enum vmops
 
 enum
 {
+  XC01 = 1 / ((int)VM_LOR  == (int)OP_LOR),
+  XC02 = 1 / ((int)VM_LAND == (int)OP_LAND),
+  XC03 = 1 / ((int)VM_GT   == (int)OP_GT),
+  XC04 = 1 / ((int)VM_GE   == (int)OP_GE),
+  XC05 = 1 / ((int)VM_EQ   == (int)OP_EQ),
+  XC06 = 1 / ((int)VM_LE   == (int)OP_LE),
+  XC07 = 1 / ((int)VM_LT   == (int)OP_LT),
+  XC08 = 1 / ((int)VM_NE   == (int)OP_NE),
+  XC09 = 1 / ((int)VM_BOR  == (int)OP_BOR),
+  XC10 = 1 / ((int)VM_BEOR == (int)OP_BEOR),
+  XC11 = 1 / ((int)VM_BAND == (int)OP_BAND),
+  XC12 = 1 / ((int)VM_SHR  == (int)OP_SHR),
+  XC13 = 1 / ((int)VM_SHL  == (int)OP_SHL),
+  XC14 = 1 / ((int)VM_SUB  == (int)OP_SUB),
+  XC15 = 1 / ((int)VM_ADD  == (int)OP_ADD),
+  XC16 = 1 / ((int)VM_MUL  == (int)OP_MUL),
+  XC17 = 1 / ((int)VM_DIV  == (int)OP_DIV),
+  XC18 = 1 / ((int)VM_MOD  == (int)OP_MOD),
+  XV19 = 1 / ((int)VM_EXP  == (int)OP_EXP),
+};
+
+enum
+{
   TEST_FAILED = MC6809_FAULT_user,
   TEST_NON_READ_MEM,
   TEST_WEEDS,
@@ -2242,31 +2265,6 @@ bool format_test_init(struct a09 *a09)
     .fini       = ftest_fini,
     .data       = NULL,
   };
-  
-  /*------------------------------------------------------------------------
-  ; C99 doesn't have static asserts, so this will have to do for now.  This
-  ; will at least double check out assumptions about the values used.
-  ;-------------------------------------------------------------------------*/
-  
-  assert((int)VM_LOR  == (int)OP_LOR);
-  assert((int)VM_LAND == (int)OP_LAND);
-  assert((int)VM_GT   == (int)OP_GT);
-  assert((int)VM_GE   == (int)OP_GE);
-  assert((int)VM_EQ   == (int)OP_EQ);
-  assert((int)VM_LE   == (int)OP_LE);
-  assert((int)VM_LT   == (int)OP_LT);
-  assert((int)VM_NE   == (int)OP_NE);
-  assert((int)VM_BOR  == (int)OP_BOR);
-  assert((int)VM_BEOR == (int)OP_BEOR);
-  assert((int)VM_BAND == (int)OP_BAND);
-  assert((int)VM_SHR  == (int)OP_SHR);
-  assert((int)VM_SHL  == (int)OP_SHL);
-  assert((int)VM_SUB  == (int)OP_SUB);
-  assert((int)VM_ADD  == (int)OP_ADD);
-  assert((int)VM_MUL  == (int)OP_MUL);
-  assert((int)VM_DIV  == (int)OP_DIV);
-  assert((int)VM_MOD  == (int)OP_MOD);
-  assert((int)VM_EXP  == (int)OP_EXP);
   
   assert(a09 != NULL);
   
