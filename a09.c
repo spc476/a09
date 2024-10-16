@@ -590,8 +590,7 @@ void usage(char const *prog)
            "\t-n Wxxxx\tsupress the given warnings\n"
            "\t-o filename\toutput filename\n"
            "\n"
-           "\tformats: bin rsdos srec test\n"
-           "%s"
+           "\tformats: bin rsdos srec\n"
            "%s"
            "%s"
            "%s"
@@ -599,8 +598,7 @@ void usage(char const *prog)
            prog,
            format_bin_usage,
            format_rsdos_usage,
-           format_srec_usage,
-           format_test_usage
+           format_srec_usage
          );
 }
 
@@ -663,11 +661,6 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              else if (strcmp(format,"srec") == 0)
              {
                if (!format_srec_init(a09))
-                 return -1;
-             }
-             else if (strcmp(format,"test") == 0)
-             {
-               if (!format_test_init(a09))
                  return -1;
              }
              else

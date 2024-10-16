@@ -59,7 +59,6 @@ enum backend
   BACKEND_BIN,
   BACKEND_RSDOS,
   BACKEND_SREC,
-  BACKEND_TEST,
 };
 
 enum admode
@@ -267,7 +266,6 @@ extern char const MSG_ERROR[];
 extern char const format_bin_usage[];
 extern char const format_rsdos_usage[];
 extern char const format_srec_usage[];
-extern char const format_test_usage[];
 
 extern bool                  cmd_unsigned_long  (unsigned long int *,int *,int,char *[],unsigned long,unsigned long);
 extern bool                  cmd_size_t         (size_t            *,int *,int,char *[],unsigned long,unsigned long);
@@ -300,7 +298,6 @@ extern void                  symbol_freetable   (tree__s *);
 extern bool                  format_bin_init    (struct a09 *);
 extern bool                  format_rsdos_init  (struct a09 *);
 extern bool                  format_srec_init   (struct a09 *);
-extern bool                  format_test_init   (struct a09 *);
 extern bool                  fdefault           (struct format *,struct opcdata *);
 extern bool                  fdefault_end       (struct format *,struct opcdata *,struct symbol const *);
 extern bool                  fdefault_cmdline   (struct format *,struct a09 *,int,int *,char *[]);
