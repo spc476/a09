@@ -196,7 +196,7 @@ non-standard pesudo operation for most 6809 assemblers.
 
 	.ENDTST
 
-		End a unit test; ignored by other backends.
+		End a unit test; ignored when not running tests.
 
 	.FLOAT float-expr [, float-expr ... ]
 
@@ -221,9 +221,9 @@ non-standard pesudo operation for most 6809 assemblers.
 	.NOTEST
 
 		All text up to a .ENDTST directive is ignored.  This is
-		an easy way to disable a test when using the test backend.
+		an easy way to disable a test without removing it.
 
-	.OPT backend option data...
+	.OPT set option data...
 
 		Supply an option from within the source code instead of the
 		command line.  The following options are always available:
@@ -267,12 +267,11 @@ non-standard pesudo operation for most 6809 assemblers.
 				rather obscure format used by Lennart
 				Benschop.
 
-		The following options are only used by the TEST backend.
-		They are otherwise ignored by other backends.  The following
-		options can appear inside or outside a .TEST directive
-		unless otherwise specified.  If they appear outside, it
-		applies to all tests; otherwise it only applies to the test
-		they appear in.
+		The following options are only used when running tests.  The
+		following options can appear inside or outside a .TEST
+		directive unless otherwise specified.  If they appear
+		outside, it applies to all tests; otherwise it only applies
+		to the test they appear in.
 
 			.OPT TEST POKE address,byte
 
@@ -610,11 +609,13 @@ They are:
 		A text format.  The default floating point format is
 		IEEE-754.
 
-	test	The unit test backend.
-
-		The default floating point format is IEEE-754.
-
   The following command line options are supported:
+
+	-D
+
+		Write the 6809 memory to the given file at the end of
+		assembly and all tests have run.  This only happens if
+		the '-t' option is specified; otherwise it does nothing.
 
 	-M
 
@@ -633,7 +634,6 @@ They are:
 			bin	- binary output
 			rsdos	- executable format for Coco BASIC
 			srec	- Motorola SREC format
-			test	- unit test backend
 
 	-h
 
@@ -654,6 +654,15 @@ They are:
 	-o filename
 
 		Specify the output file name.  Defaults to 'a09.obj'.
+
+	-r
+
+		Run the tests in a random order.  This only has an affect
+		when the '-t' option is used.
+
+	-t
+
+		Run any tests in the assembly file.
 
   Individual backends can have their own command line options that are
 activated after the '-f' option.  They are:
@@ -686,56 +695,3 @@ The SREC backend
 
 		This specifies the number of data bytes per line.  Valid
 		values are 1 to 252, with 34 being the default.
-
-The test backend
-	-A address
-
-		Use the address for assembling the unit tests in the
-		emulated 6809.  The default value for this is $E000.
-
-	-D file
-
-		Write the 6809 memory to the given file at the end of
-		assembly and all tests have run.
-
-	-E lowaddress[-highaddress]
-
-		Mark the memory of the emulated 6809 as allowing execution.
-
-	-F byte
-
-		Use the given value to fill the 6809 memory before running
-		the tests.  The default value is 1 (an illegal instruction).
-
-	-R lowaddress[-highaddress]
-
-		Mark the memory of the emulated 6809 as read-only.
-
-	-S address
-
-		Use the address for the system stack and string pool for
-		tests in the emulated 6809.  The default value for this is
-		$FFF0.
-
-	-T lowaddress[-highaddress]
-
-		Mark the memory of the emulated 6809 as being traced.  For
-		instructions, this will print the instruction and do a
-		register dump.  For memory writes, this will print out the
-		address and the new value.
-
-	-W lowaddress[-highaddress]
-
-		Mark the memory of the emulated 6809 as write-only.
-
-	-Z size
-
-		Use the value for the stack size.  The minimum size is
-		2 bytes; the maximum is 4096 and the default is 1024.
-
-	-r
-
-		Run the tests in a random order.
-
-NOTE: the test backend will NOT generate an output file even if the -o
-option is used.  It will generate a listing file.
