@@ -174,6 +174,7 @@ struct testdata
   struct a09      *a09;
   bool            (*fmtwrite)(struct format *,struct opcdata *,void const *,size_t,bool);
   bool            (*fmtrmb)  (struct format *,struct opcdata *);
+  bool            (*fmtorg)  (struct format *,struct opcdata *);
   bool            (*fmtalign)(struct format *,struct opcdata *);
   tree__s         *Asserts;
   struct unittest *units;
@@ -1469,21 +1470,39 @@ static bool ftest_opt(struct format *fmt,struct opcdata *opd)
   assert(opd->a09->runtests);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  if (opd->pass == 2)
+  struct testdata *data = opd->a09->tests;
+  char             c    = skip_space(opd->buffer);
+  label            tmp;
+  
+  read_label(opd->buffer,&tmp,c);
+  upper_label(&tmp);
+  if ((tmp.s != 4) || (memcmp(tmp.text,"TEST",4) != 0)) /* not for us, ignore */
+    return true;
+    
+  c = skip_space(opd->buffer);
+  read_label(opd->buffer,&tmp,c);
+  upper_label(&tmp);
+  
+  if (opd->pass == 1)
   {
-    struct testdata *data = opd->a09->tests;
-    char             c    = skip_space(opd->buffer);
-    label            tmp;
-    
-    read_label(opd->buffer,&tmp,c);
-    upper_label(&tmp);
-    if ((tmp.s != 4) || (memcmp(tmp.text,"TEST",4) != 0)) /* not for us, ignore */
-      return true;
+    if ((tmp.s == 9) && (memcmp(tmp.text,"LOADTESTS",9) == 0))
+    {
+      struct value addr;
       
-    c = skip_space(opd->buffer);
-    read_label(opd->buffer,&tmp,c);
-    upper_label(&tmp);
-    
+      if (!expr(&addr,opd->a09,opd->buffer,opd->pass))
+        return false;
+        
+      if (data->intest)
+        return message(opd->a09,MSG_ERROR,"E0100: Can only assign test code outside a .TEST directive");
+      
+      data->inittestpc = addr.value;
+      data->testpc     = addr.value;
+      message(opd->a09,MSG_DEBUG,"testloadpc=%04X",data->testpc);
+    }
+  }
+  
+  else if (opd->pass == 2)
+  {
     if ((tmp.s == 4) && (memcmp(tmp.text,"PROT",4) == 0))
     {
       struct memprot prot =
@@ -1692,6 +1711,8 @@ static bool ftest_opt(struct format *fmt,struct opcdata *opd)
         return message(opd->a09,MSG_ERROR,"E0100: Can only assign test code outside a .TEST directive");
       
       data->inittestpc = addr.value;
+      data->testpc     = addr.value;
+      message(opd->a09,MSG_DEBUG,"testloadpc=%04X",data->testpc);
     }
     
     else if ((tmp.s == 5) && (memcmp(tmp.text,"DEBUG",5) == 0))
@@ -1728,22 +1749,27 @@ static bool ftest_align(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-bool test_org(struct opcdata *opd)
+static bool ftest_org(struct format *fmt,struct opcdata *opd)
 {
+  (void)fmt;
   assert(opd             != NULL);
   assert(opd->a09        != NULL);
   assert(opd->a09->tests != NULL);
   assert(opd->a09->runtests);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  if (opd->pass == 2)
-  {
-    struct testdata *data = opd->a09->tests;
-    data->addr            = opd->value.value;
-  }
+  struct testdata *data = opd->a09->tests;
   
-  opd->a09->pc = opd->value.value;
-  return true;
+  if (opd->pass == 2)
+    data->addr = opd->value.value;
+    
+  if (!data->intest)
+    return opd->a09->tests->fmtorg(fmt,opd);
+  else
+  {
+    opd->a09->pc = opd->value.value;
+    return true;
+  }
 }
 
 /**************************************************************************/
@@ -1798,7 +1824,7 @@ static bool ftest_test(struct format *fmt,struct opcdata *opd)
   data->resumepc   = opd->a09->pc;
   opd->value.value = data->testpc;
   
-  if (!test_org(opd))
+  if (!ftest_org(fmt,opd))
     return false;
     
   message(opd->a09,MSG_DEBUG,"test resume=%04X new=%04X",data->resumepc,data->testpc);
@@ -2032,7 +2058,7 @@ static bool ftest_endtst(struct format *fmt,struct opcdata *opd)
   test->testpc     = opd->a09->pc;
   opd->value.value = test->resumepc;
   
-  if (!test_org(opd))
+  if (!ftest_org(fmt,opd))
     return false;
   message(opd->a09,MSG_DEBUG,"endtst pc=%04X",opd->a09->pc);
   
@@ -2110,6 +2136,7 @@ bool test_init(struct a09 *a09)
     a09->tests->a09        = a09;
     a09->tests->fmtwrite   = a09->format.write;
     a09->tests->fmtrmb     = a09->format.rmb;
+    a09->tests->fmtorg     = a09->format.org;
     a09->tests->fmtalign   = a09->format.align;
     a09->tests->Asserts    = NULL;
     a09->tests->units      = NULL;
@@ -2137,6 +2164,7 @@ bool test_init(struct a09 *a09)
     
     a09->format.write      = ftest_write;
     a09->format.rmb        = ftest_rmb;
+    a09->format.org        = ftest_org;
     a09->format.align      = ftest_align;
     a09->format.opt        = ftest_opt;
     a09->format.test       = ftest_test;

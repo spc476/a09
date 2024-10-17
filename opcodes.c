@@ -1078,10 +1078,6 @@ static bool pseudo_org(struct opcdata *opd)
   if (!parse_dirext(opd))
     return message(opd->a09,MSG_ERROR,"E0039: missing value for ORG");
     
-  if (opd->a09->runtests)
-    if (!test_org(opd))
-      return false;
-      
   if (opd->a09->obj)
     return opd->a09->format.org(&opd->a09->format,opd);
   else
