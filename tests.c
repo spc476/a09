@@ -191,7 +191,6 @@ struct testdata
   uint8_t          fill;
   bool             tron;
   bool             timing;
-  bool             rndorder;
   bool             intest;
   char             errbuf[128];
   mc6809byte__t    memory[65536u];
@@ -1289,7 +1288,7 @@ bool test_pass_end(struct a09 *a09,int pass)
     ; for this step at all.
     ;------------------------------------------------------------------------*/
     
-    if ((data->rndorder) && (data->nunits > 1))
+    if ((a09->rndtests) && (data->nunits > 1))
     {
       message(a09,MSG_DEBUG,"Randomizing tests");
       srand(time(NULL)); /* XXX is there a better way? */
@@ -1697,7 +1696,7 @@ static bool ftest_opt(struct format *fmt,struct opcdata *opd)
     {
       if (data->intest)
         return message(opd->a09,MSG_ERROR,"E0089: can only set outside a .TEST directive");
-      data->rndorder = true;
+      opd->a09->rndtests = true;
     }
     
     else if ((tmp.s == 9) && (memcmp(tmp.text,"LOADTESTS",9) == 0))
@@ -2158,7 +2157,6 @@ bool test_init(struct a09 *a09)
     a09->tests->fill       = 0x01; // illegal instruction
     a09->tests->tron       = false;
     a09->tests->timing     = false;
-    a09->tests->rndorder   = false;
     a09->tests->errbuf[0]  = '\0';
     a09->tests->intest     = false;
     

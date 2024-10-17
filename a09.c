@@ -599,6 +599,7 @@ void usage(char const *prog)
            "\t-l listfile\tlist filename\n"
            "\t-n Wxxxx\tsupress the given warnings\n"
            "\t-o filename\toutput filename\n"
+           "\t-r\t\trandomize the testing order (only if -t specified)\n"
            "\t-t\t\trun tests\n"
            "\n"
            "\tformats: bin rsdos srec\n"
@@ -695,6 +696,10 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
         case 'h':
              usage(argv[0]);
              return -1;
+             
+        case 'r':
+             a09->rndtests = true;
+             break;
              
         case 't':
              a09->runtests = true;
@@ -820,6 +825,7 @@ int main(int argc,char *argv[])
     .mkdeps    = false,
     .obj       = true,
     .runtests  = false,
+    .rndtests  = false,
     .inbuf     = { .buf = {0}, .widx = 0, .ridx = 0 },
   };
   

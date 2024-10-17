@@ -177,6 +177,7 @@ struct a09
   bool              mkdeps;
   bool              obj;
   bool              runtests;
+  bool              rndtests;
 };
 
 struct symbol
