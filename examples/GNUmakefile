@@ -16,4 +16,4 @@ clean:
 	$(RM) $(shell find . -name '*.list')
 
 float-decb.bin : override AS09FLAGS += -frsdos
-warn.bin : override AS09FLAGS += -ftest
+warn.bin : override AS09FLAGS += -t

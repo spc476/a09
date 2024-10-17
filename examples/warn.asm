@@ -36,6 +36,9 @@ next16		brn	next8b		; okay (BRN exempted W0012)
 next8b		lbrn	next16b		; okay (BRN exempted W0009, W0012)
 next16b		rts
 
+		.opt	* real msfp
+		.floatd	1e38		; W0019
+
 foobar		equ	$20
 b16		equ	$8080
 b5		equ	3
@@ -49,7 +52,7 @@ d		equ	2		; W0013
 
 	.test	"test"
 	.opt	test	stack	$F000	; W0017
-		bsr	badwrite
+		lbsr	badwrite
 		rts
 
 	.endtst
