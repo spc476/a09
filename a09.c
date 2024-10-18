@@ -593,6 +593,7 @@ void usage(char const *prog)
            "usage: %s [options] [files...]\n"
            "\t-D file\t\tcore file (of 6809 VM) name (only if -t specified)\n"
            "\t-M\t\tgenerate Makefile dependencies on stdout\n"
+           "\t-T\t\tgenerate TAP output (only if -t specified)\n"
            "\t-d\t\tdebug output\n"
            "\t-f format\toutput format (bin)\n"
            "\t-h\t\thelp (this text)\n"
@@ -703,6 +704,10 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              
         case 't':
              a09->runtests = true;
+             break;
+             
+        case 'T':
+             a09->tapout = true;
              break;
              
         default:
@@ -826,6 +831,7 @@ int main(int argc,char *argv[])
     .obj       = true,
     .runtests  = false,
     .rndtests  = false,
+    .tapout    = false,
     .inbuf     = { .buf = {0}, .widx = 0, .ridx = 0 },
   };
   

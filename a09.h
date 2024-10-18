@@ -178,6 +178,7 @@ struct a09
   bool              obj;
   bool              runtests;
   bool              rndtests;
+  bool              tapout;
 };
 
 struct symbol

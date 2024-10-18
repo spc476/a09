@@ -574,6 +574,8 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
            break;
            
       case VM_TIMEOFF:
+           if (a09->tapout)
+             printf("# ");
            printf("%s: cycles=%lu instructions=%lu cpi=%.2f\n",test->tag,cpu->cycles,data->icount,(double)cpu->cycles/(double)data->icount);
            break;
            
@@ -1936,6 +1938,8 @@ void test_run(struct a09 *a09)
   struct testdata *data   = a09->tests;
   
   message(a09,MSG_DEBUG,"number of tests: %zu",data->nunits);
+  if (a09->tapout)
+    printf("TAP version 14\n1..%d\n",data->nunits);
   
   /*-----------------------------------------------------------------------
   ; A simple way to randomize the tests array, based upon:
@@ -2017,6 +2021,8 @@ void test_run(struct a09 *a09)
           break;
         mc6809dis_format(&data->dis,inst,sizeof(inst));
         mc6809dis_registers(&data->cpu,regs,sizeof(regs));
+        if (a09->tapout)
+          printf("# ");
         printf("%s | %s\n",regs,inst);
       }
       
@@ -2055,6 +2061,14 @@ void test_run(struct a09 *a09)
     }
     while((rc == 0) && (data->cpu.S.w != data->sp));
     
+    if (a09->tapout)
+    {
+      if (rc == 0)
+        printf("ok %zu - %s %s:%zu\n",i + 1,unit->name.buf,unit->filename,unit->line);
+      else
+        printf("not ok %zu - %s %s:%zu\n",i + 1,unit->name.buf,unit->filename,unit->line);
+    }
+    
     if (rc != 0)
     {
       static char const *const mfaults[] =
@@ -2072,7 +2086,8 @@ void test_run(struct a09 *a09)
       };
       
       assert(rc < TEST_max);
-      message(a09,MSG_WARNING,"W0015: %s: %s: %s",tag,mfaults[rc],data->errbuf);
+      if (!a09->tapout)
+        message(a09,MSG_WARNING,"W0015: %s: %s: %s",tag,mfaults[rc],data->errbuf);
     }
   }
   
