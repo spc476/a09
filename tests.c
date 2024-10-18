@@ -1278,150 +1278,8 @@ bool test_pass_end(struct a09 *a09,int pass)
   
   if (data->intest)
     return message(a09,MSG_ERROR,"E0077: missing .ENDTST directive");
-    
-  if (pass == 2)
-  {
-    message(a09,MSG_DEBUG,"number of tests: %zu",data->nunits);
-    
-    /*-----------------------------------------------------------------------
-    ; A simple way to randomize the tests array, based upon:
-    ; https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
-    ; We check if we have more than one test; 0 or 1 tests, there's no need
-    ; for this step at all.
-    ;------------------------------------------------------------------------*/
-    
-    if ((a09->rndtests) && (data->nunits > 1))
-    {
-      message(a09,MSG_DEBUG,"Randomizing tests");
-      srand(time(NULL)); /* XXX is there a better way? */
-      for (size_t i = data->nunits ; i > 1 ; i--)
-      {
-        size_t j = rand() % i;
-        if (j != i - 1)
-        {
-          struct unittest tmp = data->units[i-1];
-          data->units[i-1]    = data->units[j];
-          data->units[j]      = tmp;
-        }
-      }
-    }
-    
-    for (size_t i = 0 ; i < data->nunits ; i++)
-    {
-      struct unittest *unit = &data->units[i];
-      char const      *tag  = "";
-      int              rc;
-      
-      /*--------------------------------------------------------------------
-      ; only run tests in this file.  We could get prematurely triggered if
-      ; we INCLUDEd a file.
-      ;---------------------------------------------------------------------*/
-      
-      if (unit->filename != a09->infile)
-        continue;
-        
-      for (size_t j = 0 ; j < data->stacksize ; j++)
-      {
-        data->prot[data->sp - j].read  = true;
-        data->prot[data->sp - j].write = true;
-      }
-      
-      data->cpu.pc.w = unit->addr;
-      data->cpu.S.w  = data->sp - 2;
-      data->cpu.dp   = a09->dp;
-      
-      /*----------------------------------------------------
-      ; initialize other registers with semi-random data
-      ;-----------------------------------------------------*/
-      
-      data->cpu.U.w  = data->cpu.pc.w ^ data->cpu.S.w;
-      data->cpu.Y.w  = data->cpu.U.w;
-      data->cpu.X.w  = data->cpu.Y.w;
-      data->cpu.d.w  = data->cpu.X.w;
-      a09->lnum      = unit->line;
-      message(a09,MSG_DEBUG,"Running test %s",unit->name.buf);
-      
-      do
-      {
-        if (data->memory[data->cpu.pc.w] == data->fill)
-        {
-          snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X",data->cpu.pc.w);
-          rc = TEST_WEEDS;
-          break;
-        }
-        
-        if (data->prot[data->cpu.pc.w].tron)
-        {
-          char inst[128];
-          char regs[128];
-          
-          data->dis.pc = data->cpu.pc.w;
-          rc = mc6809dis_step(&data->dis,&data->cpu);
-          if (rc != 0)
-            break;
-          mc6809dis_format(&data->dis,inst,sizeof(inst));
-          mc6809dis_registers(&data->cpu,regs,sizeof(regs));
-          printf("%s | %s\n",regs,inst);
-        }
-        
-        if (data->prot[data->cpu.pc.w].check)
-        {
-          bool     okay = false;
-          uint16_t addr = data->cpu.pc.w;
-          tree__s *tree = tree_find(data->Asserts,&addr,Assertaddrcmp);
-          
-          if (tree != NULL)
-          {
-            struct Assert *Assert = tree2Assert(tree);
-            
-            assert(Assert->here == addr);
-            for (size_t j = 0 ; j < Assert->cnt ; j++)
-            {
-              message(a09,MSG_DEBUG,"checking %s",Assert->Asserts[j].tag);
-              okay = runvm(data->a09,&data->cpu,&Assert->Asserts[j]);
-              if (!okay)
-              {
-                tag = Assert->Asserts[j].tag;
-                break;
-              }
-            }
-          }
-          
-          if (!okay)
-          {
-            rc = TEST_FAILED;
-            break;
-          }
-        }
-        
-        data->icount++;
-        rc = mc6809_step(&data->cpu);
-      }
-      while((rc == 0) && (data->cpu.S.w != data->sp));
-      
-      if (rc != 0)
-      {
-        static char const *const mfaults[] =
-        {
-          NULL,
-          "an internal error inside the MC6809 emulator",
-          "an illegal instruction was encountered",
-          "an illegal addressing mode was encountered",
-          "an undefined combination of registers was being exchanged",
-          "an undefined combination of registers was being transfered",
-          "test failed",
-          "reading from non-readable memory",
-          "code went into the weeds",
-          "writing to non-writable memory",
-        };
-        
-        assert(rc < TEST_max);
-        message(a09,MSG_WARNING,"W0015: %s: %s: %s",tag,mfaults[rc],data->errbuf);
-      }
-    }
-  }
-  
-  return true;
+  else
+    return true;
 }
 
 /**************************************************************************/
@@ -2065,6 +1923,160 @@ static bool ftest_endtst(struct format *fmt,struct opcdata *opd)
   
   test->intest = false;
   return true;
+}
+
+/**************************************************************************/
+
+void test_run(struct a09 *a09)
+{
+  assert(a09        != NULL);
+  assert(a09->tests != NULL);
+  assert(a09->runtests);
+  
+  struct testdata *data   = a09->tests;
+  
+  message(a09,MSG_DEBUG,"number of tests: %zu",data->nunits);
+  
+  /*-----------------------------------------------------------------------
+  ; A simple way to randomize the tests array, based upon:
+  ; https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+  ; We check if we have more than one test; 0 or 1 tests, there's no need
+  ; for this step at all.
+  ;------------------------------------------------------------------------*/
+  
+  if ((a09->rndtests) && (data->nunits > 1))
+  {
+    message(a09,MSG_DEBUG,"Randomizing tests");
+    srand(time(NULL)); /* XXX is there a better way? */
+    for (size_t i = data->nunits ; i > 1 ; i--)
+    {
+      size_t j = rand() % i;
+      if (j != i - 1)
+      {
+        struct unittest tmp = data->units[i-1];
+        data->units[i-1]    = data->units[j];
+        data->units[j]      = tmp;
+      }
+    }
+  }
+  
+  /*-----------------------------------------------------------------------
+  ; message() takes the filename from struct a09.  Now, in order to print
+  ; the proper file the current test is running from, we need to override
+  ; this field with the proper filename where the test is defined.  So save
+  ; this field and restore it after the tests have run.
+  ;------------------------------------------------------------------------*/
+  
+  char const *infile = a09->infile;
+  
+  for (size_t i = 0 ; i < data->nunits ; i++)
+  {
+    struct unittest *unit = &data->units[i];
+    char const      *tag  = "";
+    int              rc;
+    
+    a09->infile = unit->filename;
+    for (size_t j = 0 ; j < data->stacksize ; j++)
+    {
+      data->prot[data->sp - j].read  = true;
+      data->prot[data->sp - j].write = true;
+    }
+    
+    data->cpu.pc.w = unit->addr;
+    data->cpu.S.w  = data->sp - 2;
+    data->cpu.dp   = a09->dp;
+    
+    /*----------------------------------------------------
+    ; initialize other registers with semi-random data
+    ;-----------------------------------------------------*/
+    
+    data->cpu.U.w  = data->cpu.pc.w ^ data->cpu.S.w;
+    data->cpu.Y.w  = data->cpu.U.w;
+    data->cpu.X.w  = data->cpu.Y.w;
+    data->cpu.d.w  = data->cpu.X.w;
+    a09->lnum      = unit->line;
+    message(a09,MSG_DEBUG,"Running test %s",unit->name.buf);
+    
+    do
+    {
+      if (data->memory[data->cpu.pc.w] == data->fill)
+      {
+        snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X",data->cpu.pc.w);
+        rc = TEST_WEEDS;
+        break;
+      }
+      
+      if (data->prot[data->cpu.pc.w].tron)
+      {
+        char inst[128];
+        char regs[128];
+        
+        data->dis.pc = data->cpu.pc.w;
+        rc = mc6809dis_step(&data->dis,&data->cpu);
+        if (rc != 0)
+          break;
+        mc6809dis_format(&data->dis,inst,sizeof(inst));
+        mc6809dis_registers(&data->cpu,regs,sizeof(regs));
+        printf("%s | %s\n",regs,inst);
+      }
+      
+      if (data->prot[data->cpu.pc.w].check)
+      {
+        bool     okay = false;
+        uint16_t addr = data->cpu.pc.w;
+        tree__s *tree = tree_find(data->Asserts,&addr,Assertaddrcmp);
+        
+        if (tree != NULL)
+        {
+          struct Assert *Assert = tree2Assert(tree);
+          
+          assert(Assert->here == addr);
+          for (size_t j = 0 ; j < Assert->cnt ; j++)
+          {
+            message(a09,MSG_DEBUG,"checking %s",Assert->Asserts[j].tag);
+            okay = runvm(data->a09,&data->cpu,&Assert->Asserts[j]);
+            if (!okay)
+            {
+              tag = Assert->Asserts[j].tag;
+              break;
+            }
+          }
+        }
+        
+        if (!okay)
+        {
+          rc = TEST_FAILED;
+          break;
+        }
+      }
+      
+      data->icount++;
+      rc = mc6809_step(&data->cpu);
+    }
+    while((rc == 0) && (data->cpu.S.w != data->sp));
+    
+    if (rc != 0)
+    {
+      static char const *const mfaults[] =
+      {
+        NULL,
+        "an internal error inside the MC6809 emulator",
+        "an illegal instruction was encountered",
+        "an illegal addressing mode was encountered",
+        "an undefined combination of registers was being exchanged",
+        "an undefined combination of registers was being transfered",
+        "test failed",
+        "reading from non-readable memory",
+        "code went into the weeds",
+        "writing to non-writable memory",
+      };
+      
+      assert(rc < TEST_max);
+      message(a09,MSG_WARNING,"W0015: %s: %s: %s",tag,mfaults[rc],data->errbuf);
+    }
+  }
+  
+  a09->infile = infile;
 }
 
 /**************************************************************************/

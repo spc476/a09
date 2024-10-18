@@ -907,6 +907,9 @@ int main(int argc,char *argv[])
   
   message(&a09,MSG_DEBUG,"Post assembly phases");
   
+  if (a09.runtests)
+    test_run(&a09);
+    
   if (rc)
     warning_unused_symbols(&a09,a09.symtab);
     
