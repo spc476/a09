@@ -133,6 +133,9 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
       return true;
   }
   
+  if (a09->tapout)
+    fprintf(stderr,"# ");
+    
   if (a09->lnum > 0)
     fprintf(stderr,"%s:%zu: %s: ",a09->infile,a09->lnum,tag);
   else
