@@ -1281,6 +1281,8 @@ bool test_pass_end(struct a09 *a09,int pass)
     
   if (pass == 2)
   {
+    message(a09,MSG_DEBUG,"number of tests: %zu",data->nunits);
+    
     /*-----------------------------------------------------------------------
     ; A simple way to randomize the tests array, based upon:
     ; https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
@@ -1316,7 +1318,7 @@ bool test_pass_end(struct a09 *a09,int pass)
       ;---------------------------------------------------------------------*/
       
       if (unit->filename != a09->infile)
-        return true;
+        continue;
         
       for (size_t j = 0 ; j < data->stacksize ; j++)
       {
