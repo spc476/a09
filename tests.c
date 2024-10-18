@@ -1484,7 +1484,7 @@ static bool ftest_opt(struct format *fmt,struct opcdata *opd)
   
   if (opd->pass == 1)
   {
-    if ((tmp.s == 9) && (memcmp(tmp.text,"LOADTESTS",9) == 0))
+    if ((tmp.s == 3) && (memcmp(tmp.text,"ORG",3) == 0))
     {
       struct value addr;
       
@@ -1699,7 +1699,7 @@ static bool ftest_opt(struct format *fmt,struct opcdata *opd)
       opd->a09->rndtests = true;
     }
     
-    else if ((tmp.s == 9) && (memcmp(tmp.text,"LOADTESTS",9) == 0))
+    else if ((tmp.s == 3) && (memcmp(tmp.text,"ORG",3) == 0))
     {
       struct value addr;
       

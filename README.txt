@@ -323,7 +323,7 @@ non-standard pesudo operation for most 6809 assemblers.
 				directive, given the nature of the
 				assembler.
 
-			.OPT TEST LOADTESTS address
+			.OPT TEST ORG address
 
 				Set the starting address for assembling test
 				cases.  This directive can ONLY appear
