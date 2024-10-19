@@ -1939,7 +1939,7 @@ void test_run(struct a09 *a09)
   
   message(a09,MSG_DEBUG,"number of tests: %zu",data->nunits);
   if (a09->tapout)
-    printf("TAP version 14\n1..%d\n",data->nunits);
+    printf("TAP version 14\n1..%zu\n",data->nunits);
   
   /*-----------------------------------------------------------------------
   ; A simple way to randomize the tests array, based upon:
