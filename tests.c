@@ -2064,9 +2064,9 @@ void test_run(struct a09 *a09)
     if (a09->tapout)
     {
       if (rc == 0)
-        printf("ok %zu - %s %s:%zu\n",i + 1,unit->name.buf,unit->filename,unit->line);
+        printf("ok %zu - %s %s:%zu %s\n",i + 1,unit->name.buf,unit->filename,unit->line,tag);
       else
-        printf("not ok %zu - %s %s:%zu\n",i + 1,unit->name.buf,unit->filename,unit->line);
+        printf("not ok %zu - %s %s:%zu %s\n",i + 1,unit->name.buf,unit->filename,unit->line,tag);
     }
     
     if (rc != 0)
