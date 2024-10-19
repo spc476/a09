@@ -23,7 +23,7 @@
 CC      = gcc -std=c99 -pedantic -Wall -Wextra -Wwrite-strings
 CFLAGS  = -g
 LDFLAGS = -g
-LDLIBS  = -lcgi6 -lmc6809 -lm
+LDLIBS  = -lcgi7 -lmc6809 -lm
 
 .PHONY: clean
 
