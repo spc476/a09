@@ -622,6 +622,11 @@ They are:
 		This will generate a list of dependencies appropriate for
 		make.
 
+	-T
+
+		Run any tests in the assembly file, but generate TAP
+		output.
+
 	-d
 
 		Reserved for debug output.
