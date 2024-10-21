@@ -203,7 +203,6 @@ static bool fsrec_end(
   assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_SREC);
   assert(opd          != NULL);
-  assert(sym          != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 2)
@@ -217,7 +216,7 @@ static bool fsrec_end(
       write_record(opd->a09->out,'1',format->addr,format->buffer,format->idx);
     if (!format->override && (sym != NULL))
       write_record(opd->a09->out,'9',sym->value,NULL,0);
-    else
+    else if (sym != NULL)
       write_record(opd->a09->out,'9',format->exec,NULL,0);
     format->endf  = true;
     format->execf = true;

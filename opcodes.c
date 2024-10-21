@@ -1111,17 +1111,15 @@ static bool pseudo_end(struct opcdata *opd)
   
   c = skip_space(opd->buffer);
   if ((c == ';') || (c == '\0'))
-    return true;
-    
-  opd->buffer->ridx--;
+  {
+    opd->buffer->ridx--;
   
-  if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))
-    return message(opd->a09,MSG_ERROR,"E0050: not a label");
-  sym = symbol_find(opd->a09,&label);
-  if (sym == NULL)
-    return message(opd->a09,MSG_ERROR,"E0052: missing label for END");
-  if (opd->pass == 2)
-    sym->refs++;
+    if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))
+      return message(opd->a09,MSG_ERROR,"E0050: not a label");
+    sym = symbol_find(opd->a09,&label);
+    if ((sym != NULL) && (opd->pass == 2))
+      sym->refs++;
+  }
   return opd->a09->format.end(&opd->a09->format,opd,sym);
 }
 
