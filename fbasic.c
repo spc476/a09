@@ -27,9 +27,7 @@
 
 #include "a09.h"
 
-/**************************************************************************/
-
-/*
+/**************************************************************************
 
 line length as text: 249
 
@@ -47,18 +45,15 @@ options         starting line #
                 increment
                 add (via 'A09)
                 
-;               cassette names  "12345678"
-;               disk name       "12345678/123:0"
+                cassette names  "12345678"
+                disk name       "12345678/123:0"
 
-;               .opt    basic usr label         ; CB    @ $0113
-;               .opt    basic defusr0 label     ; ECB   DEFUSRn=addr
-;               .opt    basic defusr1 label     ; ECB
-;               .opt    basic strspace 200
-;               .opt    basic exec label
+                .opt    basic usr label         ; CB    @ $0113
+                .opt    basic defusr0 label     ; ECB   DEFUSRn=addr
+                .opt    basic defusr1 label     ; ECB
+                .opt    basic strspace 200
 
-*/
-
-/**************************************************************************/
+**************************************************************************/
 
 struct format_basic
 {
@@ -76,6 +71,8 @@ struct format_basic
   char        buffer[249];
 };
 
+/**************************************************************************/
+
 char const format_basic_usage[] =
         "\n"
         "BASIC format options:\n"
@@ -87,6 +84,30 @@ char const format_basic_usage[] =
         "\t-S name\tadd code to save 'name' program to disk\n"
         "\n";
         
+/**************************************************************************/
+
+static void write_byte(FILE *out,struct format_basic *basic,unsigned char byte)
+{
+  assert(out   != NULL);
+  assert(basic != NULL);
+  
+  int len = snprintf(&basic->buffer[basic->idx],sizeof(basic->buffer) - basic->idx,"%u,",byte);
+  if ((unsigned)len > sizeof(basic->buffer) - basic->idx)
+  {
+    assert(basic->idx > 1);
+    assert((unsigned)basic->idx <= sizeof(basic->buffer));
+    fwrite(basic->buffer,1,basic->idx - 1,out);
+    fputc('\n',out);
+    basic->line += basic->incr;
+    basic->idx   = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",basic->line);
+    assert((unsigned)basic->idx < sizeof(basic->buffer));
+    len          = snprintf(&basic->buffer[basic->idx],basic->idx,"%u,",byte);
+    assert((unsigned)(basic->idx + len) < sizeof(basic->buffer));
+  }
+  
+  basic->idx += len;
+}
+
 /**************************************************************************/
 
 static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,char *argv[])
@@ -218,21 +239,8 @@ static bool fbasic_write(struct format *fmt,struct opcdata *opd,void const *buff
   unsigned char const *buf   = buffer;
   
   for (size_t i = 0 ; i < len ; i++)
-  {
-    int len = snprintf(&basic->buffer[basic->idx],sizeof(basic->buffer) - basic->idx,"%u,",buf[i]);
-    if ((unsigned)len > sizeof(basic->buffer) - basic->idx)
-    {
-      assert(basic->idx > 1);
-      fwrite(basic->buffer,1,basic->idx - 1,opd->a09->out);
-      fputc('\n',opd->a09->out);
-      basic->line += basic->incr;
-      basic->idx   = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",basic->line);
-      len          = snprintf(&basic->buffer[basic->idx],basic->idx,"%u,",buf[i]);
-    }
+    write_byte(opd->a09->out,basic,buf[i]);
     
-    basic->idx += len;
-  }
-  
   return true;
 }
 
@@ -306,22 +314,8 @@ static bool fbasic_align(struct format *fmt,struct opcdata *opd)
     struct format_basic *basic = fmt->data;
     
     for (size_t i = 0 ; i < opd->datasz ; i++)
-    {
-      int len = snprintf(&basic->buffer[basic->idx],sizeof(basic->buffer) - basic->idx,"0,");
-      if ((unsigned)len > sizeof(basic->buffer) - basic->idx)
-      {
-        assert(basic->idx > 1);
-        fwrite(basic->buffer,1,basic->idx - 1,opd->a09->out);
-        fputc('\n',opd->a09->out);
-        basic->line += basic->incr;
-        basic->idx   = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",basic->line);
-        len          = snprintf(&basic->buffer[basic->idx],basic->idx,"0,");
-      }
-      
-      basic->idx += len;
-    }
+      write_byte(opd->a09->out,basic,0);
   }
-  
   return true;
 }
 
@@ -468,28 +462,14 @@ static bool fbasic_rmb(struct format *fmt,struct opcdata *opd)
   
   if (opd->value.value == 0)
     return message(opd->a09,MSG_ERROR,"E0099: Can't reserve 0 bytes of memory");
-
+    
   if (opd->pass == 2)
   {
     struct format_basic *basic = fmt->data;
     
     for (size_t i = 0 ; i < opd->value.value ; i++)
-    {
-      int len = snprintf(&basic->buffer[basic->idx],sizeof(basic->buffer) - basic->idx,"0,");
-      if ((unsigned)len > sizeof(basic->buffer) - basic->idx)
-      {
-        assert(basic->idx > 1);
-        fwrite(basic->buffer,1,basic->idx - 1,opd->a09->out);
-        fputc('\n',opd->a09->out);
-        basic->line += basic->incr;
-        basic->idx   = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",basic->line);
-        len          = snprintf(&basic->buffer[basic->idx],basic->idx,"0,");
-      }
-      
-      basic->idx += len;
-    }
+      write_byte(opd->a09->out,basic,0);
   }
-  
   return true;
 }
 
