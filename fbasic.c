@@ -33,7 +33,7 @@
 
 line length as text: 249
 
-10 'A09 START
+10 'A09
 20 DATA 123...
 20 CLEAR200,8192:FORA=8192TO9001:READB:POKEA,B:NEXT
 30 POKE275,hi:POKE276,lo
@@ -41,33 +41,14 @@ line length as text: 249
 50 EXEC8192
 60 CSAVEM"name",start,end,transfer
 70 SAVEM"name",start,end,transfer
-80 'A09 END
 
-binary format:  $FF <len:16>
-                <nextline:16><linenum:16> <data:8...>
-                
-                $26 $2C $00 $0A $95 '200,8192:'
-                                $80 'A' $B3 '8192' $A5 '9001:'
-                                $8D 'B:'
-                                $92 'A,B:'
-                                $8B ':'
-                                $A2 '8291' $00
-                $27 $24 $00 $14 $86 '18,57,123,123...' $00
-                $00 $00
-                
 options         starting line #
                 string space
                 increment
-                ascii vs. tokenized
-                add (via ' ASM [exec] [incr#] or REM ASM [exec] [incr#])
-                loadaddr ($2601 default)
-                
+                add (via 'A09)
                 
 ;               cassette names  "12345678"
 ;               disk name       "12345678/123:0"
-
-
-.OPT
 
 ;               .opt    basic usr label         ; CB    @ $0113
 ;               .opt    basic defusr0 label     ; ECB   DEFUSRn=addr
@@ -75,25 +56,9 @@ options         starting line #
 ;               .opt    basic strspace 200
 ;               .opt    basic exec label
 
-
-
-
 */
 
 /**************************************************************************/
-
-#define CLEAR   "\x95"
-#define FOR     "\x80"
-#define EQ      "\xB3"
-#define TO      "\xA5"
-#define READ    "\x8D"
-#define POKE    "\x92"
-#define NEXT    "\x8B"
-#define EXEC    "\xA2"
-#define DATA    "\x86"
-#define REM     "\x82"
-#define REMq    "\x83"
-#define DEFUSR  "\xB9\xFF\x83"
 
 struct format_basic
 {
@@ -329,8 +294,34 @@ static bool fbasic__opt(struct format *fmt,struct opcdata *opd,label *be)
 
 static bool fbasic_align(struct format *fmt,struct opcdata *opd)
 {
-  (void)fmt;
-  (void)opd;
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
+  assert(fmt->backend == BACKEND_BASIC);
+  assert(opd          != NULL);
+  assert(opd->a09     != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->pass == 2)
+  {
+    struct format_basic *basic = fmt->data;
+    
+    for (size_t i = 0 ; i < opd->datasz ; i++)
+    {
+      int len = snprintf(&basic->buffer[basic->idx],sizeof(basic->buffer) - basic->idx,"0,");
+      if ((unsigned)len > sizeof(basic->buffer) - basic->idx)
+      {
+        assert(basic->idx > 1);
+        fwrite(basic->buffer,1,basic->idx - 1,opd->a09->out);
+        fputc('\n',opd->a09->out);
+        basic->line += basic->incr;
+        basic->idx   = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",(unsigned)basic->line);
+        len          = snprintf(&basic->buffer[basic->idx],basic->idx,"0,");
+      }
+      
+      basic->idx += len;
+    }
+  }
+  
   return true;
 }
 
@@ -468,8 +459,37 @@ static bool fbasic_org(struct format *fmt,struct opcdata *opd)
 
 static bool fbasic_rmb(struct format *fmt,struct opcdata *opd)
 {
-  (void)fmt;
-  (void)opd;
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
+  assert(fmt->backend == BACKEND_BASIC);
+  assert(opd          != NULL);
+  assert(opd->a09     != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->value.value == 0)
+    return message(opd->a09,MSG_ERROR,"E0099: Can't reserve 0 bytes of memory");
+
+  if (opd->pass == 2)
+  {
+    struct format_basic *basic = fmt->data;
+    
+    for (size_t i = 0 ; i < opd->value.value ; i++)
+    {
+      int len = snprintf(&basic->buffer[basic->idx],sizeof(basic->buffer) - basic->idx,"0,");
+      if ((unsigned)len > sizeof(basic->buffer) - basic->idx)
+      {
+        assert(basic->idx > 1);
+        fwrite(basic->buffer,1,basic->idx - 1,opd->a09->out);
+        fputc('\n',opd->a09->out);
+        basic->line += basic->incr;
+        basic->idx   = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",(unsigned)basic->line);
+        len          = snprintf(&basic->buffer[basic->idx],basic->idx,"0,");
+      }
+      
+      basic->idx += len;
+    }
+  }
+  
   return true;
 }
 
