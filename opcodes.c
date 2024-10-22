@@ -1102,7 +1102,7 @@ static bool pseudo_setdp(struct opcdata *opd)
 
 static bool pseudo_end(struct opcdata *opd)
 {
-  struct symbol *sym;
+  struct symbol *sym = NULL;
   label          label;
   char           c;
   
@@ -1110,7 +1110,7 @@ static bool pseudo_end(struct opcdata *opd)
   assert((opd->pass == 1) || (opd->pass == 2));
   
   c = skip_space(opd->buffer);
-  if ((c == ';') || (c == '\0'))
+  if ((c != ';') && (c != '\0'))
   {
     opd->buffer->ridx--;
   
