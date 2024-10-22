@@ -354,6 +354,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
       
     fwrite(basic->buffer,1,basic->idx - 1,opd->a09->out);
     fputc('\n',opd->a09->out);
+    basic->line += basic->incr;
     
     fprintf(
         opd->a09->out,
