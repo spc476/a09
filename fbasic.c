@@ -378,6 +378,9 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     
     if (defusr)
     {
+      if (basic->usr != 0)
+        return message(opd->a09,MSG_ERROR,"E9999: can't use USR and DEFUSRn at the same time");
+        
       fwrite(basic->buffer,1,basic->idx -1 , opd->a09->out);
       fputc('\n',opd->a09->out);
       basic->line += basic->incr;
