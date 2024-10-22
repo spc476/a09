@@ -1326,9 +1326,13 @@ bool test__opt(struct opcdata *opd)
 {
   assert(opd             != NULL);
   assert(opd->a09        != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->a09->tests == NULL)
+    return true;
+    
   assert(opd->a09->tests != NULL);
   assert(opd->a09->runtests);
-  assert((opd->pass == 1) || (opd->pass == 2));
   
   struct testdata *data = opd->a09->tests;
   char             c    = skip_space(opd->buffer);
