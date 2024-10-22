@@ -43,7 +43,7 @@ line length as text: 249
 70 SAVEM"name",start,end,transfer
 80 'A09 END
 
-binary format:	$FF <len:16>
+binary format:  $FF <len:16>
                 <nextline:16><linenum:16> <data:8...>
                 
                 $26 $2C $00 $0A $95 '200,8192:'
@@ -55,7 +55,7 @@ binary format:	$FF <len:16>
                 $27 $24 $00 $14 $86 '18,57,123,123...' $00
                 $00 $00
                 
-options		starting line #
+options         starting line #
                 string space
                 increment
                 ascii vs. tokenized
@@ -63,15 +63,17 @@ options		starting line #
                 loadaddr ($2601 default)
                 
                 
-                
-                
+;               cassette names  "12345678"
+;               disk name       "12345678/123:0"
+
+
 .OPT
 
-;		.opt	basic usr label		; CB	@ $0113
-;		.opt	basic defusr0 label	; ECB	DEFUSRn=addr
-;		.opt	basic defusr1 label	; ECB
-;		.opt	basic strspace 200
-;		.opt	basic exec label
+;               .opt    basic usr label         ; CB    @ $0113
+;               .opt    basic defusr0 label     ; ECB   DEFUSRn=addr
+;               .opt    basic defusr1 label     ; ECB
+;               .opt    basic strspace 200
+;               .opt    basic exec label
 
 
 
@@ -80,18 +82,18 @@ options		starting line #
 
 /**************************************************************************/
 
-#define CLEAR	"\x95"
-#define FOR	"\x80"
-#define EQ	"\xB3"
-#define TO	"\xA5"
-#define READ	"\x8D"
-#define POKE	"\x92"
-#define NEXT	"\x8B"
-#define EXEC	"\xA2"
-#define DATA	"\x86"
-#define REM	"\x82"
-#define REMq	"\x83"
-#define DEFUSR	"\xB9\xFF\x83"
+#define CLEAR   "\x95"
+#define FOR     "\x80"
+#define EQ      "\xB3"
+#define TO      "\xA5"
+#define READ    "\x8D"
+#define POKE    "\x92"
+#define NEXT    "\x8B"
+#define EXEC    "\xA2"
+#define DATA    "\x86"
+#define REM     "\x82"
+#define REMq    "\x83"
+#define DEFUSR  "\xB9\xFF\x83"
 
 struct format_basic
 {
@@ -145,8 +147,9 @@ static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,c
     case 'C':
          if ((basic->cassette = cmd_opt(pi,argc,argv)) == NULL)
            return message(a09,MSG_ERROR,"E0068: missing option argument");
+         if (strlen(basic->cassette) > 8)
+           return message(a09,MSG_ERROR,"E9999: cassette name '%s' too long---8 characters max",basic->cassette);
          break;
-         
          
     case 'I':
          if (!cmd_uint16_t(&basic->incr,pi,argc,argv,0,65535u))
@@ -162,10 +165,49 @@ static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,c
          if (!cmd_uint16_t(&basic->strspace,pi,argc,argv,0,22*1024))
            return message(a09,MSG_ERROR,"E9999: string space must be between 0 and 22528");
          break;
-
+         
     case 'S':
-         if ((basic->disk = cmd_opt(pi,argc,argv)) == NULL)
-           return message(a09,MSG_ERROR,"E0068: missing option argument");
+         {
+           const char *ext;
+           const char *colon;
+           size_t      namelen;
+           size_t      extlen;
+           
+           if ((basic->disk = cmd_opt(pi,argc,argv)) == NULL)
+             return message(a09,MSG_ERROR,"E0068: missing option argument");
+           ext = strchr(basic->disk,'/');
+           if (ext == NULL)
+             ext = strchr(basic->disk,'.');
+             
+           colon = strchr(basic->disk,':');
+           
+           if (ext == NULL)
+           {
+             if (colon == NULL)
+               namelen = strlen(basic->disk);
+             else
+               namelen = (size_t)(colon - basic->disk);
+             extlen = 0;
+           }
+           else
+           {
+             namelen = (size_t)(ext - basic->disk);
+             
+             if (colon == NULL)
+               extlen = strlen(ext + 1);
+             else
+             {
+               extlen = (size_t)(colon - ext - 1);
+               if (!isdigit(colon[1]) || (colon[2] != '\0'))
+                 return message(a09,MSG_ERROR,"E9999: drive specifier '%s' must be 0 to 3",colon+1);
+             }
+           }
+           
+           if (namelen > 8)
+             return message(a09,MSG_ERROR,"E9999: file name '%.*s' too long---8 characters max",(int)namelen,basic->disk);
+           if (extlen > 3)
+             return message(a09,MSG_ERROR,"E9999: file extension '%.*s' too long---3 characters max",(int)extlen,ext+1);
+         }
          break;
          
     default:
@@ -252,7 +294,7 @@ static bool fbasic__opt(struct format *fmt,struct opcdata *opd,label *be)
     char c = skip_space(opd->buffer);
     read_label(opd->buffer,&tmp,c);
     upper_label(&tmp);
-  
+    
     if ((tmp.s == 3) && (memcmp(tmp.text,"USR",3) == 0))
     {
       if (!expr(&val,opd->a09,opd->buffer,opd->pass))
@@ -263,7 +305,7 @@ static bool fbasic__opt(struct format *fmt,struct opcdata *opd,label *be)
     else if ((tmp.s == 7) && (memcmp(tmp.text,"DEFUSR",6) == 0))
     {
       if (!isdigit(tmp.text[6]))
-        return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);        
+        return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
       if (!expr(&val,opd->a09,opd->buffer,opd->pass))
         return false;
       basic->defusr[(size_t)(tmp.text[6] - '0')] = val.value;
@@ -309,7 +351,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     
     if (!basic->org)
       return message(opd->a09,MSG_ERROR,"E9999: missing ORG for backend\n");
-    
+      
     fwrite(basic->buffer,1,basic->idx - 1,opd->a09->out);
     fputc('\n',opd->a09->out);
     
@@ -382,7 +424,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     {
       if (sym == NULL)
         return message(opd->a09,MSG_ERROR,"E9999: missing entry point on END");
-      
+        
       basic->line += basic->incr;
       fprintf(
           opd->a09->out,
@@ -395,7 +437,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
       );
     }
   }
-      
+  
   return true;
 }
 
@@ -408,10 +450,10 @@ static bool fbasic_org(struct format *fmt,struct opcdata *opd)
   assert(fmt->backend == BACKEND_BASIC);
   assert(opd          != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
-
+  
   if (opd->pass == 2)
   {
-    struct format_basic *basic = fmt->data;    
+    struct format_basic *basic = fmt->data;
     if (!basic->org)
       basic->staddr = opd->value.value;
     basic->org = true;
@@ -434,7 +476,7 @@ static bool fbasic_rmb(struct format *fmt,struct opcdata *opd)
 
 bool format_basic_init(struct a09 *a09)
 {
-  static struct format const callbacks = 
+  static struct format const callbacks =
   {
     .backend    = BACKEND_BASIC,
     .cmdline    = fbasic_cmdline,
