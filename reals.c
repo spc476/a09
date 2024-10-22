@@ -57,7 +57,7 @@
 
 /**************************************************************************/
 
-bool freal_ieee(struct format *fmt,struct opcdata *opd)
+bool freal__ieee(struct format *fmt,struct opcdata *opd)
 {
   (void)fmt;
   assert(opd         != NULL);
@@ -203,7 +203,7 @@ static bool freal_40b(struct format *fmt,struct opcdata *opd,int bias)
 
 /**************************************************************************/
 
-bool freal_msfp(struct format *fmt,struct opcdata *opd)
+bool freal__msfp(struct format *fmt,struct opcdata *opd)
 {
   (void)fmt;
   assert(opd          != NULL);
@@ -216,7 +216,7 @@ bool freal_msfp(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-bool freal_lbfp(struct format *fmt,struct opcdata *opd)
+bool freal__lbfp(struct format *fmt,struct opcdata *opd)
 {
   (void)fmt;
   assert(opd          != NULL);

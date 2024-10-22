@@ -1647,7 +1647,7 @@ static bool pseudo__notest(struct opcdata *opd)
   assert(opd->a09 != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  return fdefault_test(&opd->a09->format,opd);
+  return fdefault__test(&opd->a09->format,opd);
 }
 
 /**************************************************************************/
@@ -1781,11 +1781,11 @@ static bool pseudo__opt(struct opcdata *opd)
     read_label(opd->buffer,&tmp,c);
     upper_label(&tmp);
     if ((tmp.s == 4) && (memcmp(tmp.text,"IEEE",4) == 0))
-      opd->a09->format.Float = freal_ieee;
+      opd->a09->format.Float = freal__ieee;
     else if ((tmp.s == 4) && (memcmp(tmp.text,"MSFP",4) == 0))
-      opd->a09->format.Float = freal_msfp;
+      opd->a09->format.Float = freal__msfp;
     else if ((tmp.s == 4) && (memcmp(tmp.text,"LBFP",4) == 0))
-      opd->a09->format.Float = freal_lbfp;
+      opd->a09->format.Float = freal__lbfp;
     else
       return message(opd->a09,MSG_ERROR,"E0098: Real format '%.*s' not supported",(int)tmp.s,tmp.text);
       

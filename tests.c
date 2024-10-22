@@ -1668,7 +1668,7 @@ static bool ftest_rmb(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool ftest_test(struct format *fmt,struct opcdata *opd)
+static bool ftest__test(struct format *fmt,struct opcdata *opd)
 {
   (void)fmt;
   assert(opd             != NULL);
@@ -1735,7 +1735,7 @@ static bool ft_timingp(struct buffer *buffer)
 
 /**************************************************************************/
 
-static bool ftest_tron(struct format *fmt,struct opcdata *opd)
+static bool ftest__tron(struct format *fmt,struct opcdata *opd)
 {
   (void)fmt;
   assert(opd             != NULL);
@@ -1797,7 +1797,7 @@ static bool ftest_tron(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool ftest_troff(struct format *fmt,struct opcdata *opd)
+static bool ftest__troff(struct format *fmt,struct opcdata *opd)
 {
   (void)fmt;
   assert(opd             != NULL);
@@ -1858,7 +1858,7 @@ static bool ftest_troff(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool ftest_Assert(struct format *fmt,struct opcdata *opd)
+static bool ftest__Assert(struct format *fmt,struct opcdata *opd)
 {
   (void)fmt;
   assert(opd             != NULL);
@@ -1902,7 +1902,7 @@ static bool ftest_Assert(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool ftest_endtst(struct format *fmt,struct opcdata *opd)
+static bool ftest__endtst(struct format *fmt,struct opcdata *opd)
 {
   (void)fmt;
   assert(opd             != NULL);
@@ -2192,12 +2192,11 @@ bool test_init(struct a09 *a09)
     a09->format.rmb        = ftest_rmb;
     a09->format.org        = ftest_org;
     a09->format.align      = ftest_align;
-    a09->format.opt        = ftest_opt;
-    a09->format.test       = ftest_test;
-    a09->format.tron       = ftest_tron;
-    a09->format.troff      = ftest_troff;
-    a09->format.Assert     = ftest_Assert;
-    a09->format.endtst     = ftest_endtst;
+    a09->format.test       = ftest__test;
+    a09->format.tron       = ftest__tron;
+    a09->format.troff      = ftest__troff;
+    a09->format.Assert     = ftest__Assert;
+    a09->format.endtst     = ftest__endtst;
     
     memset(a09->tests->memory,a09->tests->fill,sizeof(a09->tests->memory));
     memset(a09->tests->prot,0,sizeof(a09->tests->prot));

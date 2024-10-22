@@ -94,7 +94,17 @@ bool fdefault_write(
 
 /**************************************************************************/
 
-bool fdefault_test(struct format *fmt,struct opcdata *opd)
+bool fdefault__opt(struct format *fmt,struct opcdata *opd,label *tmp)
+{
+  (void)fmt;
+  (void)opd;
+  (void)tmp;
+  return true;
+}
+
+/**************************************************************************/
+
+bool fdefault__test(struct format *fmt,struct opcdata *opd)
 {
   (void)fmt;
   assert(opd      != NULL);
