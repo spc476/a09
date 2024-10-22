@@ -196,7 +196,7 @@ static bool fbasic_pass_start(struct format *fmt,struct a09 *a09,int pass)
   if (pass == 2)
   {
     struct format_basic *basic = fmt->data;
-    basic->idx = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",(unsigned)basic->line);
+    basic->idx = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",basic->line);
   }
   
   return true;
@@ -215,19 +215,19 @@ static bool fbasic_write(struct format *fmt,struct opcdata *opd,void const *buff
   (void)instruction;
   
   struct format_basic *basic = fmt->data;
-  char const          *buf   = buffer;
+  unsigned char const *buf   = buffer;
   
   for (size_t i = 0 ; i < len ; i++)
   {
-    int len = snprintf(&basic->buffer[basic->idx],sizeof(basic->buffer) - basic->idx,"%u,",buf[i] & 255);
+    int len = snprintf(&basic->buffer[basic->idx],sizeof(basic->buffer) - basic->idx,"%u,",buf[i]);
     if ((unsigned)len > sizeof(basic->buffer) - basic->idx)
     {
       assert(basic->idx > 1);
       fwrite(basic->buffer,1,basic->idx - 1,opd->a09->out);
       fputc('\n',opd->a09->out);
       basic->line += basic->incr;
-      basic->idx   = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",(unsigned)basic->line);
-      len          = snprintf(&basic->buffer[basic->idx],basic->idx,"%u,",buf[i] & 255);
+      basic->idx   = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",basic->line);
+      len          = snprintf(&basic->buffer[basic->idx],basic->idx,"%u,",buf[i]);
     }
     
     basic->idx += len;
@@ -314,7 +314,7 @@ static bool fbasic_align(struct format *fmt,struct opcdata *opd)
         fwrite(basic->buffer,1,basic->idx - 1,opd->a09->out);
         fputc('\n',opd->a09->out);
         basic->line += basic->incr;
-        basic->idx   = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",(unsigned)basic->line);
+        basic->idx   = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",basic->line);
         len          = snprintf(&basic->buffer[basic->idx],basic->idx,"0,");
       }
       
@@ -350,11 +350,11 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     fprintf(
         opd->a09->out,
         "%u CLEAR%u,%u:FORA=%uTO%u:READB:POKEA,B:NEXT\n",
-        (unsigned)basic->line,
-        (unsigned)basic->strspace,
-        (unsigned)basic->staddr - 1,
-        (unsigned)basic->staddr,
-        (unsigned)opd->a09->pc - 1
+        basic->line,
+        basic->strspace,
+        basic->staddr - 1,
+        basic->staddr,
+        opd->a09->pc - 1
     );
     
     if (basic->usr != 0)
@@ -363,19 +363,19 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
       fprintf(
           opd->a09->out,
           "%u POKE275,%u:POKE276,%u\n",
-          (unsigned)basic->line,
-          (unsigned)basic->usr >> 8,
-          (unsigned)basic->usr & 255
+          basic->line,
+          basic->usr >> 8,
+          basic->usr & 255
       );
     }
     
-    basic->idx = snprintf(basic->buffer,sizeof(basic->buffer),"%u ",(unsigned)basic->line + basic->incr);
+    basic->idx = snprintf(basic->buffer,sizeof(basic->buffer),"%u ",basic->line + basic->incr);
     
     for (size_t i = 0 ; i < 10 ; i++)
     {
       if (basic->defusr[i] != 0)
       {
-        int len = snprintf(&basic->buffer[basic->idx],sizeof(basic->buffer) - basic->idx,"DEFUSR%zu=%u:",i,(unsigned)basic->defusr[i]);
+        int len = snprintf(&basic->buffer[basic->idx],sizeof(basic->buffer) - basic->idx,"DEFUSR%zu=%u:",i,basic->defusr[i]);
         assert((unsigned)(basic->idx + len) < sizeof(basic->buffer));
         basic->idx += len;
         defusr      = true;
@@ -392,7 +392,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     if ((sym != NULL) && (basic->cassette == NULL) && (basic->disk == NULL))
     {
       basic->line += basic->incr;
-      fprintf(opd->a09->out,"%u EXEC%u\n",(unsigned)basic->line,(unsigned)sym->value);
+      fprintf(opd->a09->out,"%u EXEC%u\n",basic->line,sym->value);
     }
     
     if (basic->cassette != NULL)
@@ -404,11 +404,11 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
       fprintf(
           opd->a09->out,
           "%u CSAVEM\"%s\",%u,%u,%u\n",
-          (unsigned)basic->line,
+          basic->line,
           basic->cassette,
-          (unsigned)basic->staddr,
-          (unsigned)opd->a09->pc,
-          (unsigned)sym->value
+          basic->staddr,
+          opd->a09->pc,
+          sym->value
       );
     }
     
@@ -421,11 +421,11 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
       fprintf(
           opd->a09->out,
           "%u SAVEM\"%s\",%u,%u,%u\n",
-          (unsigned)basic->line,
+          basic->line,
           basic->disk,
-          (unsigned)basic->staddr,
-          (unsigned)opd->a09->pc,
-          (unsigned)sym->value
+          basic->staddr,
+          opd->a09->pc,
+          sym->value
       );
     }
   }
@@ -482,7 +482,7 @@ static bool fbasic_rmb(struct format *fmt,struct opcdata *opd)
         fwrite(basic->buffer,1,basic->idx - 1,opd->a09->out);
         fputc('\n',opd->a09->out);
         basic->line += basic->incr;
-        basic->idx   = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",(unsigned)basic->line);
+        basic->idx   = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",basic->line);
         len          = snprintf(&basic->buffer[basic->idx],basic->idx,"0,");
       }
       
