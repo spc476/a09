@@ -134,22 +134,22 @@ static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,c
          if ((basic->cassette = cmd_opt(pi,argc,argv)) == NULL)
            return message(a09,MSG_ERROR,"E0068: missing option argument");
          if (strlen(basic->cassette) > 8)
-           return message(a09,MSG_ERROR,"E9999: cassette name '%s' too long---8 characters max",basic->cassette);
+           return message(a09,MSG_ERROR,"E0072: cassette name '%s' too long---8 characters max",basic->cassette);
          break;
          
     case 'I':
          if (!cmd_uint16_t(&basic->incr,pi,argc,argv,0,65535u))
-           return message(a09,MSG_ERROR,"E9999: line increment must be between 1 and 65535");
+           return message(a09,MSG_ERROR,"E0101: line increment must be between 1 and 65535");
          break;
          
     case 'L':
          if (!cmd_uint16_t(&basic->line,pi,argc,argv,0,65535u))
-           return message(a09,MSG_ERROR,"E9999: line number must be between 1 and 65535");
+           return message(a09,MSG_ERROR,"E0102: line number must be between 1 and 65535");
          break;
          
     case 'P':
          if (!cmd_uint16_t(&basic->strspace,pi,argc,argv,0,22*1024))
-           return message(a09,MSG_ERROR,"E9999: string space must be between 0 and 22528");
+           return message(a09,MSG_ERROR,"E0103: string space must be between 0 and 22528");
          break;
          
     case 'S':
@@ -185,14 +185,14 @@ static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,c
              {
                extlen = (size_t)(colon - ext - 1);
                if (!isdigit(colon[1]) || (colon[2] != '\0'))
-                 return message(a09,MSG_ERROR,"E9999: drive specifier '%s' must be 0 to 3",colon+1);
+                 return message(a09,MSG_ERROR,"E0104: drive specifier '%s' must be 0 to 3",colon+1);
              }
            }
            
            if (namelen > 8)
-             return message(a09,MSG_ERROR,"E9999: file name '%.*s' too long---8 characters max",(int)namelen,basic->disk);
+             return message(a09,MSG_ERROR,"E0105: file name '%.*s' too long---8 characters max",(int)namelen,basic->disk);
            if (extlen > 3)
-             return message(a09,MSG_ERROR,"E9999: file extension '%.*s' too long---3 characters max",(int)extlen,ext+1);
+             return message(a09,MSG_ERROR,"E0106: file extension '%.*s' too long---3 characters max",(int)extlen,ext+1);
          }
          break;
          
@@ -335,7 +335,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     bool                 defusr = false;
     
     if (!basic->org)
-      return message(opd->a09,MSG_ERROR,"E9999: missing ORG for backend\n");
+      return message(opd->a09,MSG_ERROR,"E0039: missing value for ORG");
       
     fwrite(basic->buffer,1,basic->idx - 1,opd->a09->out);
     fputc('\n',opd->a09->out);
@@ -379,7 +379,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     if (defusr)
     {
       if (basic->usr != 0)
-        return message(opd->a09,MSG_ERROR,"E9999: can't use USR and DEFUSRn at the same time");
+        return message(opd->a09,MSG_ERROR,"E0107: can't use USR and DEFUSRn at the same time");
         
       fwrite(basic->buffer,1,basic->idx -1 , opd->a09->out);
       fputc('\n',opd->a09->out);
@@ -395,7 +395,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     if (basic->cassette != NULL)
     {
       if (sym == NULL)
-        return message(opd->a09,MSG_ERROR,"E9999: missing entry point on END");
+        return message(opd->a09,MSG_ERROR,"E0052: missing label for END");
         
       basic->line += basic->incr;
       fprintf(
@@ -412,7 +412,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     if (basic->disk != NULL)
     {
       if (sym == NULL)
-        return message(opd->a09,MSG_ERROR,"E9999: missing entry point on END");
+        return message(opd->a09,MSG_ERROR,"E0052: missing label for END");
         
       basic->line += basic->incr;
       fprintf(
