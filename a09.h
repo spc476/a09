@@ -59,6 +59,7 @@ enum backend
   BACKEND_BIN,
   BACKEND_RSDOS,
   BACKEND_SREC,
+  BACKEND_BASIC,
 };
 
 enum admode
@@ -272,6 +273,7 @@ extern char const MSG_ERROR[];
 extern char const format_bin_usage[];
 extern char const format_rsdos_usage[];
 extern char const format_srec_usage[];
+extern char const format_basic_usage[];
 
 extern bool                  cmd_unsigned_long  (unsigned long int *,int *,int,char *[],unsigned long,unsigned long);
 extern bool                  cmd_size_t         (size_t            *,int *,int,char *[],unsigned long,unsigned long);

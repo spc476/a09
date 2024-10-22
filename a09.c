@@ -603,7 +603,8 @@ void usage(char const *prog)
            "\t-r\t\trandomize the testing order (only if -t specified)\n"
            "\t-t\t\trun tests\n"
            "\n"
-           "\tformats: bin rsdos srec\n"
+           "\tformats: bin rsdos srec basic\n"
+           "%s"
            "%s"
            "%s"
            "%s"
@@ -611,7 +612,8 @@ void usage(char const *prog)
            prog,
            format_bin_usage,
            format_rsdos_usage,
-           format_srec_usage
+           format_srec_usage,
+           format_basic_usage
          );
 }
 
@@ -685,6 +687,11 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              else if (strcmp(format,"srec") == 0)
              {
                if (!format_srec_init(a09))
+                 return -1;
+             }
+             else if (strcmp(format,"basic") == 0)
+             {
+               if (!format_basic_init(a09))
                  return -1;
              }
              else
