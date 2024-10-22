@@ -318,7 +318,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
         "%u CLEAR%u,%u:FORA=%uTO%u:READB:POKEA,B:NEXT\n",
         (unsigned)basic->line,
         (unsigned)basic->strspace,
-        (unsigned)basic->staddr,
+        (unsigned)basic->staddr - 1,
         (unsigned)basic->staddr,
         (unsigned)opd->a09->pc - 1
     );
