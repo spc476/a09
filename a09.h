@@ -135,7 +135,7 @@ struct format
   bool (*pass_start)(struct format *,struct a09 *,int);
   bool (*pass_end)  (struct format *,struct a09 *,int);
   bool (*write)     (struct format *,struct opcdata *,void const *,size_t,bool);
-  bool (*opt)       (struct format *,struct opcdata *);
+  bool (*opt)       (struct format *,struct opcdata *,label *);
   bool (*dp)        (struct format *,struct opcdata *);
   bool (*code)      (struct format *,struct opcdata *);
   bool (*align)     (struct format *,struct opcdata *);

@@ -1322,9 +1322,8 @@ static bool ftest_write(
 
 /**************************************************************************/
 
-static bool ftest_opt(struct format *fmt,struct opcdata *opd)
+bool test__opt(struct opcdata *opd)
 {
-  (void)fmt;
   assert(opd             != NULL);
   assert(opd->a09        != NULL);
   assert(opd->a09->tests != NULL);
@@ -1335,11 +1334,6 @@ static bool ftest_opt(struct format *fmt,struct opcdata *opd)
   char             c    = skip_space(opd->buffer);
   label            tmp;
   
-  read_label(opd->buffer,&tmp,c);
-  upper_label(&tmp);
-  if ((tmp.s != 4) || (memcmp(tmp.text,"TEST",4) != 0)) /* not for us, ignore */
-    return true;
-    
   c = skip_space(opd->buffer);
   read_label(opd->buffer,&tmp,c);
   upper_label(&tmp);

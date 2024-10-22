@@ -1712,8 +1712,13 @@ static bool pseudo__opt(struct opcdata *opd)
   
   if (c != '*')
   {
-    opd->buffer->ridx--;
-    return opd->a09->format.opt(&opd->a09->format,opd);
+    read_label(opd->buffer,&tmp,c);
+    upper_label(&tmp);
+    
+    if ((tmp.s == 4) && (memcmp(tmp.text,"TEST",4) == 0))
+      return test__opt(opd);
+    else
+      return opd->a09->format.opt(&opd->a09->format,opd,&tmp);
   }
   
   c = skip_space(opd->buffer);
