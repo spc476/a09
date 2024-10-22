@@ -30,6 +30,7 @@
 /**************************************************************************
 
 line length as text: 249
+line # 0 .. 63999
 
 10 'A09
 20 DATA 123...
@@ -54,7 +55,8 @@ struct format_basic
 {
   char const *fadd;
   int         idx;
-  uint16_t    line;
+  uint16_t    cline;
+  uint16_t    dline;
   uint16_t    incr;
   uint16_t    strspace;
   uint16_t    staddr;
@@ -70,8 +72,9 @@ char const format_basic_usage[] =
         "\n"
         "BASIC format options:\n"
         "\t-A file\t\tadd code to specified BASIC program\n"
+        "\t-C line\t\tstarting line # for code (automatic after DATA)\n"
         "\t-I incr\t\tline increment (default 10)\n"
-        "\t-L line\t\tstarting line # (default 10)\n"
+        "\t-L line\t\tstarting line # for DATA (default 10)\n"
         "\t-P size\t\tsize of string pool (default 200)\n"
         "\n";
         
@@ -89,8 +92,8 @@ static void write_byte(FILE *out,struct format_basic *basic,unsigned char byte)
     assert((unsigned)basic->idx <= sizeof(basic->buffer));
     fwrite(basic->buffer,1,basic->idx - 1,out);
     fputc('\n',out);
-    basic->line += basic->incr;
-    basic->idx   = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",basic->line);
+    basic->dline += basic->incr;
+    basic->idx    = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",basic->dline);
     assert((unsigned)basic->idx < sizeof(basic->buffer));
     len          = snprintf(&basic->buffer[basic->idx],basic->idx,"%u,",byte);
     assert((unsigned)(basic->idx + len) < sizeof(basic->buffer));
@@ -121,14 +124,19 @@ static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,c
            return message(a09,MSG_ERROR,"E0068: missing option argument");
          break;
          
+    case 'C':
+         if (!cmd_uint16_t(&basic->cline,pi,argc,argv,0,63999u))
+           return message(a09,MSG_ERROR,"E0102: line number must be between 1 and 63999");
+         break;
+         
     case 'I':
          if (!cmd_uint16_t(&basic->incr,pi,argc,argv,0,65535u))
            return message(a09,MSG_ERROR,"E0101: line increment must be between 1 and 65535");
          break;
          
     case 'L':
-         if (!cmd_uint16_t(&basic->line,pi,argc,argv,0,65535u))
-           return message(a09,MSG_ERROR,"E0102: line number must be between 1 and 65535");
+         if (!cmd_uint16_t(&basic->dline,pi,argc,argv,0,63999u))
+           return message(a09,MSG_ERROR,"E0102: line number must be between 1 and 63999");
          break;
          
     case 'P':
@@ -157,7 +165,7 @@ static bool fbasic_pass_start(struct format *fmt,struct a09 *a09,int pass)
   if (pass == 2)
   {
     struct format_basic *basic = fmt->data;
-    basic->idx = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",basic->line);
+    basic->idx = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",basic->dline);
   }
   
   return true;
@@ -280,12 +288,14 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
       
     fwrite(basic->buffer,1,basic->idx - 1,opd->a09->out);
     fputc('\n',opd->a09->out);
-    basic->line += basic->incr;
     
+    if (basic->cline == 64000)
+      basic->cline = basic->dline + basic->incr;
+      
     fprintf(
         opd->a09->out,
         "%u CLEAR%u,%u:FORA=%uTO%u:READB:POKEA,B:NEXT:",
-        basic->line,
+        basic->cline,
         basic->strspace,
         basic->staddr - 1,
         basic->staddr,
@@ -315,7 +325,6 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
         
       fwrite(basic->buffer,1,basic->idx -1 , opd->a09->out);
       fputc('\n',opd->a09->out);
-      basic->line += basic->incr;
     }
   }
   
@@ -408,7 +417,8 @@ bool format_basic_init(struct a09 *a09)
   {
     basic->fadd      = NULL;
     basic->idx       = 0;
-    basic->line      = 10;
+    basic->cline     = 64000; /* no defined line number */
+    basic->dline     = 10;
     basic->incr      = 10;
     basic->strspace  = 200;
     basic->staddr    = 0;
