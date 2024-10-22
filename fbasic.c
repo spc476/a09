@@ -39,6 +39,7 @@ line length as text: 249
 50 EXEC8192
 60 CSAVEM"FILENAME",start,end,transfer
 70 SAVEM"FILENAME/EXT:0",start,end,transfer
+80 'A09
 
 options         starting line #
                 string space
@@ -437,9 +438,13 @@ static bool fbasic_org(struct format *fmt,struct opcdata *opd)
   assert(opd          != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
+  struct format_basic *basic = fmt->data;
+  
+  if (basic->org)
+    return message(opd->a09,MSG_ERROR,"E0108: BASIC format does not support multiple ORG directives");
+    
   if (opd->pass == 2)
   {
-    struct format_basic *basic = fmt->data;
     if (!basic->org)
       basic->staddr = opd->value.value;
     basic->org = true;

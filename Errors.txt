@@ -105,3 +105,4 @@ E0104: drive specifier '%s' must be 0 to 3
 E0105: file name '%.*s' too long---8 characters max
 E0106: file extension '%.*s' too long---3 characters max
 E0107: can't use USR and DEFUSRn at the same time
+E0108: BASIC format does not support multiple ORG directives
