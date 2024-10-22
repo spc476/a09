@@ -36,9 +36,6 @@ line length as text: 249
 20 CLEAR200,8192:FORA=8192TO9001:READB:POKEA,B:NEXT
 30 POKE275,hi:POKE276,lo
 40 DEFUSR0=addr:DEFUSR1=addr...
-50 EXEC8192
-60 CSAVEM"FILENAME",start,end,transfer
-70 SAVEM"FILENAME/EXT:0",start,end,transfer
 80 'A09
 
 options         starting line #
@@ -56,8 +53,6 @@ options         starting line #
 struct format_basic
 {
   char const *fadd;
-  char const *disk;
-  char const *cassette;
   int         idx;
   uint16_t    line;
   uint16_t    incr;
@@ -75,11 +70,9 @@ char const format_basic_usage[] =
         "\n"
         "BASIC format options:\n"
         "\t-A file\t\tadd code to specified BASIC program\n"
-        "\t-C name\tadd code to save 'name' program to cassette\n"
         "\t-I incr\t\tline increment (default 10)\n"
         "\t-L line\t\tstarting line # (default 10)\n"
         "\t-P size\t\tsize of string pool (default 200)\n"
-        "\t-S name\tadd code to save 'name' program to disk\n"
         "\n";
         
 /**************************************************************************/
@@ -128,13 +121,6 @@ static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,c
            return message(a09,MSG_ERROR,"E0068: missing option argument");
          break;
          
-    case 'C':
-         if ((basic->cassette = cmd_opt(pi,argc,argv)) == NULL)
-           return message(a09,MSG_ERROR,"E0068: missing option argument");
-         if (strlen(basic->cassette) > 8)
-           return message(a09,MSG_ERROR,"E0072: cassette name '%s' too long---8 characters max",basic->cassette);
-         break;
-         
     case 'I':
          if (!cmd_uint16_t(&basic->incr,pi,argc,argv,0,65535u))
            return message(a09,MSG_ERROR,"E0101: line increment must be between 1 and 65535");
@@ -148,50 +134,6 @@ static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,c
     case 'P':
          if (!cmd_uint16_t(&basic->strspace,pi,argc,argv,0,22*1024))
            return message(a09,MSG_ERROR,"E0103: string space must be between 0 and 22528");
-         break;
-         
-    case 'S':
-         {
-           const char *ext;
-           const char *colon;
-           size_t      namelen;
-           size_t      extlen;
-           
-           if ((basic->disk = cmd_opt(pi,argc,argv)) == NULL)
-             return message(a09,MSG_ERROR,"E0068: missing option argument");
-           ext = strchr(basic->disk,'/');
-           if (ext == NULL)
-             ext = strchr(basic->disk,'.');
-             
-           colon = strchr(basic->disk,':');
-           
-           if (ext == NULL)
-           {
-             if (colon == NULL)
-               namelen = strlen(basic->disk);
-             else
-               namelen = (size_t)(colon - basic->disk);
-             extlen = 0;
-           }
-           else
-           {
-             namelen = (size_t)(ext - basic->disk);
-             
-             if (colon == NULL)
-               extlen = strlen(ext + 1);
-             else
-             {
-               extlen = (size_t)(colon - ext - 1);
-               if (!isdigit(colon[1]) || (colon[2] != '\0'))
-                 return message(a09,MSG_ERROR,"E0104: drive specifier '%s' must be 0 to 3",colon+1);
-             }
-           }
-           
-           if (namelen > 8)
-             return message(a09,MSG_ERROR,"E0105: file name '%.*s' too long---8 characters max",(int)namelen,basic->disk);
-           if (extlen > 3)
-             return message(a09,MSG_ERROR,"E0106: file extension '%.*s' too long---3 characters max",(int)extlen,ext+1);
-         }
          break;
          
     default:
@@ -326,6 +268,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
   assert(fmt->backend == BACKEND_BASIC);
   assert(opd          != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
+  (void)sym;
   
   if (opd->pass == 2)
   {
@@ -341,7 +284,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     
     fprintf(
         opd->a09->out,
-        "%u CLEAR%u,%u:FORA=%uTO%u:READB:POKEA,B:NEXT\n",
+        "%u CLEAR%u,%u:FORA=%uTO%u:READB:POKEA,B:NEXT:",
         basic->line,
         basic->strspace,
         basic->staddr - 1,
@@ -350,18 +293,9 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     );
     
     if (basic->usr != 0)
-    {
-      basic->line += basic->incr;
-      fprintf(
-          opd->a09->out,
-          "%u POKE275,%u:POKE276,%u\n",
-          basic->line,
-          basic->usr >> 8,
-          basic->usr & 255
-      );
-    }
+      fprintf(opd->a09->out,"POKE275,%u:POKE276,%u:",basic->usr >> 8,basic->usr & 255);
     
-    basic->idx = snprintf(basic->buffer,sizeof(basic->buffer),"%u ",basic->line + basic->incr);
+    basic->idx = 0;
     
     for (size_t i = 0 ; i < 10 ; i++)
     {
@@ -377,51 +311,11 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     if (defusr)
     {
       if (basic->usr != 0)
-        return message(opd->a09,MSG_ERROR,"E0107: can't use USR and DEFUSRn at the same time");
+        return message(opd->a09,MSG_ERROR,"E0072: can't use USR and DEFUSRn at the same time");
         
       fwrite(basic->buffer,1,basic->idx -1 , opd->a09->out);
       fputc('\n',opd->a09->out);
       basic->line += basic->incr;
-    }
-    
-    if ((sym != NULL) && (basic->cassette == NULL) && (basic->disk == NULL))
-    {
-      basic->line += basic->incr;
-      fprintf(opd->a09->out,"%u EXEC%u\n",basic->line,sym->value);
-    }
-    
-    if (basic->cassette != NULL)
-    {
-      if (sym == NULL)
-        return message(opd->a09,MSG_ERROR,"E0052: missing label for END");
-        
-      basic->line += basic->incr;
-      fprintf(
-          opd->a09->out,
-          "%u CSAVEM\"%s\",%u,%u,%u\n",
-          basic->line,
-          basic->cassette,
-          basic->staddr,
-          opd->a09->pc,
-          sym->value
-      );
-    }
-    
-    if (basic->disk != NULL)
-    {
-      if (sym == NULL)
-        return message(opd->a09,MSG_ERROR,"E0052: missing label for END");
-        
-      basic->line += basic->incr;
-      fprintf(
-          opd->a09->out,
-          "%u SAVEM\"%s\",%u,%u,%u\n",
-          basic->line,
-          basic->disk,
-          basic->staddr,
-          opd->a09->pc,
-          sym->value
-      );
     }
   }
   
@@ -441,7 +335,7 @@ static bool fbasic_org(struct format *fmt,struct opcdata *opd)
   struct format_basic *basic = fmt->data;
   
   if (basic->org)
-    return message(opd->a09,MSG_ERROR,"E0108: BASIC format does not support multiple ORG directives");
+    return message(opd->a09,MSG_ERROR,"E0104: BASIC format does not support multiple ORG directives");
     
   if (opd->pass == 2)
   {
@@ -513,8 +407,6 @@ bool format_basic_init(struct a09 *a09)
   if (basic != NULL)
   {
     basic->fadd      = NULL;
-    basic->disk      = NULL;
-    basic->cassette  = NULL;
     basic->idx       = 0;
     basic->line      = 10;
     basic->incr      = 10;

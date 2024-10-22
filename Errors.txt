@@ -69,7 +69,7 @@ E0068: missing option argument
 E0069: address exceeds address space
 E0070: %s: %s
 E0071: string too long
-E0072: cassette name '%s' too long---8 characters max
+E0072: can't use USR and DEFUSRn at the same time
 E0073: bad register
 E0074: not enough space for expression
 E0075: can't negate or complement a string
@@ -101,8 +101,4 @@ E0100: Can only assign test code outside a .TEST directive
 E0101: line increment must be between 1 and 65535
 E0102: line number must be between 1 and 65535
 E0103: string space must be between 0 and 22528
-E0104: drive specifier '%s' must be 0 to 3
-E0105: file name '%.*s' too long---8 characters max
-E0106: file extension '%.*s' too long---3 characters max
-E0107: can't use USR and DEFUSRn at the same time
-E0108: BASIC format does not support multiple ORG directives
+E0104: BASIC format does not support multiple ORG directives
