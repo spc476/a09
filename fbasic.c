@@ -37,17 +37,14 @@ line length as text: 249
 30 POKE275,hi:POKE276,lo
 40 DEFUSR0=addr:DEFUSR1=addr...
 50 EXEC8192
-60 CSAVEM"name",start,end,transfer
-70 SAVEM"name",start,end,transfer
+60 CSAVEM"FILENAME",start,end,transfer
+70 SAVEM"FILENAME/EXT:0",start,end,transfer
 
 options         starting line #
                 string space
                 increment
                 add (via 'A09)
                 
-                cassette names  "12345678"
-                disk name       "12345678/123:0"
-
                 .opt    basic usr label         ; CB    @ $0113
                 .opt    basic defusr0 label     ; ECB   DEFUSRn=addr
                 .opt    basic defusr1 label     ; ECB

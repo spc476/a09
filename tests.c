@@ -1338,7 +1338,6 @@ bool test__opt(struct opcdata *opd)
   char             c    = skip_space(opd->buffer);
   label            tmp;
   
-  c = skip_space(opd->buffer);
   read_label(opd->buffer,&tmp,c);
   upper_label(&tmp);
   
