@@ -273,17 +273,17 @@ non-standard pesudo operation for most 6809 assemblers.
 		outside, it applies to all tests; otherwise it only applies
 		to the test they appear in.
 
-			.OPT TEST POKE address,byte
+			.OPT TEST POKE <address>,<byte>
 
 				Write the byte value to the address in the
 				virtual memory for the 6809 emulator.
 
-			.OPT TEST POKEW address,word
+			.OPT TEST POKEW <address>,<word>
 
 				Write the word (16-bit value) to the address
 				in the virtual memory for the 6809 emulator.
 
-			.OPT TEST PROT prot,address[,end-address]
+			.OPT TEST PROT <prot>,<address>[,<end-address>]
 
 				Enable memory permissions for the given
 				address(es).  The permissions allowed are:
@@ -309,26 +309,68 @@ non-standard pesudo operation for most 6809 assemblers.
 				Randomize the order of the tests.  This can
 				ONLY appear outside of a .TEST directive.
 
-			.OPT TEST STACK address
+			.OPT TEST STACK <address>
 
 				Set the default stack address for tests.
 				This can ONLY appear outside a .TEST
 				directive, given the nature of the
 				assembler.
 
-			.OPT TEST STACKSIZE size
+			.OPT TEST STACKSIZE <size>
 
 				Set the default stack size for tests.  This
 				can ONLY appear outside of a .TEST
 				directive, given the nature of the
 				assembler.
 
-			.OPT TEST ORG address
+			.OPT TEST ORG <address>
 
 				Set the starting address for assembling test
 				cases.  This directive can ONLY appear
 				outside of a .TEST directive, given the
 				nature of the assembler.
+
+		The following options only apply when using the BASIC
+		format, otherwise they are ignored.
+
+			.OPT BASIC CODE <line>
+
+				Set the line number for the code to poke the
+				object code into memory.  Defatuls to the
+				next line number after the DATA statements
+				have been generated.
+
+			.OPT BASIC DEFUSRn <address>
+
+				Omit DEFUSRn=<address> in the BASIC output.
+				This is for code meant to run with either
+				ECB or DECB.  n can be between 0 and 9.
+
+			.OPT BASIC INCR <delta>
+
+				Set the line incrmement for subsequence
+				BASIC lines.  It defaults to 10.
+
+			.OPT BASIC LINE <line>
+
+				Set the starting line number for the DATA
+				statements.  The default value is 10.
+
+			.OPT BASIC USR <address>
+
+				Output code to set the USR function in Color
+				BASIC.  This is only useful with a machine
+				that only supports the CB ROM.  Do not use
+				if the program is meant to run on ECB or
+				DECB.
+
+			.OPT BASIC STRSPACE <size>
+
+				Used for the CLEAR <size>,<address> BASIC
+				command to reserve string and memory
+				addresses.  If not specified, the default
+				value of 200 will be used for the string
+				space in CB,ECB or DECB.
 
 	.TEST ["name"]
 
@@ -609,6 +651,13 @@ They are:
 		A text format.  The default floating point format is
 		IEEE-754.
 
+	basic	Radio Shack TRS-80 Color Computer BASIC output.
+
+		A text format.  This will be a BASIC program that will
+		reserve the appropriate memory and poke the object code into
+		memory.  The default floating poing format is the Microsoft
+		8-bit floating point format.
+
   The following command line options are supported:
 
 	-D
@@ -700,3 +749,29 @@ The SREC backend
 
 		This specifies the number of data bytes per line.  Valid
 		values are 1 to 252, with 34 being the default.
+
+The BASIC backend
+
+	-C line
+
+		The line number for the non DATA BASIC code generated.  If
+		not given, then the next available line after the DATA
+		statements is used.  It can be any value between 0 and
+		63999.
+
+	-I incr
+
+		The line increment value.  Each new line will be incremented
+		by this amount.  The default value is 10.
+
+	-L line
+
+		The line number for the DATA statements.  It defaults to
+		starting with 10.  I can be any value between 0 and 63999.
+		It is an error if any of these lines overlap with the code
+		statements.
+
+	-P size
+
+		The size of the string storage for the CLEAR BASIC command
+		generated.  It defaults to 200.
