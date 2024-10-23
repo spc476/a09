@@ -32,12 +32,10 @@
 line length as text: 249
 line # 0 .. 63999
 
-10 'A09
-20 DATA 123...
+10 DATA 123...
 20 CLEAR200,8192:FORA=8192TO9001:READB:POKEA,B:NEXT
 30 POKE275,hi:POKE276,lo
 40 DEFUSR0=addr:DEFUSR1=addr...
-80 'A09
 
 options         starting line #
                 string space
@@ -53,7 +51,6 @@ options         starting line #
 
 struct format_basic
 {
-  char const *fadd;
   int         idx;
   uint16_t    cline;
   uint16_t    dline;
@@ -71,7 +68,6 @@ struct format_basic
 char const format_basic_usage[] =
         "\n"
         "BASIC format options:\n"
-        "\t-A file\t\tadd code to specified BASIC program\n"
         "\t-C line\t\tstarting line # for code (automatic after DATA)\n"
         "\t-I incr\t\tline increment (default 10)\n"
         "\t-L line\t\tstarting line # for DATA (default 10)\n"
@@ -119,11 +115,6 @@ static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,c
   
   switch(argv[*pi][1])
   {
-    case 'A':
-         if ((basic->fadd = cmd_opt(pi,argc,argv)) == NULL)
-           return message(a09,MSG_ERROR,"E0068: missing option argument");
-         break;
-         
     case 'C':
          if (!cmd_uint16_t(&basic->cline,pi,argc,argv,0,63999u))
            return message(a09,MSG_ERROR,"E0102: line number must be between 1 and 63999");
@@ -415,7 +406,6 @@ bool format_basic_init(struct a09 *a09)
   struct format_basic *basic = malloc(sizeof(struct format_basic));
   if (basic != NULL)
   {
-    basic->fadd      = NULL;
     basic->idx       = 0;
     basic->cline     = 64000; /* no defined line number */
     basic->dline     = 10;
