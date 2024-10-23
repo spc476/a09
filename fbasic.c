@@ -44,7 +44,6 @@ options         starting line #
                 
                 .opt    basic usr label         ; CB    @ $0113
                 .opt    basic defusr0 label     ; ECB   DEFUSRn=addr
-                .opt    basic defusr1 label     ; ECB
                 .opt    basic strspace 200
                 .opt	basic line 10
                 .opt	basic incr 10
@@ -54,16 +53,16 @@ options         starting line #
 
 struct format_basic
 {
-  int         idx;
-  uint16_t    cline;
-  uint16_t    dline;
-  uint16_t    incr;
-  uint16_t    strspace;
-  uint16_t    staddr;
-  uint16_t    usr;
-  uint16_t    defusr[10];
-  bool        org;
-  char        buffer[249];
+  int      idx;
+  uint16_t cline;
+  uint16_t dline;
+  uint16_t incr;
+  uint16_t strspace;
+  uint16_t staddr;
+  uint16_t usr;
+  uint16_t defusr[10];
+  bool     org;
+  char     buffer[249];
 };
 
 /**************************************************************************/
