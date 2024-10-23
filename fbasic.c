@@ -46,6 +46,9 @@ options         starting line #
                 .opt    basic defusr0 label     ; ECB   DEFUSRn=addr
                 .opt    basic defusr1 label     ; ECB
                 .opt    basic strspace 200
+                .opt	basic line 10
+                .opt	basic incr 10
+                .opt	basic code 20
 
 **************************************************************************/
 
@@ -228,6 +231,27 @@ static bool fbasic__opt(struct format *fmt,struct opcdata *opd,label *be)
       if (!expr(&val,opd->a09,opd->buffer,opd->pass))
         return false;
       basic->strspace = val.value;
+    }
+    
+    else if ((tmp.s == 4) && (memcmp(tmp.text,"LINE",4) == 0))
+    {
+      if (!expr(&val,opd->a09,opd->buffer,opd->pass))
+        return false;
+      basic->dline = val.value;
+    }
+    
+    else if ((tmp.s == 4) && (memcmp(tmp.text,"INCR",4) == 0))
+    {
+      if (!expr(&val,opd->a09,opd->buffer,opd->pass))
+        return false;
+      basic->incr = val.value;
+    }
+    
+    else if ((tmp.s == 4) && (memcmp(tmp.text,"CODE",4) == 0))
+    {
+      if (!expr(&val,opd->a09,opd->buffer,opd->pass))
+        return false;
+      basic->cline = val.value;
     }
     
     else
