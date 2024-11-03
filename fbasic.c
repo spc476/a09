@@ -237,6 +237,7 @@ static bool fbasic__opt(struct format *fmt,struct opcdata *opd,label *be)
       if (!expr(&val,opd->a09,opd->buffer,opd->pass))
         return false;
       basic->dline = val.value;
+      basic->idx   = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",basic->dline);
     }
     
     else if ((tmp.s == 4) && (memcmp(tmp.text,"INCR",4) == 0))

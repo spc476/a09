@@ -356,6 +356,10 @@ non-standard pesudo operation for most 6809 assemblers.
 				Set the starting line number for the DATA
 				statements.  The default value is 10.
 
+				NOTE: This should appear before any data is
+				generated, otherwise the results are
+				undefined.
+
 			.OPT BASIC USR <address>
 
 				Output code to set the USR function in Color
