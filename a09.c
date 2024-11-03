@@ -848,6 +848,9 @@ static int cleanup(struct a09 *a09,bool success)
   for (size_t i = 0 ; i < a09->ndeps ; i++)
     free(a09->deps[i]);
   free(a09->deps);
+  for (size_t i = 0 ; i < a09->nincs ; i++)
+    free(a09->includes[i]);
+  free(a09->includes);
   return success ? 0 : 1;
 }
 
