@@ -71,7 +71,7 @@ char const format_basic_usage[] =
         "\n"
         "BASIC format options:\n"
         "\t-C line\t\tstarting line # for code (automatic after DATA)\n"
-        "\t-I incr\t\tline increment (default 10)\n"
+        "\t-N incr\t\tline increment (default 10)\n"
         "\t-L line\t\tstarting line # for DATA (default 10)\n"
         "\t-P size\t\tsize of string pool (default 200)\n"
         "\n";
@@ -122,7 +122,7 @@ static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,c
            return message(a09,MSG_ERROR,"E0102: line number must be between 1 and 63999");
          break;
          
-    case 'I':
+    case 'N':
          if (!cmd_uint16_t(&basic->incr,pi,argc,argv,0,65535u))
            return message(a09,MSG_ERROR,"E0101: line increment must be between 1 and 65535");
          break;

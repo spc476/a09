@@ -155,9 +155,9 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
 
 char *add_file_dep(struct a09 *a09,char const *filename)
 {
-  char  **deps;
-  char   *name;
-  size_t  len;
+  char   **deps;
+  char    *name;
+  size_t   len;
   
   assert(a09      != NULL);
   assert(filename != NULL);
@@ -184,10 +184,39 @@ char *add_file_dep(struct a09 *a09,char const *filename)
   }
   
   memcpy(name,filename,len);
+  name[len - 1]          = '\0';
   a09->deps               = deps;
   a09->deps[a09->ndeps++] = name;
   
   return name;
+}
+
+/**************************************************************************/
+
+bool add_include_file(struct a09 *a09,char const *filename)
+{
+  char   **includes;
+  char    *name;
+  size_t   len;
+  
+  assert(a09      != NULL);
+  assert(filename != NULL);
+  
+  includes = realloc(a09->includes,(a09->nincs + 1) * sizeof(char *));
+  if (includes == NULL)
+    return message(a09,MSG_ERROR,"E0046: out of memory");
+  
+  len  = strlen(filename) + 1;
+  name = malloc(len);
+  if (name == NULL)
+    return message(a09,MSG_ERROR,"E0046: out of memory");
+    
+  memcpy(name,filename,len);
+  name[len - 1]               = '\0';
+  a09->includes               = includes;
+  a09->includes[a09->nincs++] = name;
+  
+  return true;
 }
 
 /**************************************************************************/
@@ -592,6 +621,7 @@ void usage(char const *prog)
            stderr,
            "usage: %s [options] [files...]\n"
            "\t-D file\t\tcore file (of 6809 VM) name (only if -t specified)\n"
+           "\t-I dir\t\tadd directory for include files\n"
            "\t-M\t\tgenerate Makefile dependencies on stdout\n"
            "\t-T\t\trun tests with TAP output\n"
            "\t-d\t\tdebug output\n"
@@ -631,6 +661,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
   {
     if (argv[i][0] == '-')
     {
+      char const *file;
       char const *format;
       
       switch(argv[i][1])
@@ -641,6 +672,16 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
                message(a09,MSG_ERROR,"E0068: missing option argument");
                return -1;
              }
+             break;
+             
+        case 'I':
+             if ((file = cmd_opt(&i,argc,argv)) == NULL)
+             {
+               message(a09,MSG_ERROR,"E0068: missing option argument");
+               return -1;
+             }
+             if (!add_include_file(a09,file))
+               return -1;
              break;
              
         case 'M':
@@ -824,7 +865,9 @@ int main(int argc,char *argv[])
     .corefile  = NULL,
     .tests     = NULL,
     .deps      = NULL,
+    .includes  = NULL,
     .ndeps     = 0,
+    .nincs     = 0,
     .in        = NULL,
     .out       = NULL,
     .list      = NULL,

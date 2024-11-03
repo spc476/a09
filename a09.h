@@ -161,7 +161,9 @@ struct a09
   char const       *listfile;
   char const       *corefile;
   char            **deps;
+  char            **includes;
   size_t            ndeps;
+  size_t            nincs;
   FILE             *in;
   FILE             *out;
   FILE             *list;

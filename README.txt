@@ -664,11 +664,17 @@ They are:
 
   The following command line options are supported:
 
-	-D
+	-D filename
 
 		Write the 6809 memory to the given file at the end of
 		assembly and all tests have run.  This only happens if
 		the '-t' option is specified; otherwise it does nothing.
+
+	-I directory
+
+		Include the given directory to search for include files.  By
+		default, the current directory is always searched first,
+		then files in any given directories.
 
 	-M
 
@@ -763,7 +769,7 @@ The BASIC backend
 		statements is used.  It can be any value between 0 and
 		63999.
 
-	-I incr
+	-N incr
 
 		The line increment value.  Each new line will be incremented
 		by this amount.  The default value is 10.

@@ -1293,6 +1293,19 @@ static bool pseudo_include(struct opcdata *opd)
   new.in     = fopen(filename.buf,"r");
   
   if (new.in == NULL)
+  {
+    char incfile[FILENAME_MAX];
+    
+    for (size_t i = 0 ; i < opd->a09->nincs ; i++)
+    {
+      snprintf(incfile,sizeof(incfile),"%s/%s",opd->a09->includes[i],filename.buf);
+      new.in = fopen(incfile,"r");
+      if (new.in != NULL)
+        break;
+   }
+  }
+  
+  if (new.in == NULL)
     return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
     
   if ((opd->pass == 2) && (new.list != NULL))
