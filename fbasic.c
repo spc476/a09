@@ -312,7 +312,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
         "%u CLEAR%u,%u:FORA=%uTO%u:READB:POKEA,B:NEXT:",
         basic->cline,
         basic->strspace,
-        basic->staddr - 1,
+        basic->staddr,
         basic->staddr,
         opd->a09->pc - 1
     );
