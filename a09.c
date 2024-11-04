@@ -193,7 +193,7 @@ char *add_file_dep(struct a09 *a09,char const *filename)
 
 /**************************************************************************/
 
-bool add_include_file(struct a09 *a09,char const *filename)
+static bool add_include_file(struct a09 *a09,char const *filename)
 {
   char   **includes;
   char    *name;
