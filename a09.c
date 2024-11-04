@@ -620,10 +620,10 @@ void usage(char const *prog)
   fprintf(
            stderr,
            "usage: %s [options] [files...]\n"
-           "\t-D file\t\tcore file (of 6809 VM) name (only if -t specified)\n"
            "\t-I dir\t\tadd directory for include files\n"
            "\t-M\t\tgenerate Makefile dependencies on stdout\n"
            "\t-T\t\trun tests with TAP output\n"
+           "\t-c file\t\tcore file (of 6809 VM) name (only if -t specified)\n"
            "\t-d\t\tdebug output\n"
            "\t-f format\toutput format (bin)\n"
            "\t-h\t\thelp (this text)\n"
@@ -666,14 +666,6 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       
       switch(argv[i][1])
       {
-        case 'D':
-             if ((a09->corefile = cmd_opt(&i,argc,argv)) == NULL)
-             {
-               message(a09,MSG_ERROR,"E0068: missing option argument");
-               return -1;
-             }
-             break;
-             
         case 'I':
              if ((file = cmd_opt(&i,argc,argv)) == NULL)
              {
@@ -688,19 +680,17 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              a09->mkdeps = true;
              break;
              
-        case 'n':
-            if (!nowarnlist(a09,cmd_opt(&i,argc,argv)))
-              return -1;
+        case 'T':
+             a09->runtests = true;
+             a09->tapout   = true;
              break;
              
-        case 'o':
-             if ((a09->outfile = cmd_opt(&i,argc,argv)) == NULL)
+        case 'c':
+             if ((a09->corefile = cmd_opt(&i,argc,argv)) == NULL)
+             {
+               message(a09,MSG_ERROR,"E0068: missing option argument");
                return -1;
-             break;
-             
-        case 'l':
-             if ((a09->listfile = cmd_opt(&i,argc,argv)) == NULL)
-               return -1;
+             }
              break;
              
         case 'd':
@@ -746,17 +736,27 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              usage(argv[0]);
              return -1;
              
+        case 'l':
+             if ((a09->listfile = cmd_opt(&i,argc,argv)) == NULL)
+               return -1;
+             break;
+             
+        case 'n':
+            if (!nowarnlist(a09,cmd_opt(&i,argc,argv)))
+              return -1;
+             break;
+             
+        case 'o':
+             if ((a09->outfile = cmd_opt(&i,argc,argv)) == NULL)
+               return -1;
+             break;
+             
         case 'r':
              a09->rndtests = true;
              break;
              
         case 't':
              a09->runtests = true;
-             break;
-             
-        case 'T':
-             a09->runtests = true;
-             a09->tapout   = true;
              break;
              
         default:
