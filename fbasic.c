@@ -318,7 +318,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     );
     
     if (basic->usr != 0)
-      fprintf(opd->a09->out,"POKE275,%u:POKE276,%u:",basic->usr >> 8,basic->usr & 255);
+      fprintf(opd->a09->out,"POKE275,%u:POKE276,%u",basic->usr >> 8,basic->usr & 255);
     
     basic->idx = 0;
     
@@ -338,9 +338,9 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
       if (basic->usr != 0)
         return message(opd->a09,MSG_ERROR,"E0072: can't use USR and DEFUSRn at the same time");
         
-      fwrite(basic->buffer,1,basic->idx -1 , opd->a09->out);
-      fputc('\n',opd->a09->out);
+      fwrite(basic->buffer,1,basic->idx - 1,opd->a09->out);
     }
+    fputc('\n',opd->a09->out);
   }
   
   return true;
