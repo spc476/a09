@@ -18,6 +18,19 @@
 *
 *   Comments, questions and criticisms can be sent to: sean@conman.org
 *
+* ---------------------------------------------------------------------
+*
+* CB: USR
+*	entry:	CB.fp0 - argument (no registers are defined)
+*	exit:	CB.fp0 - result (no registers defined)
+*
+* ECB/DECB: USRn
+*	entry: 	X - #CB.fp0 ($004F) if passed number
+*		    string descriptor if passed string
+*		A - 00 if number, 0xFF if string
+*		B - string length if A == 0xFF
+*	exit:	CB.fp0 - result (no registers defined)
+*
 ****************************************************************************/
 
 #include <stdio.h>
