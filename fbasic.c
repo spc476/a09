@@ -165,7 +165,7 @@ static bool fbasic_pass_start(struct format *fmt,struct a09 *a09,int pass)
   assert(fmt          != NULL);
   assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_BASIC);
-  assert(a09          != NULL);
+  (void)a09;
   assert((pass == 1) || (pass == 2));
   
   if (pass == 2)
