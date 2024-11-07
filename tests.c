@@ -2175,7 +2175,7 @@ bool test_init(struct a09 *a09)
     a09->tests->dis.fault  = ft_dis_fault;
     a09->tests->addr       = 0;
     a09->tests->sp         = 0xFFF0;
-    a09->tests->stacksize = 1024;
+    a09->tests->stacksize  = 1024;
     a09->tests->inittestpc = 0xE000;
     a09->tests->testpc     = 0xE000;
     a09->tests->resumepc   = 0x0000;
