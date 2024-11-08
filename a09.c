@@ -739,7 +739,10 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            
       case 'l':
            if ((a09->listfile = arg_arg(&arg)) == NULL)
+           {
+             message(a09,MSG_ERROR,"E0068: missing option argument");
              return -1;
+           }
            break;
            
       case 'n':
@@ -749,7 +752,10 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            
       case 'o':
            if ((a09->outfile = arg_arg(&arg)) == NULL)
+           {
+             message(a09,MSG_ERROR,"E0068: missing option argument");
              return -1;
+           }
            break;
            
       case 'r':
