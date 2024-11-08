@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "a09.h"
+
 #if defined(__clang__)
 #  pragma clang diagnostic ignored "-Wconversion"
 #  pragma clang diagnostic ignored "-Wdeclaration-after-statement"
@@ -33,45 +35,120 @@
 
 /**************************************************************************/
 
-char *cmd_opt(int *pi,int argc,char *argv[])
-{
-  assert(pi   != NULL);
-  assert(argc >  0);
-  assert(argv != NULL);
-  assert(*pi  >  0);
-  assert(*pi  <  argc);
-  
-  if (argv[*pi][2] == '\0')
+#ifndef NDEBUG
+  int check_arg(struct arg *arg)
   {
-    if (*pi + 1 == argc)
-      return NULL;
-    else
-      return argv[++(*pi)];
+    assert(arg                      != NULL);
+    assert(arg->argv                != NULL);
+    assert(arg->argv[0]             != NULL);
+    assert(arg->argv[arg->argc - 1] != NULL);
+    assert(arg->argc                >  0);
+    assert(arg->ci                  >  0);
+    assert(arg->ci                  <= arg->argc);
+    return 1;
   }
-  else
-    return &argv[*pi][2];
+#endif
+
+/**************************************************************************/
+
+void arg_init(struct arg *arg,char **argv,int argc)
+{
+  assert(arg  != NULL);
+  assert(argv != NULL);
+  assert(argc >  0);
+  
+  arg->argv = argv;
+  arg->argc = argc;
+  arg->ci   = 1; /* skip program name */
+  arg->si   = 0;
 }
 
 /**************************************************************************/
 
-bool cmd_unsigned_long(
+char arg_next(struct arg *arg)
+{
+  assert(check_arg(arg));
+  
+  if (arg->ci == arg->argc)
+    return '\0';
+    
+  if (arg->si == 0)
+  {
+    assert(arg->argv[arg->ci][0] != '\0');
+    if (arg->argv[arg->ci][0] != '-')
+      return '\0';
+    arg->si++;
+  }
+  
+  if (arg->argv[arg->ci][arg->si] == '\0')
+  {
+    arg->ci++;
+    arg->si = 0;
+    if ((arg->ci == arg->argc) || (arg->argv[arg->ci][0] != '-'))
+      return '\0';
+  }
+  
+  if (arg->argv[arg->ci][arg->si] == '-')
+    arg->si++;
+    
+  if (arg->argv[arg->ci][arg->si] == '\0')
+    return '\0';
+  else
+    return arg->argv[arg->ci][arg->si++];
+}
+
+/**************************************************************************/
+
+char *arg_arg(struct arg *arg)
+{
+  char *p;
+  
+  assert(check_arg(arg));
+  
+  if (arg->ci == arg->argc)
+    return NULL;
+    
+  if (arg->argv[arg->ci][arg->si] == '\0')
+  {
+    if (arg->ci == arg->argc - 1)
+      return NULL;
+    else
+      p = arg->argv[++arg->ci];
+  }
+  else
+    p = &arg->argv[arg->ci][arg->si];
+    
+  arg->ci++;
+  arg->si = 0;
+  assert(arg->ci <= arg->argc);
+  return p;
+}
+
+/**************************************************************************/
+
+int arg_done(struct arg *arg)
+{
+  assert(check_arg(arg));
+  if (arg->si == 0)
+    return arg->ci;
+  else
+    return arg->ci + 1;
+}
+
+/**************************************************************************/
+
+bool arg_unsigned_long(
         unsigned long int *pv,
-        int               *pi,
-        int                argc,
-        char              *argv[],
+        struct arg        *arg,
         unsigned long int  low,
         unsigned long int  high
 )
 {
-  assert(pv   != NULL);
-  assert(pi   != NULL);
-  assert(argc >  0);
-  assert(argv != NULL);
-  assert(low  <  high);
-  assert(*pi  >  0);
-  assert(*pi  <  argc);
+  assert(pv  != NULL);
+  assert(low <  high);
+  assert(check_arg(arg));
   
-  char *opt = cmd_opt(pi,argc,argv);
+  char *opt = arg_arg(arg);
   if (opt == NULL)
     return false;
   *pv = strtoul(opt,NULL,0);
@@ -85,26 +162,20 @@ bool cmd_unsigned_long(
 
 /**************************************************************************/
 
-bool cmd_size_t(
+bool arg_size_t(
         size_t        *pv,
-        int           *pi,
-        int            argc,
-        char          *argv[],
+        struct arg    *arg,
         unsigned long  low,
         unsigned long  high
 )
 {
-  assert(pv   != NULL);
-  assert(pi   != NULL);
-  assert(argc >  0);
-  assert(argv != NULL);
-  assert(low  <  high);
-  assert(*pi  >  0);
-  assert(*pi  <  argc);
+  assert(pv  != NULL);
+  assert(low <  high);
+  assert(check_arg(arg));
   
   unsigned long int value;
   
-  if (!cmd_unsigned_long(&value,pi,argc,argv,low,high))
+  if (!arg_unsigned_long(&value,arg,low,high))
     return false;
   *pv = value;
   return true;
@@ -112,26 +183,20 @@ bool cmd_size_t(
 
 /**************************************************************************/
 
-bool cmd_uint16_t(
+bool arg_uint16_t(
         uint16_t          *pv,
-        int               *pi,
-        int                argc,
-        char              *argv[],
+        struct arg        *arg,
         unsigned long int  low,
         unsigned long int  high
 )
 {
   assert(pv   != NULL);
-  assert(pi   != NULL);
-  assert(argc >  0);
-  assert(argv != NULL);
   assert(low  <  high);
-  assert(*pi  >  0);
-  assert(*pi  <  argc);
+  assert(check_arg(arg));
   
   unsigned long int value;
   
-  if (!cmd_unsigned_long(&value,pi,argc,argv,low,high))
+  if (!arg_unsigned_long(&value,arg,low,high))
     return false;
   *pv = value;
   return true;
@@ -139,26 +204,20 @@ bool cmd_uint16_t(
 
 /**************************************************************************/
 
-bool cmd_uint8_t(
+bool arg_uint8_t(
       uint8_t           *pv,
-      int               *pi,
-      int                argc,
-      char              *argv[],
+      struct arg        *arg,
       unsigned long int  low,
       unsigned long int  high
 )
 {
   assert(pv   != NULL);
-  assert(pi   != NULL);
-  assert(argc >  0);
-  assert(argv != NULL);
   assert(low  <  high);
-  assert(*pi  >  0);
-  assert(*pi  <  argc);
+  assert(check_arg(arg));
   
   unsigned long int value;
   
-  if (!cmd_unsigned_long(&value,pi,argc,argv,low,high))
+  if (!arg_unsigned_long(&value,arg,low,high))
     return false;
   *pv = value;
   return true;

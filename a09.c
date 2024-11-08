@@ -615,7 +615,7 @@ static bool nowarnlist(struct a09 *a09,char const *warnings)
 
 /**************************************************************************/
 
-void usage(char const *prog)
+static int usage(char const *prog)
 {
   fprintf(
            stderr,
@@ -645,130 +645,132 @@ void usage(char const *prog)
            format_srec_usage,
            format_basic_usage
          );
+  return -1;
 }
 
 /**************************************************************************/
 
 static int parse_command(int argc,char *argv[],struct a09 *a09)
 {
-  int i;
+  struct arg arg;
+  char       c;
   
   assert(argc >= 1);
   assert(argv != NULL);
   assert(a09  != NULL);
   
-  for (i = 1 ; i < argc ; i++)
+  arg_init(&arg,argv,argc);
+  
+  while((c = arg_next(&arg)) != '\0')
   {
-    if (argv[i][0] == '-')
+    char const *file;
+    char const *format;
+    
+    switch(c)
     {
-      char const *file;
-      char const *format;
-      
-      switch(argv[i][1])
-      {
-        case 'I':
-             if ((file = cmd_opt(&i,argc,argv)) == NULL)
-             {
-               message(a09,MSG_ERROR,"E0068: missing option argument");
-               return -1;
-             }
-             if (!add_include_file(a09,file))
-               return -1;
-             break;
-             
-        case 'M':
-             a09->mkdeps = true;
-             break;
-             
-        case 'T':
-             a09->runtests = true;
-             a09->tapout   = true;
-             break;
-             
-        case 'c':
-             if ((a09->corefile = cmd_opt(&i,argc,argv)) == NULL)
-             {
-               message(a09,MSG_ERROR,"E0068: missing option argument");
-               return -1;
-             }
-             break;
-             
-        case 'd':
-             a09->debug = true;
-             break;
-             
-        case 'f':
-             format = cmd_opt(&i,argc,argv);
-             
-             if (format == NULL)
-             {
-               message(a09,MSG_ERROR,"E0068: missing option argument");
-               return -1;
-             }
-             else if (strcmp(format,"bin") == 0)
-             {
-               if (!format_bin_init(a09))
-                 return -1;
-             }
-             else if (strcmp(format,"rsdos") == 0)
-             {
-               if (!format_rsdos_init(a09))
-                 return -1;
-             }
-             else if (strcmp(format,"srec") == 0)
-             {
-               if (!format_srec_init(a09))
-                 return -1;
-             }
-             else if (strcmp(format,"basic") == 0)
-             {
-               if (!format_basic_init(a09))
-                 return -1;
-             }
-             else
-             {
-               message(a09,MSG_ERROR,"E0053: format '%s' not supported",format);
-               return -1;
-             }
-             break;
-             
-        case 'h':
-             usage(argv[0]);
+      case 'I':
+           if ((file = arg_arg(&arg)) == NULL)
+           {
+             message(a09,MSG_ERROR,"E0068: missing option argument");
              return -1;
-             
-        case 'l':
-             if ((a09->listfile = cmd_opt(&i,argc,argv)) == NULL)
+           }
+           if (!add_include_file(a09,file))
+             return -1;
+           break;
+           
+      case 'M':
+           a09->mkdeps = true;
+           break;
+           
+      case 'T':
+           a09->runtests = true;
+           a09->tapout   = true;
+           break;
+           
+      case 'c':
+           if ((a09->corefile = arg_arg(&arg)) == NULL)
+           {
+             message(a09,MSG_ERROR,"E0068: missing option argument");
+             return -1;
+           }
+           break;
+           
+      case 'd':
+           a09->debug = true;
+           break;
+           
+      case 'f':
+           format = arg_arg(&arg);
+           
+           if (format == NULL)
+           {
+             message(a09,MSG_ERROR,"E0068: missing option argument");
+             return -1;
+           }
+           else if (strcmp(format,"bin") == 0)
+           {
+             if (!format_bin_init(a09))
                return -1;
-             break;
-             
-        case 'n':
-            if (!nowarnlist(a09,cmd_opt(&i,argc,argv)))
-              return -1;
-             break;
-             
-        case 'o':
-             if ((a09->outfile = cmd_opt(&i,argc,argv)) == NULL)
+           }
+           else if (strcmp(format,"rsdos") == 0)
+           {
+             if (!format_rsdos_init(a09))
                return -1;
-             break;
-             
-        case 'r':
-             a09->rndtests = true;
-             break;
-             
-        case 't':
-             a09->runtests = true;
-             break;
-             
-        default:
-             if (!a09->format.cmdline(&a09->format,a09,argc,&i,argv))
+           }
+           else if (strcmp(format,"srec") == 0)
+           {
+             if (!format_srec_init(a09))
                return -1;
-      }
+           }
+           else if (strcmp(format,"basic") == 0)
+           {
+             if (!format_basic_init(a09))
+               return -1;
+           }
+           else
+           {
+             message(a09,MSG_ERROR,"E0053: format '%s' not supported",format);
+             return -1;
+           }
+           break;
+           
+      case 'h':
+           return usage(argv[0]);
+           
+      case 'l':
+           if ((a09->listfile = arg_arg(&arg)) == NULL)
+             return -1;
+           break;
+           
+      case 'n':
+          if (!nowarnlist(a09,arg_arg(&arg)))
+            return -1;
+           break;
+           
+      case 'o':
+           if ((a09->outfile = arg_arg(&arg)) == NULL)
+             return -1;
+           break;
+           
+      case 'r':
+           a09->rndtests = true;
+           break;
+           
+      case 't':
+           a09->runtests = true;
+           break;
+           
+      default:
+           if (!a09->format.cmdline(&a09->format,a09,&arg,c))
+           {
+             fprintf(stderr,"unsupported option '%c'\n",c);
+             return usage(argv[0]);
+           }
+           break;
     }
-    else
-      break;
   }
   
-  return i;
+  return arg_done(&arg);
 }
 
 /**************************************************************************/

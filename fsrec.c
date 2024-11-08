@@ -85,33 +85,31 @@ static void write_record(
 
 /**************************************************************************/
 
-static bool fsrec_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,char *argv[])
+static bool fsrec_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,char c)
 {
   assert(fmt          != NULL);
   assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_SREC);
   assert(a09          != NULL);
-  assert(argc         >  0);
-  assert(pi           != NULL);
-  assert(*pi          >  0);
-  assert(argv         != NULL);
+  assert(arg          != NULL);
+  assert(c            != '\0');
   
   struct format_srec *format = fmt->data;
   
-  switch(argv[*pi][1])
+  switch(c)
   {
     case 'R':
-         if (!cmd_size_t(&format->recsize,pi,argc,argv,1,252))
+         if (!arg_size_t(&format->recsize,arg,1,252))
            return message(a09,MSG_ERROR,"E0067: record size must be between 1 and 252");
          break;
          
     case 'L':
-         if (!cmd_uint16_t(&format->addr,pi,argc,argv,0,65535u))
+         if (!arg_uint16_t(&format->addr,arg,0,65535u))
            return message(a09,MSG_ERROR,"E0069: address exceeds address space");
          break;
          
     case 'E':
-         if (!cmd_uint16_t(&format->exec,pi,argc,argv,0,65535u))
+         if (!arg_uint16_t(&format->exec,arg,0,65535u))
            return message(a09,MSG_ERROR,"E0069: address exceeds address space");
          format->execf = true;
          break;
@@ -121,12 +119,11 @@ static bool fsrec_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,ch
          break;
          
     case '0':
-         if ((format->S0file = cmd_opt(pi,argc,argv)) == NULL)
+         if ((format->S0file = arg_arg(arg)) == NULL)
            return message(a09,MSG_ERROR,"E0068: missing option argument");
          break;
          
     default:
-         usage(argv[0]);
          return false;
   }
   

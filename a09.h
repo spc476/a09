@@ -128,11 +128,12 @@ struct a09;
 struct opcdata;
 struct symbol;
 struct testdata;
+struct arg;
 
 struct format
 {
   enum backend backend;
-  bool (*cmdline)   (struct format *,struct a09 *,int,int *,char *[]);
+  bool (*cmdline)   (struct format *,struct a09 *,struct arg *,char);
   bool (*pass_start)(struct format *,struct a09 *,int);
   bool (*pass_end)  (struct format *,struct a09 *,int);
   bool (*write)     (struct format *,struct opcdata *,void const *,size_t,bool);
@@ -266,6 +267,14 @@ struct optable
   unsigned int     pri;
 };
 
+struct arg
+{
+  char   **argv;
+  size_t   argc;
+  size_t   ci;
+  size_t   si;
+};
+
 /**************************************************************************/
 
 extern char const MSG_DEBUG[];
@@ -277,11 +286,14 @@ extern char const format_rsdos_usage[];
 extern char const format_srec_usage[];
 extern char const format_basic_usage[];
 
-extern bool                  cmd_unsigned_long  (unsigned long int *,int *,int,char *[],unsigned long,unsigned long);
-extern bool                  cmd_size_t         (size_t            *,int *,int,char *[],unsigned long,unsigned long);
-extern bool                  cmd_uint16_t       (uint16_t          *,int *,int,char *[],unsigned long,unsigned long);
-extern bool                  cmd_uint8_t        (uint8_t           *,int *,int,char *[],unsigned long,unsigned long);
-extern char                 *cmd_opt            (int *,int,char *[]);
+extern void                  arg_init           (struct arg *,char **,int);
+extern char                  arg_next           (struct arg *);
+extern char                 *arg_arg            (struct arg *);
+extern int                   arg_done           (struct arg *);
+extern bool                  arg_unsigned_long  (unsigned long int *,struct arg *,unsigned long int,unsigned long int);
+extern bool                  arg_size_t         (size_t            *,struct arg *,unsigned long int,unsigned long int);
+extern bool                  arg_uint16_t       (uint16_t          *,struct arg *,unsigned long int,unsigned long int);
+extern bool                  arg_uint8_t        (uint8_t           *,struct arg *,unsigned long int,unsigned long int);
 extern bool                  enable_warning     (struct a09 *,char const *);
 extern bool                  disable_warning    (struct a09 *,char const *);
 extern bool                  message            (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
@@ -296,7 +308,6 @@ extern bool                  parse_op           (struct buffer *,struct opcode c
 extern char                  skip_space         (struct buffer *);
 extern bool                  print_list         (struct a09 *,struct opcdata *,bool);
 extern bool                  assemble_pass      (struct a09 *,int);
-extern void                  usage              (char const *);
 extern struct opcode const  *op_find            (char const *);
 extern bool                  s2num              (struct a09 *,uint16_t *,struct buffer *,uint16_t);
 extern struct optable const *get_op             (struct buffer *);
@@ -311,7 +322,7 @@ extern bool                  format_srec_init   (struct a09 *);
 extern bool                  format_basic_init  (struct a09 *);
 extern bool                  fdefault           (struct format *,struct opcdata *);
 extern bool                  fdefault_end       (struct format *,struct opcdata *,struct symbol const *);
-extern bool                  fdefault_cmdline   (struct format *,struct a09 *,int,int *,char *[]);
+extern bool                  fdefault_cmdline   (struct format *,struct a09 *,struct arg *,char);
 extern bool                  fdefault_pass      (struct format *,struct a09 *,int);
 extern bool                  fdefault_write     (struct format *,struct opcdata *,void const *,size_t,bool);
 extern bool                  fdefault__opt      (struct format *,struct opcdata *,label *);

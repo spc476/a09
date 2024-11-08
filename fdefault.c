@@ -27,13 +27,12 @@
 
 /**************************************************************************/
 
-bool fdefault_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,char *argv[])
+bool fdefault_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,char c)
 {
   (void)fmt;
   (void)a09;
-  (void)argc;
-  (void)pi;
-  (void)argv;
+  (void)arg;
+  (void)c;
   return false;
 }
 

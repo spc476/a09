@@ -115,43 +115,40 @@ static void write_byte(FILE *out,struct format_basic *basic,unsigned char byte)
 
 /**************************************************************************/
 
-static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,int argc,int *pi,char *argv[])
+static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,char c)
 {
   assert(fmt          != NULL);
   assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_BASIC);
   assert(a09          != NULL);
-  assert(argc         >  0);
-  assert(pi           != NULL);
-  assert(*pi          >  0);
-  assert(argv         != NULL);
+  assert(arg          != NULL);
+  assert(c            != '\0');
   
   struct format_basic *basic = fmt->data;
   
-  switch(argv[*pi][1])
+  switch(c)
   {
     case 'C':
-         if (!cmd_uint16_t(&basic->cline,pi,argc,argv,0,63999u))
+         if (!arg_uint16_t(&basic->cline,arg,0,63999u))
            return message(a09,MSG_ERROR,"E0102: line number must be between 1 and 63999");
          break;
          
     case 'L':
-         if (!cmd_uint16_t(&basic->dline,pi,argc,argv,0,63999u))
+         if (!arg_uint16_t(&basic->dline,arg,0,63999u))
            return message(a09,MSG_ERROR,"E0102: line number must be between 1 and 63999");
          break;
          
     case 'N':
-         if (!cmd_uint16_t(&basic->incr,pi,argc,argv,0,65535u))
+         if (!arg_uint16_t(&basic->incr,arg,0,65535u))
            return message(a09,MSG_ERROR,"E0101: line increment must be between 1 and 65535");
          break;
          
     case 'P':
-         if (!cmd_uint16_t(&basic->strspace,pi,argc,argv,0,22*1024))
+         if (!arg_uint16_t(&basic->strspace,arg,0,22*1024))
            return message(a09,MSG_ERROR,"E0103: string space must be between 0 and 22528");
          break;
          
     default:
-         usage(argv[0]);
          return false;
   }
   
