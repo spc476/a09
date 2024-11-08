@@ -78,6 +78,8 @@ char arg_next(struct arg *arg)
     if (arg->argv[arg->ci][0] != '-')
       return '\0';
     arg->si++;
+    if (arg->argv[arg->ci][1] == '\0')
+      return '\0';
   }
   
   if (arg->argv[arg->ci][arg->si] == '\0')
