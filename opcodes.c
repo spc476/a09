@@ -1317,7 +1317,7 @@ static bool pseudo_include(struct opcdata *opd)
   rc = assemble_pass(&new,opd->pass);
   
   if ((opd->pass == 2) && (new.list != NULL))
-    fprintf(new.list,"                         | ENF-OF-LINE\n");
+    fprintf(new.list,"                         | END-OF-LINE\n");
     
   fclose(new.in);
   opd->a09->pc     = new.pc;
