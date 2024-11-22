@@ -86,9 +86,7 @@ labels, due to the internal expansion.
 
   Expressions can be prefixed with '>' to force a 16-bit value; with '<' to
 force an 8-bit value, or '<<' to force a 5-bit value (useful for the index
-addressing mode).  The use of '>' and '<' is standard for other 6809
-assemblers, but as far as I know, the use of '<<' is unique to this one. 
-An example:
+addressing mode).
 
 foo     equ     $01
 
@@ -188,8 +186,8 @@ non-standard pesudo operation for most 6809 assemblers.
 
 	.ASSERT expr [, "explanation" ]
 
-		Assert a condition when using the test backend, otherwise
-		ignored.  If the expression is true, nothing happens; if the
+		Assert a condition when running tests; otherwise ignored.
+		If the expression is true, nothing happens; if the
 		expression is false, the test fails, a dianostic message is
 		printed, and the assembly procedure stops.  This can appear
 		outside of a unit test.
@@ -200,23 +198,20 @@ non-standard pesudo operation for most 6809 assemblers.
 
 	.FLOAT float-expr [, float-expr ... ]
 
-		Format a floating point number.  For all backends except for
-		the rsdos one, this will format a 32-bit IEEE-754 floating
-		point number, which can be used with the MC6839.  For the
-		rsdos backend, this will generate the Color Basic floating
-		point format (40 bits).  There may be some differences with
-		a value generated from Color Basic itself, but may be "close
-		enough" to be useful.
+		Format a floating point number; default format except when
+		using the rsdos or basic formats.  This will format a 32-bit
+		IEEE-754 floating point number, which can be used with the
+		MC6839.  For the rsdos and basic formats, this will generate
+		the Color Basic floating point format (40 bits).  There may
+		be some differences with a value generated from Color Basic
+		itself, but may be "close enough" to be useful.  The format
+		can be changed with the .OPT * REAL directive.
 
 	.FLOATD float-expr [, float-expr ... ]
 
-		Format a floating point number.  For all backends except for
-		the rsdos one, this will format a 64-bit IEEE-754 floating
-		point number, which can be used with the MC6839.  For the
-		rsdos backend, this will generate the Color Basic floating
-		point format (40 bits) but will generate a warning.  There
-		may be some differences with a vlaue generated from Color
-		Basic itself, but may be "close enough" to be useful.
+		Format a double length floating point number when using
+		IEEE-754 floats.  For the rsdos and basic formats, this will
+		generate the same value as .FLOAT, but generate a warning.
 
 	.NOTEST
 
@@ -235,8 +230,8 @@ non-standard pesudo operation for most 6809 assemblers.
 				cannot be disabled with this directive given
 				the nature of when they happen.  W0002 can
 				be disabled with the ".OPT * USES <label>"
-				directive; the others only happen when using
-				the test backend.
+				directive; the others mentioned above only
+				happen when using the test backend.
 
 			.OPT * ENABLE <warning>
 
@@ -264,14 +259,13 @@ non-standard pesudo operation for most 6809 assemblers.
 				Generate floating point values per the
 				IEEE-754 ('IEEE') format, the Microsoft
 				('MSFP') floating point format, or the
-				rather obscure format used by Lennart
-				Benschop.
+				format used by Lennart Benschop's floating
+				point routines.
 
 		The following options are only used when running tests.  The
 		following options can appear inside or outside a .TEST
-		directive unless otherwise specified.  If they appear
-		outside, it applies to all tests; otherwise it only applies
-		to the test they appear in.
+		directive unless otherwise specified.  If specified inside a
+		.TEST directive, they only take effect when the test is run.
 
 			.OPT TEST POKE <address>,<byte>
 
@@ -378,26 +372,25 @@ non-standard pesudo operation for most 6809 assemblers.
 
 	.TEST ["name"]
 
-		Define a unit test if using the test backend.  Any 6809 code
-		is executed at the end of pass 2 of the assembler, and must
-		end with a 'RTS' instruction.  All .ASSERT directives in the
-		code being executed will be run.  This, and all following
-		text until a .ENDTST directive, will be ignored by other
-		backends.
+		Define a unit test.  Any 6809 code is executed at the end of
+		pass 2 of the assembler, and must end with a 'RTS'
+		instruction.  All .ASSERT directives in the code being
+		executed will be run.  This, and all following text until a
+		.ENDTST directive, will be ignored when not running tests.
 
 	.TROFF
 
-		Turn off 6809 program tracing if using the test backend. 
-		Ignored by other backends.  Like the .ASSERT directive, this
-		can appear outside a unit test definition.
+		Turn off 6809 program tracing when running tests.  Like the
+		.ASSERT directive, this can appear outside a unit test
+		definition.  Ignored if not running tests.
 
 	.TRON [timing]
 
-		Turn on 6809 program tracing if using the test backend. 
-		Each 6809 instruction is printed on stdout and includes the
-		contents of the registers at that point in execution, and
-		can appear outside of a unit test definition.  This is
-		ignored by other backends.
+		Turn on 6809 program tracing if running tests.  Each 6809
+		instruction is printed on stdout and includes the contents
+		of the registers at that point in execution, and can appear
+		outside of a unit test definition.  This is ignored when
+		not running tests.
 
 		If the "timing" option is used, the code will be timed, not
 		traced.  At the corresponding .TROFF, the number of CPU
@@ -463,7 +456,7 @@ non-standard pesudo operation for most 6809 assemblers.
 
 		(Non-standard) The given label is an external reference. 
 		This is accepted and the label will be "defined" but
-		othersise, this current does nothing.
+		otherwise, this currently does nothing.
 
 	FCB expr[,expr...]
 
@@ -697,12 +690,13 @@ They are:
 
 	-f format
 
-		Specify the output format.  Two formats are currently
+		Specify the output format.  Four formats are currently
 		supported:
 
 			bin	- binary output
 			rsdos	- executable format for Coco BASIC
 			srec	- Motorola SREC format
+			basic   - output BASIC code to load code into memory
 
 	-h
 
