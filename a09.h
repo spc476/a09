@@ -245,7 +245,9 @@ struct opcdata
 struct opcode
 {
   char            name[8];
+  char            flag[8];
   bool          (*func)(struct opcdata *);
+  unsigned char   cycles; /* imm---dir +2, idx +2, ext +3 */
   unsigned char   opcode;
   unsigned char   page;
   bool            bit16;
