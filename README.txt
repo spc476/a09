@@ -688,7 +688,12 @@ They are:
 
 	-d
 
-		Reserved for debug output.
+		Print additional debugging information while assembling.
+
+	-e ('c' | 'f')
+
+		Add to the listing file cycle counts ('c') and/or flags
+		modified ('f') for each instruction.
 
 	-f format
 
