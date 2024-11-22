@@ -440,6 +440,14 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
       }
     }
     
+    if (a09->cc)
+    {
+      if ((opd->op != NULL) && (opd->op->flag[0] != '\0'))
+        fprintf(a09->list," {%s} ",opd->op->flag);
+      else
+        fputs("         ",a09->list);
+    }
+    
     fprintf(a09->list," %5zu | %s\n",a09->lnum,a09->inbuf.buf);
   }
   opd->includehack = false;
@@ -984,7 +992,12 @@ int main(int argc,char *argv[])
       return cleanup(&a09,false);
     }
     
-    fprintf(a09.list,"                         | FILE %s\n",a09.infile);
+    fprintf(
+      a09.list,
+      "                         %s| FILE %s\n",
+      a09.cc ? "         " : "",
+      a09.infile
+    );
   }
   
   /*-----------------------------------------------------------------------

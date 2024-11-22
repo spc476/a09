@@ -1311,13 +1311,24 @@ static bool pseudo_include(struct opcdata *opd)
   if ((opd->pass == 2) && (new.list != NULL))
   {
     print_list(opd->a09,opd,false);
-    fprintf(new.list,"                         | FILE %s\n",filename.buf);
+    fprintf(
+      new.list,
+      "                         %s| FILE %s\n",
+      opd->a09->cc ? "         " : "",
+      filename.buf
+    );
     opd->includehack = true;
   }
   rc = assemble_pass(&new,opd->pass);
   
   if ((opd->pass == 2) && (new.list != NULL))
-    fprintf(new.list,"                         | END-OF-LINE\n");
+  {
+    fprintf(
+      new.list,
+      "                         %s| END-OF-LINE\n",
+      opd->a09->cc ? "         " : ""
+    );
+  }
     
   fclose(new.in);
   opd->a09->pc     = new.pc;
