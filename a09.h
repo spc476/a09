@@ -183,6 +183,8 @@ struct a09
   bool              runtests;
   bool              rndtests;
   bool              tapout;
+  bool              cc;
+  bool              cycles;
 };
 
 struct symbol

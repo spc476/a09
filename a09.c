@@ -625,6 +625,7 @@ static int usage(char const *prog)
            "\t-T\t\trun tests with TAP output\n"
            "\t-c file\t\tcore file (of 6809 VM) name (only if -t specified)\n"
            "\t-d\t\tdebug output\n"
+           "\t-e ('c'|'f')\tadd _c_ycle and/or _f_lags in list file\n"
            "\t-f format\toutput format (bin)\n"
            "\t-h\t\thelp (this text)\n"
            "\t-l listfile\tlist filename\n"
@@ -665,6 +666,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
   {
     char const *file;
     char const *format;
+    char const *extra;
     
     switch(c)
     {
@@ -697,6 +699,28 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            
       case 'd':
            a09->debug = true;
+           break;
+           
+      case 'e':
+           if ((extra = arg_arg(&arg)) == NULL)
+           {
+             message(a09,MSG_ERROR,"E0068: missing option argument");
+             return -1;
+           }
+           
+           while(*extra != '\0')
+           {
+             if (*extra == 'c')
+               a09->cycles = true;
+             else if (*extra == 'f')
+               a09->cc = true;
+             else
+             {
+               message(a09,MSG_ERROR,"E9999: unsupported extra option");
+               return -1;
+             }
+             extra++;
+           }
            break;
            
       case 'f':
