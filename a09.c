@@ -409,6 +409,7 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
           fprintf(a09->list,"%02X",opd->bytes[i]);
         for ( ; c < sizeof(opd->bytes) ; c++)
           fprintf(a09->list,"  ");
+        fprintf(a09->list,"%*s",a09->list_pad,"");
       }
       else
       {
