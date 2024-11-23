@@ -262,6 +262,16 @@ non-standard pesudo operation for most 6809 assemblers.
 				format used by Lennart Benschop's floating
 				point routines.
 
+			.OPT * CT
+
+				Generate a total cycle count in the listing
+				file.
+
+			.OPT * CC
+
+				Clear the total cycle count in the listing
+				file.
+
 		The following options are only used when running tests.  The
 		following options can appear inside or outside a .TEST
 		directive unless otherwise specified.  If specified inside a
