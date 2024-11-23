@@ -172,9 +172,11 @@ struct a09
   struct format     format;
   struct buffer     inbuf;
   size_t            lnum;
+  size_t            total_cycles;
   tree__s          *symtab;
   unsigned char     nowarn[10000 / CHAR_BIT];
   label             label;
+  int               list_pad;
   uint16_t          pc;
   unsigned char     dp;
   bool              debug;
@@ -185,6 +187,8 @@ struct a09
   bool              tapout;
   bool              cc;
   bool              cycles;
+  bool              cycles_detailed;
+  bool              cycles_total;
 };
 
 struct symbol
@@ -228,6 +232,9 @@ struct opcdata
   unsigned char        bytes[6];
   bool                 data;
   size_t               datasz;
+  size_t               cycles;
+  size_t               ecycles;
+  size_t               acycles;
   enum admode          mode;
   struct value         value;
   size_t               bits;

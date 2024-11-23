@@ -40,7 +40,7 @@
 *
 * There is a third floating point library I found for the 6809, found here:
 *
-*	https://lennartb.home.xs4all.nl/m6809.html
+*       https://lennartb.home.xs4all.nl/m6809.html
 *
 * The only difference between this and the Microsoft floating point format,
 * is the exponent bias---it uses $80 instead of $81.
@@ -122,7 +122,7 @@ bool freal__ieee(struct format *fmt,struct opcdata *opd)
             return false;
       }
     }
-       
+    
     char c = skip_space(opd->buffer);
     if ((c == ';') || (c == '\0'))
       return true;
@@ -147,7 +147,7 @@ static bool freal_40b(struct format *fmt,struct opcdata *opd,int bias)
   while(true)
   {
     struct fvalue fv;
-
+    
     skip_space(opd->buffer);
     opd->buffer->ridx--;
     
@@ -183,7 +183,7 @@ static bool freal_40b(struct format *fmt,struct opcdata *opd,int bias)
       
       if (opd->op->opcode == 1)
         message(opd->a09,MSG_WARNING,"W0019: double floats not supported, using single float");
-
+        
       decbfloat[1] |= sign ? 0x80 : 0x00;
       
       for (size_t i = 0 ; (opd->sz < sizeof(opd->bytes)) && (i < 5) ; i++,opd->sz++)
@@ -223,7 +223,7 @@ bool freal__lbfp(struct format *fmt,struct opcdata *opd)
   assert(opd->a09     != NULL);
   assert(opd->buffer  != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
-
+  
   return freal_40b(fmt,opd,128);
 }
 

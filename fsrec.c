@@ -234,7 +234,7 @@ static bool fsrec_org(
   assert(fmt->backend == BACKEND_SREC);
   assert(opd          != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
-
+  
   if (opd->pass == 2)
   {
     struct format_srec *format = fmt->data;

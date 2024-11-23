@@ -21,15 +21,15 @@
 * ---------------------------------------------------------------------
 *
 * CB: USR
-*	entry:	CB.fp0 - argument (no registers are defined)
-*	exit:	CB.fp0 - result (no registers defined)
+*       entry:  CB.fp0 - argument (no registers are defined)
+*       exit:   CB.fp0 - result (no registers defined)
 *
 * ECB/DECB: USRn
-*	entry: 	X - #CB.fp0 ($004F) if passed number
-*		    string descriptor if passed string
-*		A - 00 if number, 0xFF if string
-*		B - string length if A == 0xFF
-*	exit:	CB.fp0 - result (no registers defined)
+*       entry:  X - #CB.fp0 ($004F) if passed number
+*                   string descriptor if passed string
+*               A - 00 if number, 0xFF if string
+*               B - string length if A == 0xFF
+*       exit:   CB.fp0 - result (no registers defined)
 *
 ****************************************************************************/
 
@@ -58,9 +58,9 @@ options         starting line #
                 .opt    basic usr label         ; CB    @ $0113
                 .opt    basic defusr0 label     ; ECB   DEFUSRn=addr
                 .opt    basic strspace 200
-                .opt	basic line 10
-                .opt	basic incr 10
-                .opt	basic code 20
+                .opt    basic line 10
+                .opt    basic incr 10
+                .opt    basic code 20
 
 **************************************************************************/
 
@@ -329,7 +329,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     
     if (basic->usr != 0)
       fprintf(opd->a09->out,"POKE275,%u:POKE276,%u",basic->usr >> 8,basic->usr & 255);
-    
+      
     basic->idx = 0;
     
     for (size_t i = 0 ; i < 10 ; i++)

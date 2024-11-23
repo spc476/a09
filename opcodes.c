@@ -199,9 +199,15 @@ static bool parse_dirext(struct opcdata *opd)
   if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
     return false;
   if (opd->value.defined && ((opd->value.value >> 8) == opd->a09->dp))
-    opd->mode = AM_DIRECT;
+  {
+    opd->cycles += 2;
+    opd->mode    = AM_DIRECT;
+  }
   else
-    opd->mode = AM_EXTENDED;
+  {
+    opd->cycles += 3;
+    opd->mode    = AM_EXTENDED;
+  }
   return true;
 }
 
@@ -265,16 +271,17 @@ static bool parse_operand(struct opcdata *opd)
   
   if (c == '[')
   {
+    opd->ecycles += 3;
     indexindirect = true;
     c = skip_space(opd->buffer);
   }
   
   if (c == ',')
   {
-    opd->mode           = AM_INDEX;
-    opd->bits           = 0;
-    opd->value.postbyte = 0x80;
-    c                   = toupper(skip_space(opd->buffer));
+    opd->mode            = AM_INDEX;
+    opd->bits            = 0;
+    opd->value.postbyte  = 0x80;
+    c                    = toupper(skip_space(opd->buffer));
     
     switch(c)
     {
@@ -284,9 +291,12 @@ static bool parse_operand(struct opcdata *opd)
       case 'S': opd->value.postbyte |= index_register(c); break;
       
       case '-':
-           c = opd->buffer->buf[opd->buffer->ridx];
+           c             = opd->buffer->buf[opd->buffer->ridx];
+           opd->ecycles += 2;
+           
            if (c == '-')
            {
+             opd->ecycles        += 1;
              opd->value.postbyte |= 0x03;
              c                    = opd->buffer->buf[++opd->buffer->ridx];
            }
@@ -333,9 +343,12 @@ static bool parse_operand(struct opcdata *opd)
     else if (c != '+')
       return message(opd->a09,MSG_ERROR,"E0020: syntax error in post-increment index mode");
       
-    c = opd->buffer->buf[opd->buffer->ridx++];
+    opd->ecycles += 2;
+    c             = opd->buffer->buf[opd->buffer->ridx++];
+    
     if (c == '+')
     {
+      opd->ecycles += 1;
       opd->value.postbyte |= 0x01;
       if (opd->buffer->buf[opd->buffer->ridx++] == ']')
       {
@@ -365,15 +378,17 @@ static bool parse_operand(struct opcdata *opd)
   
   if (opd->buffer->buf[opd->buffer->ridx+1] == ',')
   {
-    opd->mode = AM_INDEX;
-    opd->bits = 0;
-    c         = toupper(opd->buffer->buf[opd->buffer->ridx]);
+    opd->mode    = AM_INDEX;
+    opd->bits    = 0;
+    c            = toupper(opd->buffer->buf[opd->buffer->ridx]);
     
     switch(c)
     {
+      case 'D':
+           opd->ecycles += 3;
       case 'A':
       case 'B':
-      case 'D':
+           opd->ecycles        += 1;
            opd->value.postbyte  = acc_register(c);
            opd->buffer->ridx   += 2; // skip comma
            c = toupper(opd->buffer->buf[opd->buffer->ridx]);
@@ -416,13 +431,15 @@ static bool parse_operand(struct opcdata *opd)
       
     if ((opd->value.bits == 5) || (opd->value.bits == 8))
     {
-      opd->mode = AM_DIRECT;
+      opd->cycles += 2;
+      opd->mode    = AM_DIRECT;
       return true;
     }
     
     if (opd->value.bits == 16)
     {
-      opd->mode = AM_EXTENDED;
+      opd->cycles += 3;
+      opd->mode    = AM_EXTENDED;
       return true;
     }
     
@@ -430,7 +447,8 @@ static bool parse_operand(struct opcdata *opd)
     
     if (opd->value.unknownpass1)
     {
-      opd->mode = AM_EXTENDED;
+      opd->cycles += 3;
+      opd->mode    = AM_EXTENDED;
       if (opd->pass == 2)
       {
         if ((opd->value.value >> 8) == opd->a09->dp)
@@ -440,9 +458,15 @@ static bool parse_operand(struct opcdata *opd)
     }
     
     if (opd->value.defined && ((opd->value.value >> 8) == opd->a09->dp))
-      opd->mode = AM_DIRECT;
+    {
+      opd->cycles += 2;
+      opd->mode    = AM_DIRECT;
+    }
     else
-      opd->mode = AM_EXTENDED;
+    {
+      opd->cycles += 3;
+      opd->mode    = AM_EXTENDED;
+    }
     return true;
   }
   
@@ -451,18 +475,18 @@ static bool parse_operand(struct opcdata *opd)
     if (!indexindirect)
       return message(opd->a09,MSG_ERROR,"E0017: end of indirection without start of indirection error");
       
-    opd->value.postbyte = 0x9F;
-    opd->value.bits     = 16;
-    opd->mode           = AM_INDEX;
+    opd->value.postbyte   = 0x9F;
+    opd->value.bits       = 16;
+    opd->mode             = AM_INDEX;
     return true;
   }
   
   if (c != ',')
     return message(opd->a09,MSG_ERROR,"E0023: missing expected comma");
     
-  opd->value.postbyte = 0;
-  opd->mode           = AM_INDEX;
-  c                   = skip_space(opd->buffer);
+  opd->value.postbyte  = 0;
+  opd->mode            = AM_INDEX;
+  c                    = skip_space(opd->buffer);
   
   switch(toupper(c))
   {
@@ -473,6 +497,8 @@ static bool parse_operand(struct opcdata *opd)
          opd->value.postbyte |= index_register(c);
          if (opd->value.bits == 5)
          {
+           opd->ecycles += 1;
+           
            if (indexindirect)
            {
              opd->value.postbyte |= 0x88;
@@ -488,11 +514,13 @@ static bool parse_operand(struct opcdata *opd)
          }
          else if (opd->value.bits == 8)
          {
+           opd->ecycles        += 1;
            opd->value.postbyte |= 0x88;
            opd->bits            = 8;
          }
          else if (opd->value.bits == 16)
          {
+           opd->ecycles        += 4;
            opd->value.postbyte |= 0x89;
            opd->bits            = 16;
          }
@@ -501,6 +529,7 @@ static bool parse_operand(struct opcdata *opd)
            assert(opd->value.bits == 0);
            if (opd->value.unknownpass1)
            {
+             opd->ecycles        += 4;
              opd->value.postbyte |= 0x89;
              opd->bits            = 16;
              if (opd->pass == 2)
@@ -534,6 +563,7 @@ static bool parse_operand(struct opcdata *opd)
              {
                if (indexindirect)
                {
+                 opd->ecycles        += 1;
                  opd->value.postbyte |= 0x88;
                  opd->bits            = 8;
                }
@@ -546,11 +576,13 @@ static bool parse_operand(struct opcdata *opd)
            }
            else if ((opd->value.value < 0x80) || (opd->value.value > 0xFF7F))
            {
+             opd->ecycles        += 1;
              opd->value.postbyte |= 0x88;
              opd->bits            = 8;
            }
            else
            {
+             opd->ecycles        += 4;
              opd->value.postbyte |= 0x89;
              opd->bits            = 16;
            }
@@ -570,8 +602,9 @@ static bool parse_operand(struct opcdata *opd)
            
            if (opd->value.unknownpass1)
            {
-             opd->value.postbyte = 0x8D;
-             opd->bits           = 16;
+             opd->ecycles        += 5;
+             opd->value.postbyte  = 0x8D;
+             opd->bits            = 16;
              if (opd->pass == 2)
              {
                if ((delta < 0x80) || (delta > 0xFF7F))
@@ -582,25 +615,29 @@ static bool parse_operand(struct opcdata *opd)
            {
              if ((delta < 0x80) || (delta > 0xFF7F))
              {
-               opd->value.postbyte = 0x8C;
-               opd->bits           = 8;
+               opd->ecycles        += 1;
+               opd->value.postbyte  = 0x8C;
+               opd->bits            = 8;
              }
              else
              {
-               opd->value.postbyte = 0x8D;
-               opd->bits           = 16;
+               opd->ecycles        += 5;
+               opd->value.postbyte  = 0x8D;
+               opd->bits            = 16;
              }
            }
          }
          else if (opd->value.bits == 8)
          {
-           opd->value.postbyte = 0x8C;
-           opd->bits           = 8;
+           opd->ecycles        += 1;
+           opd->value.postbyte  = 0x8C;
+           opd->bits            = 8;
          }
          else
          {
-           opd->value.postbyte = 0x8D;
-           opd->bits           = 16;
+           opd->ecycles        += 5;
+           opd->value.postbyte  = 0x8D;
+           opd->bits            = 16;
          }
          break;
          
@@ -637,6 +674,10 @@ static bool op_inh(struct opcdata *opd)
     opd->bytes[opd->sz++] = opd->op->page;
     
   opd->bytes[opd->sz++] = opd->op->opcode;
+  
+  if (opd->op->opcode == 0x3B) /* RTI */
+    opd->acycles = 15;
+    
   return true;
 }
 
@@ -654,8 +695,9 @@ static bool finish_index_bytes(struct opcdata *opd)
   else if (opcode >= 0x80)
     opcode += 0x20;
     
-  opd->bytes[opd->sz++] = opcode;
-  opd->bytes[opd->sz++] = opd->value.postbyte;
+  opd->cycles           += 2;
+  opd->bytes[opd->sz++]  = opcode;
+  opd->bytes[opd->sz++]  = opd->value.postbyte;
   if (opd->bits == 8)
   {
     if (opd->pcrel)
@@ -861,8 +903,10 @@ static bool op_lbr(struct opcdata *opd)
     opd->bytes[opd->sz++] = delta & 255;
   }
   
-  opd->mode  = AM_BRANCH;
-  opd->pcrel = true;
+  opd->mode    = AM_BRANCH;
+  opd->pcrel   = true;
+  if ((opd->op->opcode != 0x16) && (opd->op->opcode != 0x17))
+    opd->acycles = 6;
   return true;
 }
 
@@ -943,7 +987,8 @@ static bool op_pshpul(struct opcdata *opd)
       if (!sop_findreg(&reg,&opd->buffer->buf[opd->buffer->ridx],skip))
         return message(opd->a09,MSG_ERROR,"E0031: bad register name for PSH/PUL");
       opd->buffer->ridx += reg->reg[0];
-      operand |= reg->pushpull;
+      operand           |= reg->pushpull;
+      opd->ecycles      += reg->bit16 ? 2 : 1;
       c = skip_space(opd->buffer);
       if (c == '\0')
         break;
@@ -953,7 +998,7 @@ static bool op_pshpul(struct opcdata *opd)
         return message(opd->a09,MSG_ERROR,"E0032: missing comma in register list");
     }
   }
-    
+  
   opd->bytes[opd->sz++] = opd->op->opcode;
   opd->bytes[opd->sz++] = operand;
   return true;
@@ -1113,7 +1158,7 @@ static bool pseudo_end(struct opcdata *opd)
   if ((c != ';') && (c != '\0'))
   {
     opd->buffer->ridx--;
-  
+    
     if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))
       return message(opd->a09,MSG_ERROR,"E0050: not a label");
     sym = symbol_find(opd->a09,&label);
@@ -1313,8 +1358,8 @@ static bool pseudo_include(struct opcdata *opd)
     print_list(opd->a09,opd,false);
     fprintf(
       new.list,
-      "                         %s| FILE %s\n",
-      opd->a09->cc ? "         " : "",
+      "                         %*s| FILE %s\n",
+      opd->a09->list_pad,"",
       filename.buf
     );
     opd->includehack = true;
@@ -1325,11 +1370,11 @@ static bool pseudo_include(struct opcdata *opd)
   {
     fprintf(
       new.list,
-      "                         %s| END-OF-LINE\n",
-      opd->a09->cc ? "         " : ""
+      "                         %*s| END-OF-LINE\n",
+      opd->a09->list_pad,""
     );
   }
-    
+  
   fclose(new.in);
   opd->a09->pc     = new.pc;
   opd->a09->symtab = new.symtab;
@@ -1824,6 +1869,22 @@ static bool pseudo__opt(struct opcdata *opd)
   else if ((tmp.s == 5) && (memcmp(tmp.text,"DEBUG",5) == 0))
     return message(opd->a09,MSG_DEBUG,".OPT * DEBUG");
     
+  else if ((tmp.s == 2) && (memcmp(tmp.text,"CT",2) == 0))
+  {
+    if (!opd->a09->cycles_total)
+    {
+      opd->a09->cycles_total = true;
+      opd->a09->list_pad     += 8;
+    }
+    return true;
+  }
+  
+  else if ((tmp.s == 2) && (memcmp(tmp.text,"CC",2) == 0))
+  {
+    opd->a09->total_cycles = 0;
+    return true;
+  }
+  
   else
     return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
 }
@@ -1984,7 +2045,7 @@ struct opcode const *op_find(char const *name)
     { "BPL"     , "-----" , op_br          ,  3 , 0x2A , 0x00 , BYTE  } ,
     { "BRA"     , "-----" , op_br          ,  3 , 0x20 , 0x00 , BYTE  } ,
     { "BRN"     , "-----" , op_br          ,  3 , 0x21 , 0x00 , BYTE  } ,
-    { "BSR"     , "-----" , op_br          ,  3 , 0x8D , 0x00 , BYTE  } ,
+    { "BSR"     , "-----" , op_br          ,  7 , 0x8D , 0x00 , BYTE  } ,
     { "BVC"     , "-----" , op_br          ,  3 , 0x28 , 0x00 , BYTE  } ,
     { "BVS"     , "-----" , op_br          ,  3 , 0x29 , 0x00 , BYTE  } ,
     { "CLR"     , "-0100" , op_die         ,  4 , 0x0F , 0x00 , BYTE  } ,
@@ -2039,7 +2100,7 @@ struct opcode const *op_find(char const *name)
     { "LBPL"    , "-----" , op_lbr         ,  5 , 0x2A , 0x10 , WORD  } ,
     { "LBRA"    , "-----" , op_lbr         ,  5 , 0x16 , 0x00 , WORD  } ,
     { "LBRN"    , "-----" , op_lbr         ,  5 , 0x21 , 0x10 , WORD  } ,
-    { "LBSR"    , "-----" , op_lbr         ,  5 , 0x17 , 0x00 , WORD  } ,
+    { "LBSR"    , "-----" , op_lbr         ,  9 , 0x17 , 0x00 , WORD  } ,
     { "LBVC"    , "-----" , op_lbr         ,  5 , 0x28 , 0x10 , WORD  } ,
     { "LBVS"    , "-----" , op_lbr         ,  5 , 0x29 , 0x10 , WORD  } ,
     { "LDA"     , "-aa0-" , op_idie        ,  2 , 0x86 , 0x00 , BYTE  } ,
@@ -2049,10 +2110,10 @@ struct opcode const *op_find(char const *name)
     { "LDU"     , "-aa0-" , op_idie        ,  3 , 0xCE , 0x00 , WORD  } ,
     { "LDX"     , "-aa0-" , op_idie        ,  3 , 0x8E , 0x00 , WORD  } ,
     { "LDY"     , "-aa0-" , op_idie        ,  4 , 0x8E , 0x10 , WORD  } ,
-    { "LEAS"    , "-----" , op_lea         ,  4 , 0x32 , 0x00 , WORD  } ,
-    { "LEAU"    , "-----" , op_lea         ,  4 , 0x33 , 0x00 , WORD  } ,
-    { "LEAX"    , "--a--" , op_lea         ,  4 , 0x30 , 0x00 , WORD  } ,
-    { "LEAY"    , "--a--" , op_lea         ,  4 , 0x31 , 0x00 , WORD  } ,
+    { "LEAS"    , "-----" , op_lea         ,  2 , 0x32 , 0x00 , WORD  } ,
+    { "LEAU"    , "-----" , op_lea         ,  2 , 0x33 , 0x00 , WORD  } ,
+    { "LEAX"    , "--a--" , op_lea         ,  2 , 0x30 , 0x00 , WORD  } ,
+    { "LEAY"    , "--a--" , op_lea         ,  2 , 0x31 , 0x00 , WORD  } ,
     { "LSL"     , "-aaaa" , op_die         ,  4 , 0x08 , 0x00 , BYTE  } ,
     { "LSLA"    , "-aaaa" , op_inh         ,  2 , 0x48 , 0x00 , BYTE  } ,
     { "LSLB"    , "-aaaa" , op_inh         ,  2 , 0x58 , 0x00 , BYTE  } ,
@@ -2080,7 +2141,7 @@ struct opcode const *op_find(char const *name)
     { "ROR"     , "-aa-a" , op_die         ,  4 , 0x06 , 0x00 , BYTE  } ,
     { "RORA"    , "-aa-a" , op_inh         ,  2 , 0x46 , 0x00 , BYTE  } ,
     { "RORB"    , "-aa-a" , op_inh         ,  2 , 0x56 , 0x00 , BYTE  } ,
-    { "RTI"     , "-----" , op_inh         , 15 , 0x3B , 0x00 , BYTE  } , // pessimistic value, 6 if FIRQ
+    { "RTI"     , "-----" , op_inh         ,  6 , 0x3B , 0x00 , BYTE  } , // pessimistic value, 6 if FIRQ
     { "RTS"     , "-----" , op_inh         ,  5 , 0x39 , 0x00 , BYTE  } ,
     { "SBCA"    , "?aaaa" , op_idie        ,  2 , 0x82 , 0x00 , BYTE  } ,
     { "SBCB"    , "?aaaa" , op_idie        ,  2 , 0xC2 , 0x00 , BYTE  } ,
@@ -2102,7 +2163,7 @@ struct opcode const *op_find(char const *name)
     { "SWI3"    , "-----" , op_inh         , 20 , 0x3F , 0x11 , BYTE  } ,
     { "SYNC"    , "-----" , op_inh         ,  2 , 0x13 , 0x00 , BYTE  } ,
     { "TFR"     , "-----" , op_exg         ,  7 , 0x1F , 0x00 , BYTE  } ,
-    { "TST"     , "-aa0-" , op_die         ,  6 , 0x0D , 0x00 , BYTE  } ,
+    { "TST"     , "-aa0-" , op_die         ,  4 , 0x0D , 0x00 , BYTE  } ,
     { "TSTA"    , "-aa0-" , op_inh         ,  2 , 0x4D , 0x00 , BYTE  } ,
     { "TSTB"    , "-aa0-" , op_inh         ,  2 , 0x5D , 0x00 , BYTE  } ,
   };

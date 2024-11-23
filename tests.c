@@ -1352,7 +1352,7 @@ bool test__opt(struct opcdata *opd)
         
       if (data->intest)
         return message(opd->a09,MSG_ERROR,"E0100: Can only assign test code outside a .TEST directive");
-      
+        
       data->inittestpc = addr.value;
       data->testpc     = addr.value;
       message(opd->a09,MSG_DEBUG,"testloadpc=%04X",data->testpc);
@@ -1567,7 +1567,7 @@ bool test__opt(struct opcdata *opd)
         
       if (data->intest)
         return message(opd->a09,MSG_ERROR,"E0100: Can only assign test code outside a .TEST directive");
-      
+        
       data->inittestpc = addr.value;
       data->testpc     = addr.value;
       message(opd->a09,MSG_DEBUG,"testloadpc=%04X",data->testpc);
@@ -1598,7 +1598,7 @@ static bool ftest_align(struct format *fmt,struct opcdata *opd)
   
   if (opd->pass == 2)
     data->addr += opd->datasz;
-  
+    
   if (!data->intest)
     return opd->a09->tests->fmtalign(fmt,opd);
   else
@@ -1937,7 +1937,7 @@ void test_run(struct a09 *a09)
   message(a09,MSG_DEBUG,"number of tests: %zu",data->nunits);
   if (a09->tapout)
     printf("TAP version 14\n1..%zu\n",data->nunits);
-  
+    
   /*-----------------------------------------------------------------------
   ; A simple way to randomize the tests array, based upon:
   ; https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle

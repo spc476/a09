@@ -205,7 +205,7 @@ static bool add_include_file(struct a09 *a09,char const *filename)
   includes = realloc(a09->includes,(a09->nincs + 1) * sizeof(char *));
   if (includes == NULL)
     return message(a09,MSG_ERROR,"E0046: out of memory");
-  
+    
   len  = strlen(filename) + 1;
   name = malloc(len);
   if (name == NULL)
@@ -395,9 +395,9 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
     if ((opd->sz == 0) && (opd->datasz == 0))
     {
       if (labelonly && opd->label.s > 0)
-        fprintf(a09->list,"%04X:             %s",a09->pc,a09->cc ? "         ":"");
+        fprintf(a09->list,"%04X:             %*s",a09->pc,a09->list_pad,"");
       else
-        fprintf(a09->list,"                  %s",a09->cc ? "         ":"");
+        fprintf(a09->list,"                  %*s",a09->list_pad,"");
     }
     else
     {
@@ -437,19 +437,40 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
         
         for ( ; c < 5 ; c++)
           fprintf(a09->list,"  ");
+          
+        if (a09->cc)
+        {
+          if ((opd->op != NULL) && (opd->op->flag[0] != '\0'))
+            fprintf(a09->list," {%s}",opd->op->flag);
+          else
+            fputs("        ",a09->list);
+        }
+        
+        if (a09->cycles && !opd->data)
+        {
+          char tcyc[8];
+          
+          if (a09->cycles_detailed && (opd->ecycles > 0))
+            snprintf(tcyc,sizeof(tcyc),"[%zu+%zu]",opd->cycles,opd->ecycles);
+          else if (opd->acycles > 0)
+            snprintf(tcyc,sizeof(tcyc),"[%zu/%zu]",opd->cycles,opd->acycles);
+          else
+            snprintf(tcyc,sizeof(tcyc),"[%zu]",opd->cycles + opd->ecycles);
+            
+          fprintf(a09->list," %-8s",tcyc);
+        }
+        
+        if (a09->cycles_total)
+        {
+          a09->total_cycles += opd->cycles + opd->ecycles;
+          fprintf(a09->list," %7zu",a09->total_cycles);
+        }
       }
-    }
-    
-    if (a09->cc)
-    {
-      if ((opd->op != NULL) && (opd->op->flag[0] != '\0'))
-        fprintf(a09->list," {%s} ",opd->op->flag);
-      else
-        fputs("         ",a09->list);
     }
     
     fprintf(a09->list," %5zu | %s\n",a09->lnum,a09->inbuf.buf);
   }
+  
   opd->includehack = false;
   return true;
 }
@@ -466,16 +487,19 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   bool           rc;
   struct opcdata opd =
   {
-    .a09    = a09,
-    .op     = NULL,
-    .buffer = buffer,
-    .label  = { .s = 0 },
-    .pass   = pass,
-    .sz     = 0,
-    .data   = false,
-    .datasz = 0,
-    .mode   = AM_INHERENT,
-    .value  =
+    .a09     = a09,
+    .op      = NULL,
+    .buffer  = buffer,
+    .label   = { .s = 0 },
+    .pass    = pass,
+    .sz      = 0,
+    .data    = false,
+    .datasz  = 0,
+    .cycles  = 0,
+    .ecycles = 0,
+    .acycles = 0,
+    .mode    = AM_INHERENT,
+    .value   =
     {
       .value        = 0,
       .bits         = 0,
@@ -536,7 +560,8 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   if (!parse_op(&a09->inbuf,&opd.op))
     return message(a09,MSG_ERROR,"E0003: unknown opcode");
     
-  rc = opd.op->func(&opd);
+  opd.cycles = opd.op->cycles;
+  rc         = opd.op->func(&opd);
   
   if (rc)
   {
@@ -633,7 +658,7 @@ static int usage(char const *prog)
            "\t-T\t\trun tests with TAP output\n"
            "\t-c file\t\tcore file (of 6809 VM) name (only if -t specified)\n"
            "\t-d\t\tdebug output\n"
-           "\t-e ('c'|'f')\tadd _c_ycle and/or _f_lags in list file\n"
+           "\t-e ('c'|'d'|'f') add _c_ycles (_d_etailed) and/or _f_lags in list file\n"
            "\t-f format\toutput format (bin)\n"
            "\t-h\t\thelp (this text)\n"
            "\t-l listfile\tlist filename\n"
@@ -719,9 +744,21 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            while(*extra != '\0')
            {
              if (*extra == 'c')
-               a09->cycles = true;
+             {
+               a09->list_pad += 8;
+               a09->cycles    = true;
+             }
+             else if (*extra == 'd')
+             {
+               a09->list_pad        += 9;
+               a09->cycles           = true;
+               a09->cycles_detailed  = true;
+             }
              else if (*extra == 'f')
-               a09->cc = true;
+             {
+               a09->cc        = true;
+               a09->list_pad += 8;
+             }
              else
              {
                message(a09,MSG_ERROR,"E9999: unsupported extra option");
@@ -902,31 +939,37 @@ int main(int argc,char *argv[])
   bool       rc;
   struct a09 a09 =
   {
-    .infile    = argv[0],
-    .outfile   = "a09.obj",
-    .listfile  = NULL,
-    .corefile  = NULL,
-    .tests     = NULL,
-    .deps      = NULL,
-    .includes  = NULL,
-    .ndeps     = 0,
-    .nincs     = 0,
-    .in        = NULL,
-    .out       = NULL,
-    .list      = NULL,
-    .lnum      = 0,
-    .symtab    = NULL,
-    .nowarn    = {0},
-    .label     = { .s = 0, .text = { '\0' } },
-    .pc        = 0,
-    .dp        = 0,
-    .debug     = false,
-    .mkdeps    = false,
-    .obj       = true,
-    .runtests  = false,
-    .rndtests  = false,
-    .tapout    = false,
-    .inbuf     = { .buf = {0}, .widx = 0, .ridx = 0 },
+    .infile          = argv[0],
+    .outfile         = "a09.obj",
+    .listfile        = NULL,
+    .corefile        = NULL,
+    .tests           = NULL,
+    .deps            = NULL,
+    .includes        = NULL,
+    .ndeps           = 0,
+    .nincs           = 0,
+    .in              = NULL,
+    .out             = NULL,
+    .list            = NULL,
+    .lnum            = 0,
+    .total_cycles    = 0,
+    .symtab          = NULL,
+    .nowarn          = {0},
+    .label           = { .s = 0, .text = { '\0' } },
+    .list_pad        = 0,
+    .pc              = 0,
+    .dp              = 0,
+    .debug           = false,
+    .mkdeps          = false,
+    .obj             = true,
+    .runtests        = false,
+    .rndtests        = false,
+    .tapout          = false,
+    .cc              = false,
+    .cycles          = false,
+    .cycles_detailed = false,
+    .cycles_total    = false,
+    .inbuf           = { .buf = {0}, .widx = 0, .ridx = 0 },
   };
   
   format_bin_init(&a09);
@@ -994,8 +1037,8 @@ int main(int argc,char *argv[])
     
     fprintf(
       a09.list,
-      "                         %s| FILE %s\n",
-      a09.cc ? "         " : "",
+      "                         %*s| FILE %s\n",
+      a09.list_pad,"",
       a09.infile
     );
   }
