@@ -693,10 +693,11 @@ They are:
 
 		Print additional debugging information while assembling.
 
-	-e ('c' | 'f')
+	-e ('c' | 'd' | 'f')
 
-		Add to the listing file cycle counts ('c') and/or flags
-		modified ('f') for each instruction.
+		Add to the listing file cycle counts ('c'), detailed cycle
+		counts ('d') and/or flags modified ('f') for each
+		instruction.
 
 	-f format
 
