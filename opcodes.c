@@ -385,7 +385,7 @@ static bool parse_operand(struct opcdata *opd)
     switch(c)
     {
       case 'D':
-           opd->ecycles += 3;
+           opd->ecycles += 3; /* fallthrough */
       case 'A':
       case 'B':
            opd->ecycles        += 1;
