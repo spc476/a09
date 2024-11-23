@@ -570,6 +570,7 @@ static bool parse_operand(struct opcdata *opd)
                }
                else
                {
+                 opd->ecycles        += 1;
                  opd->value.postbyte |= opd->value.value & 0x1F;
                  opd->bits            = 5;
                }
