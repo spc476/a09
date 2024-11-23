@@ -475,9 +475,10 @@ static bool parse_operand(struct opcdata *opd)
     if (!indexindirect)
       return message(opd->a09,MSG_ERROR,"E0017: end of indirection without start of indirection error");
       
-    opd->value.postbyte   = 0x9F;
-    opd->value.bits       = 16;
-    opd->mode             = AM_INDEX;
+    opd->ecycles        += 2;
+    opd->value.postbyte  = 0x9F;
+    opd->value.bits      = 16;
+    opd->mode            = AM_INDEX;
     return true;
   }
   
