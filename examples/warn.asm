@@ -52,6 +52,7 @@ d		equ	2		; W0013
 
 	.test	"test"
 	.opt	test	stack	$F000	; W0017
+	.opt	test	stacksize $100	; W0018
 		lbsr	badwrite
 		rts
 
