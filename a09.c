@@ -395,9 +395,9 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
     if ((opd->sz == 0) && (opd->datasz == 0))
     {
       if (labelonly && opd->label.s > 0)
-        fprintf(a09->list,"%04X:             ",a09->pc);
+        fprintf(a09->list,"%04X:             %s",a09->pc,a09->cc ? "         ":"");
       else
-        fprintf(a09->list,"                  ");
+        fprintf(a09->list,"                  %s",a09->cc ? "         ":"");
     }
     else
     {
