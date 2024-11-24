@@ -746,7 +746,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            {
              if (*extra == 'c')
              {
-               a09->list_pad += 8;
+               a09->list_pad += 9;
                a09->cycles    = true;
              }
              else if (*extra == 'd')
