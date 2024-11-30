@@ -912,7 +912,7 @@ static int cleanup(struct a09 *a09,bool success)
   
   if (a09->runtests)    test_fini(a09);
   if (a09->out != NULL) fclose(a09->out);
-  if (a09->out != NULL) fclose(a09->in);
+  if (a09->in  != NULL) fclose(a09->in);
   
   if (!success)
   {
