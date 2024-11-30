@@ -1353,8 +1353,12 @@ static bool pseudo_include(struct opcdata *opd)
   }
   
   if (new.in == NULL)
+  {
+    opd->a09->deps  = new.deps;
+    opd->a09->ndeps = new.ndeps;
     return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
-    
+  }
+  
   if ((opd->pass == 2) && (new.list != NULL))
   {
     print_list(opd->a09,opd,false);
