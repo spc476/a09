@@ -459,12 +459,12 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
             snprintf(tcyc,sizeof(tcyc),"[%zu]",opd->cycles + opd->ecycles);
             
           fprintf(a09->list," %-8s",tcyc);
-        }
-        
-        if (a09->cycles_total)
-        {
-          a09->total_cycles += opd->cycles + opd->ecycles;
-          fprintf(a09->list," %7zu",a09->total_cycles);
+          
+          if (a09->cycles_total)
+          {
+            a09->total_cycles += opd->cycles + opd->ecycles;
+            fprintf(a09->list," %7zu",a09->total_cycles);
+          }
         }
       }
     }

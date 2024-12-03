@@ -1877,7 +1877,7 @@ static bool pseudo__opt(struct opcdata *opd)
     
   else if ((tmp.s == 2) && (memcmp(tmp.text,"CT",2) == 0))
   {
-    if (!opd->a09->cycles_total)
+    if (opd->a09->cycles && !opd->a09->cycles_total)
     {
       opd->a09->cycles_total = true;
       opd->a09->list_pad     += 8;
