@@ -659,7 +659,9 @@ static int usage(char const *prog)
            "\t-T\t\trun tests with TAP output\n"
            "\t-c file\t\tcore file (of 6809 VM) name (only if -t specified)\n"
            "\t-d\t\tdebug output\n"
-           "\t-e ('c'|'d'|'f') add _c_ycles (_d_etailed) and/or _f_lags in list file\n"
+           "\t-e ('c'|'d'|'f'|'t')\n"
+           "\t\t\tadd _c_ycles (_d_etailed and _t_otals) and/or _f_lags\n"
+           "\t\t\tin list file\n"
            "\t-f format\toutput format (bin)\n"
            "\t-h\t\thelp (this text)\n"
            "\t-l listfile\tlist filename\n"
@@ -760,6 +762,8 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
                a09->cc        = true;
                a09->list_pad += 8;
              }
+             else if (*extra == 't')
+               a09->cycles_total = true;
              else
              {
                message(a09,MSG_ERROR,"E9999: unsupported extra option");
@@ -767,6 +771,10 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              }
              extra++;
            }
+           
+           if (a09->cycles && a09->cycles_total)
+             a09->list_pad += 8;
+             
            break;
            
       case 'f':
