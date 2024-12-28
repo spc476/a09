@@ -593,7 +593,6 @@ bool assemble_pass(struct a09 *a09,int pass)
   
   rewind(a09->in);
   a09->lnum  = 0;
-  a09->label = (label){ .s = 0 , .text = { '\0' } };
   
   message(a09,MSG_DEBUG,"Pass %d",pass);
   

@@ -1334,7 +1334,6 @@ static bool pseudo_include(struct opcdata *opd)
   assert(filename.widx < sizeof(filename.buf));
   filename.buf[filename.widx++] = '\0';
   
-  new.label  = (label){ .s = 0 , .text = { '\0' } };
   new.inbuf  = (struct buffer){ .buf = {0}, .widx = 0 , .ridx = 0 };
   new.infile = add_file_dep(&new,filename.buf);
   new.in     = fopen(filename.buf,"r");
