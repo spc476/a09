@@ -765,7 +765,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
                a09->cycles_total = true;
              else
              {
-               message(a09,MSG_ERROR,"E9999: unsupported extra option");
+               message(a09,MSG_ERROR,"E0105: unsupported extra option");
                return -1;
              }
              extra++;
