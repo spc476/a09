@@ -78,6 +78,7 @@ struct format_basic
   uint16_t usr;
   uint16_t defusr[10];
   bool     org;
+  bool     init;
   char     buffer[249];
 };
 
@@ -171,7 +172,11 @@ static bool fbasic_pass_start(struct format *fmt,struct a09 *a09,int pass)
   if (pass == 2)
   {
     struct format_basic *basic = fmt->data;
-    basic->idx = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",basic->dline);
+    if (!basic->init)
+    {
+      basic->idx = snprintf(basic->buffer,sizeof(basic->buffer),"%u DATA",basic->dline);
+      basic->init = true;
+    }
   }
   
   return true;
@@ -451,6 +456,7 @@ bool format_basic_init(struct a09 *a09)
     basic->staddr    = 0;
     basic->usr       = 0;
     basic->org       = false;
+    basic->init      = false;
     basic->buffer[0] = '\0';
     a09->format      = callbacks;
     a09->format.data = basic;
