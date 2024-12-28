@@ -1989,6 +1989,32 @@ static bool pseudo__float(struct opcdata *opd)
 
 /**************************************************************************/
 
+static bool pseudo__pcle(struct opcdata *opd)
+{
+  assert(opd         != NULL);
+  assert(opd->a09    != NULL);
+  assert(opd->buffer != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  skip_space(opd->buffer);
+  opd->buffer->ridx--;
+  if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
+    return false;
+  
+  if (opd->pass == 2)
+  {
+    message(opd->a09,MSG_DEBUG,"PC: %04X limit: %04X",opd->a09->pc,opd->value.value);
+    if (opd->a09->pc <= opd->value.value)
+      return true;
+    else
+      return message(opd->a09,MSG_ERROR,"E0106: PC %04X exceeds given limit %04X",opd->a09->pc,opd->value.value);
+  }
+  
+  return true;
+}
+
+/**************************************************************************/
+
 static int opcode_cmp(void const *needle,void const *haystack)
 {
   char          const *key    = needle;
@@ -2012,6 +2038,7 @@ struct opcode const *op_find(char const *name)
     { ".FLOATD" , ""      , pseudo__float  ,  0 , 0x01 , 0x00 , false } ,
     { ".NOTEST" , ""      , pseudo__notest ,  0 , 0x00 , 0x00 , false } , // test
     { ".OPT"    , ""      , pseudo__opt    ,  0 , 0x00 , 0x00 , false } ,
+    { ".PCLE"   , ""      , pseudo__pcle   ,  0 , 0x00 , 0x00 , false } ,
     { ".TEST"   , ""      , pseudo__test   ,  0 , 0x00 , 0x00 , false } , // test
     { ".TROFF"  , ""      , pseudo__troff  ,  0 , 0x00 , 0x00 , false } , // test
     { ".TRON"   , ""      , pseudo__tron   ,  0 , 0x00 , 0x00 , false } , // test

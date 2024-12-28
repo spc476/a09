@@ -186,42 +186,47 @@ non-standard pesudo operation for most 6809 assemblers.
 
 	.ASSERT expr [, "explanation" ]
 
-		Assert a condition when running tests; otherwise ignored.
-		If the expression is true, nothing happens; if the
-		expression is false, the test fails, a dianostic message is
-		printed, and the assembly procedure stops.  This can appear
-		outside of a unit test.
+		(Non-standard) Assert a condition when running tests;
+		otherwise ignored.  If the expression is true, nothing
+		happens; if the expression is false, the test fails, a
+		dianostic message is printed, and the assembly procedure
+		stops.  This can appear outside of a unit test.
 
 	.ENDTST
 
-		End a unit test; ignored when not running tests.
+		(Non-standard) End a unit test; ignored when not running
+		tests.
 
 	.FLOAT float-expr [, float-expr ... ]
 
-		Format a floating point number; default format except when
-		using the rsdos or basic formats.  This will format a 32-bit
-		IEEE-754 floating point number, which can be used with the
-		MC6839.  For the rsdos and basic formats, this will generate
-		the Color Basic floating point format (40 bits).  There may
-		be some differences with a value generated from Color Basic
-		itself, but may be "close enough" to be useful.  The format
-		can be changed with the .OPT * REAL directive.
+		(Non-standard) Format a floating point number; default
+		format except when using the rsdos or basic formats.  This
+		will format a 32-bit IEEE-754 floating point number, which
+		can be used with the MC6839.  For the rsdos and basic
+		formats, this will generate the Color Basic floating point
+		format (40 bits).  There may be some differences with a
+		value generated from Color Basic itself, but may be "close
+		enough" to be useful.  The format can be changed with the
+		.OPT * REAL directive.
 
 	.FLOATD float-expr [, float-expr ... ]
 
-		Format a double length floating point number when using
-		IEEE-754 floats.  For the rsdos and basic formats, this will
-		generate the same value as .FLOAT, but generate a warning.
+		(Non-standard) Format a double length floating point number
+		when using IEEE-754 floats.  For the rsdos and basic
+		formats, this will generate the same value as .FLOAT, but
+		generate a warning.
 
 	.NOTEST
 
-		All text up to a .ENDTST directive is ignored.  This is
-		an easy way to disable a test without removing it.
+		(Non-standard) All text up to a .ENDTST directive is
+		ignored.  This is an easy way to disable a test without
+		removing it.
 
 	.OPT set option data...
 
-		Supply an option from within the source code instead of the
-		command line.  The following options are always available:
+		(Non-standard) Supply an option from within the source code
+		instead of the command line.  The following options are
+		always available:
 
 			.OPT * DISABLE <warning>
 
@@ -380,27 +385,35 @@ non-standard pesudo operation for most 6809 assemblers.
 				value of 200 will be used for the string
 				space in CB,ECB or DECB.
 
+	.PCLE expr
+
+		(Non-standard) Ensure that the current program counter is
+		less than or equal to the expression.  This is to help
+		ensure that a program doesn't flow over into an area of
+		memory not meant for the program, such as ROM.
+
 	.TEST ["name"]
 
-		Define a unit test.  Any 6809 code is executed at the end of
-		pass 2 of the assembler, and must end with a 'RTS'
-		instruction.  All .ASSERT directives in the code being
-		executed will be run.  This, and all following text until a
-		.ENDTST directive, will be ignored when not running tests.
+		(Non-standard) Define a unit test.  Any 6809 code is
+		executed at the end of pass 2 of the assembler, and must end
+		with a 'RTS' instruction.  All .ASSERT directives in the
+		code being executed will be run.  This, and all following
+		text until a .ENDTST directive, will be ignored when not
+		running tests.
 
 	.TROFF
 
-		Turn off 6809 program tracing when running tests.  Like the
-		.ASSERT directive, this can appear outside a unit test
-		definition.  Ignored if not running tests.
+		(Non-standard) Turn off 6809 program tracing when running
+		tests.  Like the .ASSERT directive, this can appear outside
+		a unit test definition.  Ignored if not running tests.
 
 	.TRON [timing]
 
-		Turn on 6809 program tracing if running tests.  Each 6809
-		instruction is printed on stdout and includes the contents
-		of the registers at that point in execution, and can appear
-		outside of a unit test definition.  This is ignored when
-		not running tests.
+		(Non-standard) Turn on 6809 program tracing if running
+		tests.  Each 6809 instruction is printed on stdout and
+		includes the contents of the registers at that point in
+		execution, and can appear outside of a unit test definition.
+		This is ignored when not running tests.
 
 		If the "timing" option is used, the code will be timed, not
 		traced.  At the corresponding .TROFF, the number of CPU
