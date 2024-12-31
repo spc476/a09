@@ -340,7 +340,8 @@ non-standard pesudo operation for most 6809 assemblers.
 				nature of the assembler.
 
 		The following options only apply when using the BASIC
-		format, otherwise they are ignored.
+		format, or the RS-DOS format if the -B options is ued,
+		otherwise they are ignored.
 
 			.OPT BASIC CODE <line>
 
@@ -754,6 +755,33 @@ They are:
   Individual backends can have their own command line options that are
 activated after the '-f' option.  They are:
 
+The RSDOS backend
+
+	-B filename
+
+		Use the given filename to generate the BASIC code to reserve
+		memory, load the file from disk, and define the various
+		routines for use by BASIC.  This is in addition to the
+		normal file that the -o options generates.  This filename is
+		for the local filesystem.  If this is not given, no BASIC
+		file is generated.
+
+	-L line
+
+		The line number for the BASIC code.  It defaults to 10, but
+		can be any value between 0 and 63999.
+
+	-N rsdosfilename
+
+		The filename for use in BASIC.  If not given, this will
+		translate the name of the output file to one usable by
+		RS-DOS.
+
+	-P size
+
+		The size of the string storage for the CLEAR BASIC command
+		generated.  It defaults to 200.
+
 The SREC backend
 
 	-0 file
@@ -795,7 +823,7 @@ The BASIC backend
 	-L line
 
 		The line number for the DATA statements.  It defaults to
-		starting with 10.  I can be any value between 0 and 63999.
+		starting with 10.  It can be any value between 0 and 63999.
 		It is an error if any of these lines overlap with the code
 		statements.
 

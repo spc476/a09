@@ -22,23 +22,37 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <errno.h>
 
 #include "a09.h"
 
 struct format_rsdos
 {
-  long     section_hdr;
-  long     section_start;
-  uint16_t entry;
-  bool     endf;
-  bool     org;
+  char     *basicf;
+  char     *name;
+  long      section_hdr;
+  long      section_start;
+  uint16_t  entry;
+  uint16_t  line;
+  uint16_t  strspace;
+  uint16_t  staddr;
+  uint16_t  usr;
+  uint16_t  defusr[10];
+  bool      endf;
+  bool      org;
 };
 
 /**************************************************************************/
 
-char const format_rsdos_usage[] = "";
-
+char const format_rsdos_usage[] =
+        "\n"
+        "RSDOS format options:\n"
+        "\t-B filename\tfilename for BASIC code output\n"
+        "\t-L line\t\tstarting line # (default 10)\n"
+        "\t-N filename\tfilename for RSDOS\n"
+        "\t-P size\t\tsize of string pool (default 200)\n";
+        
 /**************************************************************************/
 
 static bool update_section_size(struct format_rsdos *format,struct opcdata *opd)
@@ -184,6 +198,72 @@ static bool frsdos_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     if (fwrite(hdr,1,sizeof(hdr),opd->a09->out) != sizeof(hdr))
       return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
     format->endf = true;
+    
+    if (format->name != NULL)
+    {
+      bool    defusr = false;
+      char    buffer[249];
+      char    rsdfn[16];
+      size_t  idx;
+      FILE   *basic;
+      
+      if (format->basicf == NULL)
+      {
+        char const *p = strrchr(opd->a09->outfile,'/');
+        if (p == NULL)
+          p = opd->a09->outfile;
+        format->basicf = rsdfn;
+        
+        for ( idx = 0 ; (p[idx] != '\0') && (idx < sizeof(rsdfn)-1) ; idx++)
+        {
+          if (p[idx] == '.')
+            format->basicf[idx] = '/';
+          else
+            format->basicf[idx] = p[idx];
+        }
+        format->basicf[idx] = '\0';
+      }
+      
+      for (idx = 0 ; format->basicf[idx] != '\0'; idx++)
+        format->basicf[idx] = toupper(format->basicf[idx]);
+        
+      idx = snprintf(
+          buffer,
+          sizeof(buffer),
+          "%u CLEAR%u,%u:LOADM\"%s\"",
+          format->line,
+          format->strspace,
+          format->entry - 1,
+          format->basicf
+      );
+      assert(idx < sizeof(buffer));
+      
+      if (format->usr != 0)
+      {
+        idx += snprintf(&buffer[idx],sizeof(buffer) - idx,":POKE275,%u:POKE276,%u",format->usr >> 8,format->usr & 255);
+        assert(idx < sizeof(buffer));
+      }
+      
+      for (size_t i = 0 ; i < 10 ; i++)
+      {
+        if (format->defusr[i] != 0)
+        {
+          idx += snprintf(&buffer[idx],sizeof(buffer) - idx,":DEFUSR%zu=%u",i,format->defusr[i]);
+          assert(idx < sizeof(buffer));
+          defusr = true;
+        }
+      }
+      
+      if (defusr && (format->usr != 0))
+        return message(opd->a09,MSG_ERROR,"E0072: can't use USR and DEFUSRn at the same time");
+      
+      basic = fopen(format->name,"w");
+      if (basic == NULL)
+        return message(opd->a09,MSG_ERROR,"E0070: %s: %s",format->basicf,strerror(errno));
+      fwrite(buffer,1,idx,basic);
+      fputc('\n',basic);
+      fclose(basic);
+    }
   }
   
   return true;
@@ -207,6 +287,9 @@ static bool frsdos_org(struct format *fmt,struct opcdata *opd)
     
     format->org = true;
     
+    if (opd->value.value < format->entry)
+      format->entry = opd->value.value;
+      
     if (!update_section_size(format,opd))
       return false;
       
@@ -264,16 +347,129 @@ static bool frsdos_write(struct format *fmt,struct opcdata *opd,void const *buff
 
 /**************************************************************************/
 
+static bool frsdos_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,char c)
+{
+  assert(fmt          != NULL);
+  assert(fmt->data    != NULL);
+  assert(fmt->backend == BACKEND_RSDOS);
+  assert(a09          != NULL);
+  assert(arg          != NULL);
+  assert(c            != '\0');
+  
+  struct format_rsdos *format = fmt->data;
+  
+  switch(c)
+  {
+    case 'B':
+         if ((format->name = arg_arg(arg)) == NULL)
+           return message(a09,MSG_ERROR,"E0068: missing option argument");
+         break;
+         
+    case 'L':
+         if (!arg_uint16_t(&format->line,arg,0,63999u))
+           return message(a09,MSG_ERROR,"E0102: line number must be between 1 and 63999");
+         break;
+         
+    case 'N':
+         if ((format->basicf = arg_arg(arg)) == NULL)
+           return message(a09,MSG_ERROR,"E0068: missing option argument");
+         break;
+         
+    case 'P':
+         if (!arg_uint16_t(&format->strspace,arg,0,22*1024))
+           return message(a09,MSG_ERROR,"E0103: string space must be between 0 and 22528");
+         break;
+         
+    default:
+         return false;
+  }
+  
+  return true;
+}
+
+/**************************************************************************/
+
+static bool frsdos__opt(struct format *fmt,struct opcdata *opd,label *be)
+{
+  assert(fmt       != NULL);
+  assert(fmt->data != NULL);
+  assert(opd       != NULL);
+  assert(opd->a09  != NULL);
+  assert(be        != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  struct format_rsdos *format = fmt->data;
+  struct value         val;
+  
+  if ((be->s != 5) && (memcmp(be->text,"BASIC",5) != 0))
+    return true;
+    
+  if (opd->pass == 2)
+  {
+    label tmp;
+    char  c = skip_space(opd->buffer);
+    read_label(opd->buffer,&tmp,c);
+    upper_label(&tmp);
+    
+    if ((tmp.s == 3) && (memcmp(tmp.text,"USR",3) == 0))
+    {
+      if (!expr(&val,opd->a09,opd->buffer,opd->pass))
+        return false;
+      format->usr = val.value;
+    }
+    
+    else if ((tmp.s == 7) && (memcmp(tmp.text,"DEFUSR",6) == 0))
+    {
+      if (!isdigit(tmp.text[6]))
+        return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
+      if (!expr(&val,opd->a09,opd->buffer,opd->pass))
+        return false;
+      format->defusr[(size_t)(tmp.text[6] - '0')] = val.value;
+    }
+    
+    else if ((tmp.s == 8) && (memcmp(tmp.text,"STRSPACE",8) == 0))
+    {
+      if (!expr(&val,opd->a09,opd->buffer,opd->pass))
+        return false;
+      format->strspace = val.value;
+    }
+    
+    else if ((tmp.s == 4) && (memcmp(tmp.text,"LINE",4) == 0))
+    {
+      if (!expr(&val,opd->a09,opd->buffer,opd->pass))
+        return false;
+      format->line = val.value;
+    }
+    
+    else if ((tmp.s == 4) && (memcmp(tmp.text,"INCR",4) == 0))
+      return true;
+      
+    else if ((tmp.s == 4) && (memcmp(tmp.text,"CODE",4) == 0))
+    {
+      if (!expr(&val,opd->a09,opd->buffer,opd->pass))
+        return false;
+      format->line = val.value;
+    }
+    
+    else
+      return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
+  }
+  
+  return true;
+}
+
+/**************************************************************************/
+
 bool format_rsdos_init(struct a09 *a09)
 {
   static struct format const callbacks =
   {
     .backend    = BACKEND_RSDOS,
-    .cmdline    = fdefault_cmdline,
+    .cmdline    = frsdos_cmdline,
     .pass_start = fdefault_pass,
     .pass_end   = fdefault_pass,
     .write      = frsdos_write,
-    .opt        = fdefault__opt,
+    .opt        = frsdos__opt,
     .dp         = fdefault,
     .code       = fdefault,
     .align      = frsdos_align,
@@ -296,13 +492,20 @@ bool format_rsdos_init(struct a09 *a09)
   struct format_rsdos *data = malloc(sizeof(struct format_rsdos));
   if (data != NULL)
   {
+    data->basicf        = NULL;
+    data->name          = NULL;
     data->section_hdr   = 0;
     data->section_start = 0;
-    data->entry         = 0;
+    data->entry         = 65535u;
+    data->line          = 10;
+    data->strspace      = 200;
+    data->staddr        = 0;
+    data->usr           = 0;
     data->endf          = false;
     data->org           = false;
     a09->format         = callbacks;
     a09->format.data    = data;
+    memset(data->defusr,0,sizeof(data->defusr));
     return true;
   }
   else
