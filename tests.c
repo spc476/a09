@@ -1160,7 +1160,7 @@ static bool ft_expr(
     {
       if (
                (ostack[osp]->pri >  op->pri)
-           || ((ostack[osp]->pri == op->pri) && (op->pri == AS_LEFT))
+           || ((ostack[osp]->pri == op->pri) && (op->as == AS_LEFT))
          )
       {
         if (*pvip == max)

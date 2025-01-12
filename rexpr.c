@@ -378,7 +378,7 @@ bool rexpr(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool
     {
       if (
                (ostack[osp]->pri >  op->pri)
-           || ((ostack[osp]->pri == op->pri) && (op->pri == AS_LEFT))
+           || ((ostack[osp]->pri == op->pri) && (op->as == AS_LEFT))
          )
       {
         if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
