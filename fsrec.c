@@ -37,6 +37,7 @@ struct format_srec
   bool           endf;
   bool           execf;
   bool           override;
+  bool           zero;
   unsigned char  buffer[252];
 };
 
@@ -50,6 +51,7 @@ char const format_srec_usage[] =
         "\t-L addr\t\tinitial load address\n"
         "\t-O\t\tforce override of load and exec address\n"
         "\t-R size\t\tset #bytes per record (min=1, max=252, default=34)\n"
+        "\t-Z\t\tforce zero byte data to be written\n"
         "\n"
         "NOTE:\tS0 record will be truncated to max record size\n";
         
@@ -114,6 +116,10 @@ static bool fsrec_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,cha
          
     case 'O':
          format->override = true;
+         break;
+         
+    case 'Z':
+         format->zero = true;
          break;
          
     case '0':
@@ -312,15 +318,25 @@ static bool fsrec_align(struct format *fmt,struct opcdata *opd)
   {
     struct format_srec *format = fmt->data;
     
-    for (size_t i = 0 ; i < opd->datasz ; i++)
+    if ((opd->datasz < 6) || format->zero)
     {
-      if (format->idx == format->recsize)
+      for (size_t i = 0 ; i < opd->datasz ; i++)
       {
-        write_record(opd->a09->out,'1',format->addr,format->buffer,format->recsize);
-        format->addr += format->recsize;
-        format->idx = 0;
+        if (format->idx == format->recsize)
+        {
+          write_record(opd->a09->out,'1',format->addr,format->buffer,format->recsize);
+          format->addr += format->recsize;
+          format->idx   = 0;
+        }
+        format->buffer[format->idx++] = 0;
       }
-      format->buffer[format->idx++] = 0;
+    }
+    else
+    {
+      if (format->idx > 0)
+        write_record(opd->a09->out,'1',format->addr,format->buffer,format->idx);
+      format->addr += format->idx + opd->datasz;
+      format->idx   = 0;
     }
   }
   
@@ -344,15 +360,25 @@ static bool fsrec_rmb(struct format *fmt,struct opcdata *opd)
     if (opd->value.value == 0)
       return message(opd->a09,MSG_ERROR,"E0099: Can't reserve 0 bytes of memory");
       
-    for (size_t i = 0 ; i < opd->value.value ; i++)
+    if ((opd->value.value < 6) || format->zero)
     {
-      if (format->idx == format->recsize)
+      for (size_t i = 0 ; i < opd->value.value ; i++)
       {
-        write_record(opd->a09->out,'1',format->addr,format->buffer,format->recsize);
-        format->addr += format->recsize;
-        format->idx = 0;
+        if (format->idx == format->recsize)
+        {
+          write_record(opd->a09->out,'1',format->addr,format->buffer,format->recsize);
+          format->addr += format->recsize;
+          format->idx   = 0;
+        }
+        format->buffer[format->idx++] = 0;
       }
-      format->buffer[format->idx++] = 0;
+    }
+    else
+    {
+      if (format->idx > 0)
+        write_record(opd->a09->out,'1',format->addr,format->buffer,format->idx);
+      format->addr += format->idx + opd->value.value;
+      format->idx   = 0;
     }
   }
   
@@ -401,6 +427,7 @@ bool format_srec_init(struct a09 *a09)
     data->endf       = false;
     data->execf      = false;
     data->override   = false;
+    data->zero       = false;
     a09->format      = callbacks;
     a09->format.data = data;
     return true;
