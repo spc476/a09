@@ -811,6 +811,14 @@ The SREC backend
 		This specifies the number of data bytes per line.  Valid
 		values are 1 to 252, with 34 being the default.
 
+	-Z
+
+		The default is that if the number of NUL (0) bytes written
+		by the RMB and ALIGN is 6 bytes or more, then a new record
+		will be written (this saves the output size and could lead
+		to faster loading).  If you want the NUL bytes in the
+		output, specify this flag.
+
 The BASIC backend
 
 	-C line
