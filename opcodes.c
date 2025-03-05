@@ -591,7 +591,9 @@ static bool parse_operand(struct opcdata *opd)
            return message(opd->a09,MSG_ERROR,"E0016: invalid index register");
          opd->pcrel = true;
          opd->buffer->ridx++;
-         
+         if (toupper(opd->buffer->buf[opd->buffer->ridx]) == 'R')
+           opd->buffer->ridx++;
+           
          if (opd->value.bits == 0)
          {
            uint16_t pc    = opd->a09->pc + 2 + (opd->op->page != 0);
