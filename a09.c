@@ -560,8 +560,9 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   if (!parse_op(&a09->inbuf,&opd.op))
     return message(a09,MSG_ERROR,"E0003: unknown opcode");
     
-  opd.cycles = opd.op->cycles;
-  rc         = opd.op->func(&opd);
+  opd.cycles  = opd.op->cycles;
+  rc          = opd.op->func(&opd);
+  a09->prevop = opd.op->opcode;
   
   if (rc)
   {
@@ -968,6 +969,7 @@ int main(int argc,char *argv[])
     .list_pad        = 0,
     .pc              = 0,
     .dp              = 0,
+    .prevop          = 0x01,	/* not a valid opcode */
     .debug           = false,
     .mkdeps          = false,
     .obj             = true,

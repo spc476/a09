@@ -179,6 +179,7 @@ struct a09
   int               list_pad;
   uint16_t          pc;
   unsigned char     dp;
+  unsigned char     prevop;
   bool              debug;
   bool              mkdeps;
   bool              obj;

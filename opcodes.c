@@ -677,6 +677,32 @@ static bool op_inh(struct opcdata *opd)
   if (opd->op->opcode == 0x3B) /* RTI */
     opd->acycles = 15;
     
+  if ((opd->pass == 2) && (opd->op->opcode == 0x39)) /* RTS */
+  {
+    if (
+            (opd->a09->prevop == 0x17) /* LBSR         */
+         || (opd->a09->prevop == 0x8D) /* BSR          */
+         || (opd->a09->prevop == 0x9D) /* JSR direct   */
+         || (opd->a09->prevop == 0xAD) /* JSR index    */
+         || (opd->a09->prevop == 0xBD) /* JSR extended */
+       )
+    {
+      message(opd->a09,MSG_WARNING,"W0020: BSR/LBSR/JSR followed by RTS, maybe use BRA/LBRA/JMP?");
+    }
+    else if (
+                 (opd->a09->prevop == 0x35) /* PULS */
+              || (opd->a09->prevop == 0x37) /* PULU */
+            )
+    {
+      message(
+          opd->a09,
+          MSG_WARNING,
+          "W0021: %s followed by RTS, maybe add ',PC' to %s?",
+          opd->a09->prevop == 0x35 ? "PULS" : "PULU",
+          opd->a09->prevop == 0x35 ? "PULS" : "PULU"
+      );
+    }
+  }
   return true;
 }
 
