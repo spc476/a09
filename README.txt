@@ -650,6 +650,16 @@ be potential problems.  The defined warnings are:
 
 		The given floating point format is not supported.
 
+	W0020
+
+		RTS follows a BSR/LBSR/JSR and thus, the BSR/LBSR/JSR could
+		be replaced with a BRA/LBRA/JMP, and the RTS removed.
+
+	W0021
+
+		RTS follows a PULS, and thus, the RTS could be removed by
+		including the PC in the PULS instruction.
+
   Individual warnings can be supressed by using the appropritate command
 line option.
 

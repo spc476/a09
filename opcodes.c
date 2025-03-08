@@ -689,19 +689,8 @@ static bool op_inh(struct opcdata *opd)
     {
       message(opd->a09,MSG_WARNING,"W0020: BSR/LBSR/JSR followed by RTS, maybe use BRA/LBRA/JMP?");
     }
-    else if (
-                 (opd->a09->prevop == 0x35) /* PULS */
-              || (opd->a09->prevop == 0x37) /* PULU */
-            )
-    {
-      message(
-          opd->a09,
-          MSG_WARNING,
-          "W0021: %s followed by RTS, maybe add ',PC' to %s?",
-          opd->a09->prevop == 0x35 ? "PULS" : "PULU",
-          opd->a09->prevop == 0x35 ? "PULS" : "PULU"
-      );
-    }
+    else if(opd->a09->prevop == 0x35) /* PULS */
+      message(opd->a09,MSG_WARNING,"W0021: PULS followed by RTS, maybe add ',PC' to PULS?");
   }
   return true;
 }
