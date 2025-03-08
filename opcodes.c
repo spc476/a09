@@ -687,10 +687,14 @@ static bool op_inh(struct opcdata *opd)
          || (opd->a09->prevop == 0xBD) /* JSR extended */
        )
     {
-      message(opd->a09,MSG_WARNING,"W0020: BSR/LBSR/JSR followed by RTS, maybe use BRA/LBRA/JMP?");
+      if (opd->label.s == 0)
+        message(opd->a09,MSG_WARNING,"W0020: BSR/LBSR/JSR followed by RTS, maybe use BRA/LBRA/JMP?");
     }
     else if(opd->a09->prevop == 0x35) /* PULS */
-      message(opd->a09,MSG_WARNING,"W0021: PULS followed by RTS, maybe add ',PC' to PULS?");
+    {
+      if (opd->label.s == 0)
+        message(opd->a09,MSG_WARNING,"W0021: PULS followed by RTS, maybe add ',PC' to PULS?");
+    }
   }
   return true;
 }
