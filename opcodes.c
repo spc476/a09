@@ -1019,6 +1019,7 @@ static bool op_pshpul(struct opcdata *opd)
   
   opd->bytes[opd->sz++] = opd->op->opcode;
   opd->bytes[opd->sz++] = operand;
+  opd->a09->prevpb      = operand;
   return true;
 }
 
@@ -1056,6 +1057,7 @@ static bool op_exg(struct opcdata *opd)
   
   opd->bytes[opd->sz++] = opd->op->opcode;
   opd->bytes[opd->sz++] = operand;
+  opd->a09->prevpb      = operand;
   return true;
 }
 

@@ -562,6 +562,44 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     
   opd.cycles  = opd.op->cycles;
   rc          = opd.op->func(&opd);
+  
+  if (pass == 2)
+  {
+    if ((opd.label.s == 0) && (opd.op->cycles > 0))
+    {
+      if (
+              (a09->prevop == 0x16) /* LBRA         */
+           || (a09->prevop == 0x20) /* BRA          */
+           || (a09->prevop == 0x0E) /* JMP direct   */
+           || (a09->prevop == 0x6E) /* JMP indexed  */
+           || (a09->prevop == 0x7E) /* JMP extended */
+         )
+      {
+        if (a09->prevop != opd.op->opcode) /* skip jump table */
+          message(a09,MSG_WARNING,"W0022: possible dead code");
+      }
+      else if ((a09->prevop == 0x39) || (a09->prevop == 0x3B)) /* RTS RTI */
+      {
+        message(a09,MSG_WARNING,"W0022: possible dead code");
+      }
+      else if ((a09->prevop == 0x35) || (a09->prevop == 0x37)) /* PULS PULU */
+      {
+        if ((a09->prevpb & 0x80) == 0x80) /* pull PC */
+          message(a09,MSG_WARNING,"W0022: possible dead code");
+      }
+      else if (a09->prevop == 0x1F) /* TFR */
+      {
+        if ((a09->prevpb & 0x0F) == 0x05) /* transfer to PC */
+          message(a09,MSG_WARNING,"W0022: possible dead code");
+      }
+      else if (a09->prevop == 0x1E) /* EXT */
+      {
+        if (((a09->prevpb & 0xF0) == 0x50) || ((a09->prevpb & 0x0F) == 0x05))
+          message(a09,MSG_WARNING,"W0022: possible dead code");
+      }
+    }
+  }
+  
   a09->prevop = opd.op->opcode;
   
   if (rc)
@@ -969,7 +1007,8 @@ int main(int argc,char *argv[])
     .list_pad        = 0,
     .pc              = 0,
     .dp              = 0,
-    .prevop          = 0x01,	/* not a valid opcode */
+    .prevop          = 0x01, /* not a valid opcode */
+    .prevpb          = 0,    /* filled by PULx, TFR, EXT */
     .debug           = false,
     .mkdeps          = false,
     .obj             = true,

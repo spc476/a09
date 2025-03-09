@@ -180,6 +180,7 @@ struct a09
   uint16_t          pc;
   unsigned char     dp;
   unsigned char     prevop;
+  unsigned char     prevpb;
   bool              debug;
   bool              mkdeps;
   bool              obj;

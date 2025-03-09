@@ -661,6 +661,12 @@ be potential problems.  The defined warnings are:
 		RTS without a label follows a PULS, and thus, the RTS could
 		be removed by including the PC in the PULS instruction.
 
+	W0022
+
+		An instruction without label follows an instruction that
+		transfers program control.  It should not trigger on a jump
+		table.
+
   Individual warnings can be supressed by using the appropritate command
 line option.
 
