@@ -583,7 +583,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   
   if (pass == 2)
   {
-    if (!labeled(&opd) && (opd.op->cycles > 0))
+    if (!labeled(&opd) && (opd.op->cycles > 0) && (opd.a09->lnum > 1))
     {
       if (
               (a09->prevop == 0x16) /* LBRA         */
