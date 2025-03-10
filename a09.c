@@ -610,7 +610,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
         if ((a09->prevpb & 0x0F) == 0x05) /* transfer to PC */
           message(a09,MSG_WARNING,"W0022: possible dead code");
       }
-      else if (a09->prevop == 0x1E) /* EXT */
+      else if (a09->prevop == 0x1E) /* EXG */
       {
         if (((a09->prevpb & 0xF0) == 0x50) || ((a09->prevpb & 0x0F) == 0x05))
           message(a09,MSG_WARNING,"W0022: possible dead code");
