@@ -583,7 +583,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   
   if (pass == 2)
   {
-    if (!labeled(&opd) && (opd.op->cycles > 0) && (opd.a09->lnum > 1))
+    if (!labeled(&opd) && (opd.op->cycles > 0))
     {
       if (
               (a09->prevop == 0x16) /* LBRA         */
@@ -1119,6 +1119,7 @@ int main(int argc,char *argv[])
   
   a09.pc      = 0;
   a09.dp      = 0;
+  a09.prevop  = 0x01;
   a09.lastsym = NULL;
   a09.label   = (label){ .s = 0 , .text = { '\0' } };
   rc          = assemble_pass(&a09,2);
