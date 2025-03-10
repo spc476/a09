@@ -48,6 +48,23 @@ char const MSG_ERROR[]   = "error";
 
 /**************************************************************************/
 
+bool labeled(struct opcdata *opd)
+{
+  assert(opd       != NULL);
+  assert(opd->pass == 2);
+  assert(opd->a09  != NULL);
+  
+  if (opd->a09->lastsym == NULL)
+    return false;
+  if (opd->a09->lastsym->type != SYM_ADDRESS)
+    return false;
+  if (opd->a09->lastsym->value == opd->a09->pc)
+    return true;
+  return false;
+}
+
+/**************************************************************************/
+
 static bool check_warning_tag(struct a09 *a09,char const *tag,div_t *pres)
 {
   assert(a09  != NULL);
@@ -531,6 +548,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
         return message(a09,MSG_ERROR,"E0001: Internal error---'%.*s' should exist, but doesn't",a09->label.s,a09->label.text);
       if ((sym->type == SYM_ADDRESS) && (sym->value != a09->pc))
         return message(a09,MSG_ERROR,"E0002: Internal error---out of phase;\n\t'%.*s' = %04X pass 1, %04X pass 2",a09->label.s,a09->label.text,sym->value,a09->pc);
+      a09->lastsym = sym;
     }
     
     /*-------------------------------------------------------------------
@@ -565,7 +583,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   
   if (pass == 2)
   {
-    if ((opd.label.s == 0) && (opd.op->cycles > 0))
+    if (!labeled(&opd) && (opd.op->cycles > 0))
     {
       if (
               (a09->prevop == 0x16) /* LBRA         */
@@ -1002,6 +1020,7 @@ int main(int argc,char *argv[])
     .lnum            = 0,
     .total_cycles    = 0,
     .symtab          = NULL,
+    .lastsym         = NULL,
     .nowarn          = {0},
     .label           = { .s = 0, .text = { '\0' } },
     .list_pad        = 0,
@@ -1098,10 +1117,11 @@ int main(int argc,char *argv[])
   ; don't want to reset the PC or DP or global label when using INCLUDE.
   ;------------------------------------------------------------------------*/
   
-  a09.pc    = 0;
-  a09.dp    = 0;
-  a09.label = (label){ .s = 0 , .text = { '\0' } };
-  rc        = assemble_pass(&a09,2);
+  a09.pc      = 0;
+  a09.dp      = 0;
+  a09.lastsym = NULL;
+  a09.label   = (label){ .s = 0 , .text = { '\0' } };
+  rc          = assemble_pass(&a09,2);
   
   message(&a09,MSG_DEBUG,"Post assembly phases");
   
