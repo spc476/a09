@@ -28,9 +28,6 @@
 * algorithm, as we have no functions, and the parenthensis are handled by
 * factor().  See the table cops[] in get_op() for the precedence levels.
 *
-* Note: Even though we don't have any right associative operators, we
-* do have support for them for the time when (if) they are added.
-*
 ****************************************************************************/
 
 #include <string.h>
