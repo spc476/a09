@@ -47,7 +47,8 @@
 
 enum vmops
 {
-  VM_LOR,       /* why yes, these do match enum operator */
+  VM_WORD,      /* why yes, these do match enum operator */
+  VM_LOR,
   VM_LAND,
   VM_GT,
   VM_GE,
@@ -107,6 +108,7 @@ enum vmops
 
 enum
 {
+  XC00 = 1 / ((int)VM_WORD == (int)OP_WORD),
   XC01 = 1 / ((int)VM_LOR  == (int)OP_LOR),
   XC02 = 1 / ((int)VM_LAND == (int)OP_LAND),
   XC03 = 1 / ((int)VM_GT   == (int)OP_GT),
@@ -329,6 +331,11 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
   {
     switch(test->prog[ip++])
     {
+      case VM_WORD:
+           result      = stack[sp + 1] * 256 + stack[sp];
+           stack[++sp] = result;
+           break;
+           
       case VM_LOR:
            result      = stack[sp + 1] || stack[sp];
            stack[++sp] = result;

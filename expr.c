@@ -58,6 +58,7 @@ static bool eval(
     
   switch(op)
   {
+    case OP_WORD: v1->value = v1->value * 256 + v2->value; break;
     case OP_LOR:  v1->value = v1->value || v2->value; break;
     case OP_LAND: v1->value = v1->value && v2->value; break;
     case OP_GT:   v1->value = v1->value >  v2->value; break;
@@ -331,6 +332,7 @@ struct optable const *get_op(struct buffer *buffer)
     [OP_EQ]   = { OP_EQ   , AS_LEFT  ,  300 } ,
     [OP_GE]   = { OP_GE   , AS_LEFT  ,  300 } ,
     [OP_GT]   = { OP_GT   , AS_LEFT  ,  300 } ,
+    [OP_WORD] = { OP_WORD , AS_LEFT  ,  250 } ,
     [OP_LAND] = { OP_LAND , AS_LEFT  ,  200 } ,
     [OP_LOR]  = { OP_LOR  , AS_LEFT  ,  100 } ,
   };
@@ -406,6 +408,13 @@ struct optable const *get_op(struct buffer *buffer)
          else
            return &cops[OP_GT];
            
+    case ':':
+         if (buffer->buf[buffer->ridx] == ':')
+         {
+           buffer->ridx++;
+           return &cops[OP_WORD];
+         } /* fallthrough */
+         
     default:
          if (c != '\0')
            buffer->ridx--;

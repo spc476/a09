@@ -181,6 +181,51 @@ at all:
   This generates an operand byte of 0.  This can be useful if you need a
 5-cycle NOP instruction.
 
+  The assembler also supports a wide range of operators.  Unary operators
+include:
+
+	>n	Force n to be 16 bits
+	<n	Force n to be 8 bits
+	<<n	Force n to be 5 bits (signed)
+	-n	Negate n
+	~n	2s complement n
+	+n	n
+	n!	Factorial n (floating point values only)
+
+And binary operators include (grouped by highest to lowest, left to right
+assiciative unless indicated otherwise):
+
+	a ** b	a to the b power (right to left associative)
+
+	a * b	a * b
+	a / b	a / b
+	a % b	a mod b
+
+	a + b	a add b
+	a - b	a sub b
+
+	a << b	a shift left b bits
+	a >> b	a shift right b bits
+
+	a & b	a bitwise and b
+
+	a ^ b	a bitwise exclusive or b
+
+	a | b	a bitwise or b
+
+	a <> b	a not equal to b
+	a <  b	a less than b
+	a <= b	a less than or equal to b
+	a =  b	a equal to b
+	a >= b	a greater than or equal to b
+	a >  b	a greater than b
+
+	a :: b	a * 256 + b (a MSB of word, b LSB of word)
+
+	a && b	a logical and b
+
+	a || b	a logical or b
+
   The list of supported pseudo operations---if label "Non-standard", it's a
 non-standard pesudo operation for most 6809 assemblers.
 

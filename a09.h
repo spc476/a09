@@ -90,6 +90,7 @@ enum associative
 
 enum operator
 {
+  OP_WORD,
   OP_LOR,
   OP_LAND,
   OP_GT,
