@@ -329,6 +329,7 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
   
   while(true)
   {
+    a09->lnum = test->line;
     switch(test->prog[ip++])
     {
       case VM_WORD:
@@ -1233,6 +1234,7 @@ static bool ft_compile(
   if (new == NULL)
     return message(a09,MSG_ERROR,"E0046: out of memory");
     
+  new->line = a09->lnum;
   memcpy(new->prog,program,vip * sizeof(enum vmops));
   
   c = skip_space(buffer);
