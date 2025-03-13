@@ -43,19 +43,20 @@ static bool eval(
                   struct a09   *         a09,
                   struct value *restrict v1,
                   enum operator          op,
-                  struct value *restrict v2
+                  struct value *restrict v2,
+                  int                    pass
 )
 {
   assert(a09 != NULL);
   assert(v1  != NULL);
   assert(v2  != NULL);
+  assert((pass == 1) || (pass == 2));
   
   if (v1->external || v2->external)
     return message(a09,MSG_ERROR,"E0007: EXTERN in expression not allowed");
     
   switch(op)
   {
-    case OP_WORD: v1->value = v1->value * 256 + v2->value; break;
     case OP_LOR:  v1->value = v1->value || v2->value; break;
     case OP_LAND: v1->value = v1->value && v2->value; break;
     case OP_GT:   v1->value = v1->value >  v2->value; break;
@@ -94,6 +95,11 @@ static bool eval(
            while(--v2->value)
              v1->value = v1->value * v1->value;
          }
+         break;
+         
+    case OP_WORD:
+         v1->value = value_lsb(a09,v1->value,pass) * 256
+                   + value_lsb(a09,v2->value,pass);
          break;
   }
   
@@ -451,7 +457,7 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
       {
         if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
           return message(a09,MSG_ERROR,"E0065: Internal error---expression parser mismatch");
-        if (!eval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp]))
+        if (!eval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp],pass))
           return false;
         vsp++;
         osp++;
@@ -474,7 +480,7 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   {
     if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
       return message(a09,MSG_ERROR,"E0065: Internal error---expression parser mismatch");
-    if (!eval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp]))
+    if (!eval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp],pass))
       return false;
     vsp++;
     osp++;

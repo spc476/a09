@@ -42,7 +42,7 @@ static unsigned char value_5bit(struct a09 *a09,uint16_t value,int pass)
 
 /**************************************************************************/
 
-static unsigned char value_lsb(struct a09 *a09,uint16_t value,int pass)
+unsigned char value_lsb(struct a09 *a09,uint16_t value,int pass)
 {
   assert(a09 != NULL);
   assert((pass == 1) || (pass == 2));

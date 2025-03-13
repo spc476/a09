@@ -58,6 +58,7 @@ static bool reval(
     [OP_BAND] = "&",
     [OP_SHR]  = ">>",
     [OP_SHL]  = "<<",
+    [OP_WORD] = "::",
   };
   
   assert(a09 != NULL);
@@ -71,7 +72,6 @@ static bool reval(
   {
     switch(op)
     {
-      case OP_WORD: v1->value.d = v1->value.d * 256 + v2->value.d; break;
       case OP_LOR:  v1->value.d = v1->value.d || v2->value.d; break;
       case OP_LAND: v1->value.d = v1->value.d && v2->value.d; break;
       case OP_GT:   v1->value.d = v1->value.d >  v2->value.d; break;
@@ -83,6 +83,7 @@ static bool reval(
       case OP_BOR:
       case OP_BEOR:
       case OP_BAND:
+      case OP_WORD:
       case OP_SHR:
       case OP_SHL:  return message(a09,MSG_ERROR,"E0092: operator '%s' not supported for floats",toper[op]);
       case OP_SUB:  v1->value.d = v1->value.d -  v2->value.d; break;
@@ -106,7 +107,6 @@ static bool reval(
   {
     switch(op)
     {
-      case OP_WORD: v1->value.f = v1->value.f * 256 + v2->value.f; break;
       case OP_LOR:  v1->value.f = v1->value.f || v2->value.f; break;
       case OP_LAND: v1->value.f = v1->value.f && v2->value.f; break;
       case OP_GT:   v1->value.f = v1->value.f >  v2->value.f; break;
@@ -118,6 +118,7 @@ static bool reval(
       case OP_BOR:
       case OP_BEOR:
       case OP_BAND:
+      case OP_WORD:
       case OP_SHR:
       case OP_SHL:  return message(a09,MSG_ERROR,"E0092: operator '%s' not supported for floats",toper[op]);
       case OP_SUB:  v1->value.f = v1->value.f -  v2->value.f; break;

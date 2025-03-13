@@ -220,7 +220,7 @@ assiciative unless indicated otherwise):
 	a >= b	a greater than or equal to b
 	a >  b	a greater than b
 
-	a :: b	a * 256 + b (a MSB of word, b LSB of word)
+	a :: b	a * 256 + b (a MSB of word, b LSB of word) (int values only)
 
 	a && b	a logical and b
 
