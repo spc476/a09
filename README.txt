@@ -213,14 +213,14 @@ assiciative unless indicated otherwise):
 
 	a | b	a bitwise or b
 
+	a :: b	a * 256 + b (a MSB of word, b LSB of word) (int values only)
+
 	a <> b	a not equal to b
 	a <  b	a less than b
 	a <= b	a less than or equal to b
 	a =  b	a equal to b
 	a >= b	a greater than or equal to b
 	a >  b	a greater than b
-
-	a :: b	a * 256 + b (a MSB of word, b LSB of word) (int values only)
 
 	a && b	a logical and b
 

@@ -332,7 +332,8 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
     switch(test->prog[ip++])
     {
       case VM_WORD:
-           result      = stack[sp + 1] * 256 + stack[sp];
+           result      = value_lsb(a09,stack[sp + 1],2) * 256
+                       + value_lsb(a09,stack[sp    ],2);
            stack[++sp] = result;
            break;
            
