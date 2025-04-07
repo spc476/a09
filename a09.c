@@ -164,7 +164,8 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
 #endif
   va_end(ap);
   fprintf(stderr,"\n");
-  return tag != MSG_ERROR;
+  a09->error = tag == MSG_ERROR;
+  return !a09->error;
 }
 
 /**************************************************************************/
@@ -1030,6 +1031,7 @@ int main(int argc,char *argv[])
     .dp              = 0,
     .prevop          = 0x01, /* not a valid opcode */
     .prevpb          = 0,    /* filled by PULx, TFR, EXT */
+    .error           = false,
     .debug           = false,
     .mkdeps          = false,
     .obj             = true,
@@ -1128,7 +1130,7 @@ int main(int argc,char *argv[])
   
   message(&a09,MSG_DEBUG,"Post assembly phases");
   
-  if (a09.runtests)
+  if (a09.runtests && !a09.error)
     test_run(&a09);
     
   if (rc)

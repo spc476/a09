@@ -183,6 +183,7 @@ struct a09
   unsigned char     dp;
   unsigned char     prevop;
   unsigned char     prevpb;
+  bool              error;
   bool              debug;
   bool              mkdeps;
   bool              obj;
