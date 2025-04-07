@@ -136,6 +136,7 @@ enum
   TEST_NON_READ_MEM,
   TEST_WEEDS,
   TEST_NON_WRITE_MEM,
+  TEST_NON_EXEC_MEM,
   TEST_max,
 };
 
@@ -646,7 +647,7 @@ static mc6809byte__t ft_cpu_read(mc6809__t *cpu,mc6809addr__t addr,bool inst)
   if (inst && !data->prot[addr].exec)
   {
     snprintf(data->errbuf,sizeof(data->errbuf),"PC=%04X addr=%04X",cpu->instpc,addr);
-    longjmp(cpu->err,TEST_WEEDS);
+    longjmp(cpu->err,TEST_NON_EXEC_MEM);
   }
   
   return data->memory[addr];
@@ -2090,6 +2091,7 @@ void test_run(struct a09 *a09)
         "reading from non-readable memory",
         "code went into the weeds",
         "writing to non-writable memory",
+        "executing non-code",
       };
       
       assert(rc < TEST_max);
