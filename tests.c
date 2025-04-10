@@ -979,7 +979,7 @@ static bool ft_value(
     buffer->ridx--;
     rc = s2num(a09,&v,buffer,10);
   }
-  else if ((c == '.') || (c == '.') || isalpha(c))
+  else if ((c == '_') || (c == '.') || isalpha(c))
   {
     struct symbol *sym;
     label          label;
