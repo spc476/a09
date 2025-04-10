@@ -327,6 +327,13 @@ non-standard pesudo operation for most 6809 assemblers.
 		directive unless otherwise specified.  If specified inside a
 		.TEST directive, they only take effect when the test is run.
 
+			.OPT TEST ORG <address>
+
+				Set the starting address for assembling test
+				cases.  This directive can ONLY appear
+				outside of a .TEST directive, given the
+				nature of the assembler.
+
 			.OPT TEST POKE <address>,<byte>
 
 				Write the byte value to the address in the
@@ -377,12 +384,11 @@ non-standard pesudo operation for most 6809 assemblers.
 				directive, given the nature of the
 				assembler.
 
-			.OPT TEST ORG <address>
+			.OPT TEST TRACEALL
 
-				Set the starting address for assembling test
-				cases.  This directive can ONLY appear
-				outside of a .TEST directive, given the
-				nature of the assembler.
+				Trace all the code execution of a single
+				test.  This can ONLY appear inside a .TEST
+				directive.
 
 		The following options only apply when using the BASIC
 		format, or the RS-DOS format if the -B options is ued,

@@ -155,6 +155,7 @@ struct unittest
   char const    *filename;
   size_t         line;
   struct buffer  name;
+  bool           trace_all;
 };
 
 struct vmcode
@@ -1587,6 +1588,14 @@ bool test__opt(struct opcdata *opd)
     else if ((tmp.s == 5) && (memcmp(tmp.text,"DEBUG",5) == 0))
       return message(opd->a09,MSG_DEBUG,"OPT TEST DEBUG");
       
+    else if ((tmp.s == 8) && (memcmp(tmp.text,"TRACEALL",8) == 0))
+    {
+      if (!data->intest)
+        return message(opd->a09,MSG_WARNING,"W9999: cannot set TRACEALL outside a .TEXT directive");
+      assert(data->nunits > 0);
+      data->units[data->nunits-1].trace_all = true;
+    }
+    
     else
       return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
   }
@@ -1705,10 +1714,11 @@ static bool ftest__test(struct format *fmt,struct opcdata *opd)
     struct unittest *new = realloc(data->units,(data->nunits + 1) * sizeof(struct unittest));
     if (new == NULL)
       return message(opd->a09,MSG_ERROR,"E0046: out of memory");
-    data->units                        = new;
-    data->units[data->nunits].addr     = opd->a09->pc;
-    data->units[data->nunits].filename = opd->a09->infile;
-    data->units[data->nunits].line     = opd->a09->lnum;
+    data->units                         = new;
+    data->units[data->nunits].addr      = opd->a09->pc;
+    data->units[data->nunits].filename  = opd->a09->infile;
+    data->units[data->nunits].line      = opd->a09->lnum;
+    data->units[data->nunits].trace_all = false;
     
     c = skip_space(opd->buffer);
     if ((c == '"') || (c == '\''))
@@ -2018,7 +2028,7 @@ void test_run(struct a09 *a09)
         break;
       }
       
-      if (data->prot[data->cpu.pc.w].tron)
+      if (unit->trace_all || data->prot[data->cpu.pc.w].tron)
       {
         char inst[128];
         char regs[128];
