@@ -384,7 +384,7 @@ non-standard pesudo operation for most 6809 assemblers.
 				directive, given the nature of the
 				assembler.
 
-			.OPT TEST TRACEALL
+			.OPT TEST TRON
 
 				Trace all the code execution of a single
 				test.  This can ONLY appear inside a .TEST

@@ -155,7 +155,7 @@ struct unittest
   char const    *filename;
   size_t         line;
   struct buffer  name;
-  bool           trace_all;
+  bool           tron;
 };
 
 struct vmcode
@@ -1588,12 +1588,12 @@ bool test__opt(struct opcdata *opd)
     else if ((tmp.s == 5) && (memcmp(tmp.text,"DEBUG",5) == 0))
       return message(opd->a09,MSG_DEBUG,"OPT TEST DEBUG");
       
-    else if ((tmp.s == 8) && (memcmp(tmp.text,"TRACEALL",8) == 0))
+    else if ((tmp.s == 4) && (memcmp(tmp.text,"TRON",4) == 0))
     {
       if (!data->intest)
-        return message(opd->a09,MSG_WARNING,"W9999: cannot set TRACEALL outside a .TEXT directive");
+        return message(opd->a09,MSG_WARNING,"W0023: cannot set TRON outside a .TEXT directive");
       assert(data->nunits > 0);
-      data->units[data->nunits-1].trace_all = true;
+      data->units[data->nunits-1].tron = true;
     }
     
     else
@@ -1718,7 +1718,7 @@ static bool ftest__test(struct format *fmt,struct opcdata *opd)
     data->units[data->nunits].addr      = opd->a09->pc;
     data->units[data->nunits].filename  = opd->a09->infile;
     data->units[data->nunits].line      = opd->a09->lnum;
-    data->units[data->nunits].trace_all = false;
+    data->units[data->nunits].tron = false;
     
     c = skip_space(opd->buffer);
     if ((c == '"') || (c == '\''))
@@ -2028,7 +2028,7 @@ void test_run(struct a09 *a09)
         break;
       }
       
-      if (unit->trace_all || data->prot[data->cpu.pc.w].tron)
+      if (unit->tron || data->prot[data->cpu.pc.w].tron)
       {
         char inst[128];
         char regs[128];
