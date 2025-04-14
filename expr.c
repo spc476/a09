@@ -216,7 +216,7 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
   else if (c == '\'')
   {
     c = buffer->buf[buffer->ridx++];
-    if (isgraph(c))
+    if (isprint(c))
     {
       pv->value = c;
       if (buffer->buf[buffer->ridx] == '\'')
