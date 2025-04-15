@@ -104,3 +104,4 @@ E0103: string space must be between 0 and 22528
 E0104: BASIC format does not support multiple ORG directives
 E0105: unsupported extra option
 E0106: PC %04X exceeds given limit %04X
+E0107: FCC/FCS only accepts one operand

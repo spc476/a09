@@ -80,7 +80,11 @@ static bool collect_string(
     assert(wbuf->widx < sizeof(wbuf->buf));
   }
   
-  return true;
+  c = skip_space(rbuf);
+  if ((c == ';') || (c == '\0'))
+    return true;
+  else
+    return message(a09,MSG_ERROR,"E0107: FCC/FCS only accepts one operand");
 }
 
 /**************************************************************************/
