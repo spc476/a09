@@ -412,9 +412,9 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
     if ((opd->sz == 0) && (opd->datasz == 0))
     {
       if (labelonly && opd->label.s > 0)
-        fprintf(a09->list,"%04X:             %*s",a09->pc,a09->list_pad,"");
+        fprintf(a09->list,"%04X:                %*s",a09->pc,a09->list_pad,"");
       else
-        fprintf(a09->list,"                  %*s",a09->list_pad,"");
+        fprintf(a09->list,"                     %*s",a09->list_pad,"");
     }
     else
     {
@@ -426,6 +426,10 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
           fprintf(a09->list,"%02X",opd->bytes[i]);
         for ( ; c < sizeof(opd->bytes) ; c++)
           fprintf(a09->list,"  ");
+        if (opd->truncate)
+          fprintf(a09->list,"...");
+        else
+          fprintf(a09->list,"   ");
         fprintf(a09->list,"%*s",a09->list_pad,"");
       }
       else
@@ -483,6 +487,7 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
             fprintf(a09->list," %7zu",a09->total_cycles);
           }
         }
+        fprintf(a09->list,"   ");
       }
     }
     
@@ -505,19 +510,20 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   bool           rc;
   struct opcdata opd =
   {
-    .a09     = a09,
-    .op      = NULL,
-    .buffer  = buffer,
-    .label   = { .s = 0 },
-    .pass    = pass,
-    .sz      = 0,
-    .data    = false,
-    .datasz  = 0,
-    .cycles  = 0,
-    .ecycles = 0,
-    .acycles = 0,
-    .mode    = AM_INHERENT,
-    .value   =
+    .a09      = a09,
+    .op       = NULL,
+    .buffer   = buffer,
+    .label    = { .s = 0 },
+    .pass     = pass,
+    .sz       = 0,
+    .data     = false,
+    .truncate = false,
+    .datasz   = 0,
+    .cycles   = 0,
+    .ecycles  = 0,
+    .acycles  = 0,
+    .mode     = AM_INHERENT,
+    .value    =
     {
       .value        = 0,
       .bits         = 0,
@@ -1110,7 +1116,7 @@ int main(int argc,char *argv[])
     
     fprintf(
       a09.list,
-      "                         %*s| FILE %s\n",
+      "                            %*s| FILE %s\n",
       a09.list_pad,"",
       a09.infile
     );

@@ -236,6 +236,7 @@ struct opcdata
   uint16_t             sz;
   unsigned char        bytes[6];
   bool                 data;
+  bool                 truncate;
   size_t               datasz;
   size_t               cycles;
   size_t               ecycles;

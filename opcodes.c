@@ -1223,7 +1223,8 @@ static bool pseudo_fcb(struct opcdata *opd)
       }
     }
     
-    char c = skip_space(opd->buffer);
+    opd->truncate = opd->datasz > sizeof(opd->bytes);
+    char c        = skip_space(opd->buffer);
     if ((c == ';') || (c == '\0'))
       return true;
     if (c != ',')
@@ -1270,7 +1271,8 @@ static bool pseudo_fdb(struct opcdata *opd)
       }
     }
     
-    char c = skip_space(opd->buffer);
+    opd->truncate = opd->datasz > sizeof(opd->bytes);
+    char c        = skip_space(opd->buffer);
     if ((c == ';') || (c == '\0'))
       return true;
     if (c != ',')
@@ -1293,8 +1295,9 @@ static bool pseudo_fcc(struct opcdata *opd)
   if (!collect_string(opd->a09,&textstring,opd->buffer,c))
     return false;
     
-  opd->data   = true;
-  opd->datasz = textstring.widx;
+  opd->data     = true;
+  opd->datasz   = textstring.widx;
+  opd->truncate = opd->datasz > sizeof(opd->bytes);
   
   if (opd->pass == 2)
   {
@@ -1322,8 +1325,9 @@ static bool pseudo_ascii(struct opcdata *opd)
   if (!parse_string(opd->a09,&textstring,opd->buffer))
     return false;
     
-  opd->data   = true;
-  opd->datasz = textstring.widx;
+  opd->data     = true;
+  opd->datasz   = textstring.widx;
+  opd->truncate = opd->datasz > sizeof(opd->bytes);
   
   if (opd->pass == 2)
   {
@@ -1385,7 +1389,7 @@ static bool pseudo_include(struct opcdata *opd)
     print_list(opd->a09,opd,false);
     fprintf(
       new.list,
-      "                         %*s| FILE %s\n",
+      "                            %*s| FILE %s\n",
       opd->a09->list_pad,"",
       filename.buf
     );
@@ -1397,7 +1401,7 @@ static bool pseudo_include(struct opcdata *opd)
   {
     fprintf(
       new.list,
-      "                         %*s| END-OF-LINE\n",
+      "                            %*s| END-OF-LINE\n",
       opd->a09->list_pad,""
     );
   }
@@ -1503,8 +1507,9 @@ static bool pseudo_incbin(struct opcdata *opd)
   assert(start < fsize);
   assert(start + len <= fsize);
   
-  opd->data   = true;
-  opd->datasz = len;
+  opd->data     = true;
+  opd->datasz   = len;
+  opd->truncate = opd->datasz > sizeof(opd->bytes);
   
   if (opd->pass == 1)
     add_file_dep(opd->a09,filename.buf);
@@ -1532,9 +1537,10 @@ static bool pseudo_incbin(struct opcdata *opd)
       
       if (!fill)
       {
-        opd->sz   = min(bsz,sizeof(opd->bytes));
-        opd->data = true;
-        fill      = true;
+        opd->sz       = min(bsz,sizeof(opd->bytes));
+        opd->data     = true;
+        opd->truncate = bsz > sizeof(opd->bytes);
+        fill          = true;
         memcpy(opd->bytes,buffer,opd->sz);
       }
       
@@ -1674,8 +1680,9 @@ static bool pseudo_align(struct opcdata *opd)
   if (rem == 0)
     return true;
     
-  opd->data   = true;
-  opd->datasz = opd->value.value - rem;
+  opd->data     = true;
+  opd->datasz   = opd->value.value - rem;
+  opd->truncate = opd->datasz > sizeof(opd->bytes);
   
   return opd->a09->format.align(&opd->a09->format,opd);
 }
@@ -1695,8 +1702,9 @@ static bool pseudo_fcs(struct opcdata *opd)
   if (!collect_string(opd->a09,&textstring,opd->buffer,c))
     return false;
     
-  opd->data   = true;
-  opd->datasz = textstring.widx;
+  opd->data     = true;
+  opd->datasz   = textstring.widx;
+  opd->truncate = opd->datasz > sizeof(opd->bytes);
   
   if (opd->pass == 2)
   {

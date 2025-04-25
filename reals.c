@@ -123,7 +123,8 @@ bool freal__ieee(struct format *fmt,struct opcdata *opd)
       }
     }
     
-    char c = skip_space(opd->buffer);
+    opd->truncate = opd->datasz > sizeof(opd->bytes);
+    char c        = skip_space(opd->buffer);
     if ((c == ';') || (c == '\0'))
       return true;
     if (c != ',')
@@ -193,7 +194,8 @@ static bool freal_40b(struct format *fmt,struct opcdata *opd,int bias)
           return false;
     }
     
-    char c = skip_space(opd->buffer);
+    opd->truncate = opd->datasz > sizeof(opd->bytes);
+    char c        = skip_space(opd->buffer);
     if ((c == ';') || (c == '\0'))
       return true;
     if (c != ',')
