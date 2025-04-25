@@ -992,7 +992,7 @@ static bool op_pshpul(struct opcdata *opd)
   assert(opd->op->page == 0);
   
   unsigned char operand = 0;
-  char          skip    = tolower(opd->op->name[3]); /* yes, I know! */
+  char          skip    = toupper(opd->op->name[3]); /* yes, I know! */
   char          c       = skip_space(opd->buffer);
   
   if (c == '\0')
