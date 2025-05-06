@@ -186,6 +186,7 @@ struct testdata
   unsigned long    icount;
   mc6809__t        cpu;
   mc6809dis__t     dis;
+  int              passinit;
   uint16_t         addr;
   uint16_t         sp;
   uint16_t         stacksize;
@@ -1272,9 +1273,15 @@ bool test_pass_start(struct a09 *a09,int pass)
   (void)pass;
   
   struct testdata *test = a09->tests;
-  test->intest          = false;
-  test->testpc          = test->inittestpc;
-  test->resumepc        = 0x0000;
+
+  message(a09,MSG_DEBUG,"testpc=%04X",test->testpc);
+  
+  if (test->passinit == 0)
+    test->testpc = test->inittestpc;
+    
+  test->intest   = false;
+  test->resumepc = 0x0000;
+  test->passinit++;
   return true;
 }
 
@@ -1290,6 +1297,7 @@ bool test_pass_end(struct a09 *a09,int pass)
   
   struct testdata *data = a09->tests;
   
+  data->passinit--;
   if (data->intest)
     return message(a09,MSG_ERROR,"E0077: missing .ENDTST directive");
   else
@@ -2195,6 +2203,7 @@ bool test_init(struct a09 *a09)
     a09->tests->dis.user   = a09->tests;
     a09->tests->dis.read   = ft_dis_read;
     a09->tests->dis.fault  = ft_dis_fault;
+    a09->tests->passinit   = 0;
     a09->tests->addr       = 0;
     a09->tests->sp         = 0xFFF0;
     a09->tests->stacksize  = 1024;
