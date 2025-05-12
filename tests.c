@@ -2114,6 +2114,7 @@ void test_run(struct a09 *a09)
       
       assert(rc < TEST_max);
       message(a09,MSG_WARNING,"W0015: %s: %s: %s",tag,mfaults[rc],data->errbuf);
+      data->errbuf[0] = '\0';
     }
   }
   
