@@ -626,6 +626,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   }
   
   a09->prevop = opd.op->opcode;
+  a09->prevpb = opd.bytes[1];
   
   if (rc)
   {
