@@ -238,6 +238,24 @@ static unsigned char acc_register(char c)
 
 /**************************************************************************/
 
+static bool check_index_register(struct a09 *a09,char c)
+{
+  if ((c == '\0') || (c == ';') || (c == '+') || (c == ']') || isspace(c))
+    return true;
+  return message(a09,MSG_ERROR,"E0016: invalid index register");
+}
+
+/**************************************************************************/
+
+static bool check_pc_register(struct a09 *a09,char c)
+{
+  if ((c == '\0') || (c == ';') || (c == ']') || isspace(c))
+    return true;
+  return message(a09,MSG_ERROR,"E0016: invalid index register");
+}
+
+/**************************************************************************/
+
 static bool parse_operand(struct opcdata *opd)
 {
   assert(opd != NULL);
@@ -287,7 +305,11 @@ static bool parse_operand(struct opcdata *opd)
       case 'X':
       case 'Y':
       case 'U':
-      case 'S': opd->value.postbyte |= index_register(c); break;
+      case 'S':
+           if (!check_index_register(opd->a09,opd->buffer->buf[opd->buffer->ridx]))
+             return false;
+           opd->value.postbyte |= index_register(c);
+           break;
       
       case '-':
            c             = opd->buffer->buf[opd->buffer->ridx];
@@ -307,7 +329,11 @@ static bool parse_operand(struct opcdata *opd)
              case 'X':
              case 'Y':
              case 'U':
-             case 'S': opd->value.postbyte |= index_register(c); break;
+             case 'S':
+                  if (!check_index_register(opd->a09,opd->buffer->buf[opd->buffer->ridx+1]))
+                    return false;
+                  opd->value.postbyte |= index_register(c);
+                  break;
              default: return message(opd->a09,MSG_ERROR,"E0016: invalid index register");
            }
            
@@ -396,7 +422,11 @@ static bool parse_operand(struct opcdata *opd)
              case 'X':
              case 'Y':
              case 'U':
-             case 'S': opd->value.postbyte |= index_register(c); break;
+             case 'S':
+                  if (!check_index_register(opd->a09,opd->buffer->buf[opd->buffer->ridx + 1]))
+                    return false;
+                  opd->value.postbyte |= index_register(c);
+                  break;
              default: return message(opd->a09,MSG_ERROR,"E0018: invalid index register");
            }
            c = opd->buffer->buf[++opd->buffer->ridx];
@@ -494,6 +524,8 @@ static bool parse_operand(struct opcdata *opd)
     case 'Y':
     case 'U':
     case 'S':
+         if (!check_index_register(opd->a09,opd->buffer->buf[opd->buffer->ridx]))
+           return false;
          opd->value.postbyte |= index_register(c);
          if (opd->value.bits == 5)
          {
@@ -597,6 +629,8 @@ static bool parse_operand(struct opcdata *opd)
          opd->buffer->ridx++;
          if (toupper(opd->buffer->buf[opd->buffer->ridx]) == 'R')
            opd->buffer->ridx++;
+         if (!check_pc_register(opd->a09,opd->buffer->buf[opd->buffer->ridx]))
+           return false;
            
          if (opd->value.bits == 0)
          {
