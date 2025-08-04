@@ -40,7 +40,7 @@
 #include <limits.h>
 #include <assert.h>
 
-#include <cgilib7/tree.h>
+#include <cgilib8/tree.h>
 
 enum
 {
