@@ -49,7 +49,7 @@ E0048: missing label or expression for PUBLIC
 E0049: '%.*s' already defined on line %zu
 E0050: not a label
 E0051: value for ALIGN must be known in pass 1
-E0052: missing label for END
+E0052: 
 E0053: format '%s' not supported
 E0054: Internal error---no header written?
 E0055: object size too large
@@ -99,7 +99,7 @@ E0098: Real format '%.*s' not supported
 E0099: Can't reserve 0 bytes of memory
 E0100: Can only assign test code outside a .TEST directive
 E0101: line increment must be between 1 and 65535
-E0102: line number must be between 1 and 65535
+E0102: line number must be between 1 and 63999
 E0103: string space must be between 0 and 22528
 E0104: BASIC format does not support multiple ORG directives
 E0105: unsupported extra option
