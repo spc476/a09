@@ -49,7 +49,7 @@ fbasic.o   : a09.h
 fdefault.o : a09.h
 tests.o    : a09.h
 
-install:
+install: a09
 	$(INSTALL_PROGRAM) a09 $(DESTDIR)$(bindir)
 
 uninstall:
