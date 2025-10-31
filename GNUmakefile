@@ -25,7 +25,14 @@ CFLAGS  = -g
 LDFLAGS = -g
 LDLIBS  = -lcgi8 -lmc6809 -lm
 
-.PHONY: clean
+INSTALL         = /usr/bin/install
+INSTALL_PROGRAM = $(INSTALL)
+
+prefix          = /usr/local
+exec_prefix     = $(prefix)
+bindir          = $(exec_prefix)/bin
+
+.PHONY: clean install uninstall
 
 a09 : a09.o cmdline.o opcodes.o symbol.o expr.o rexpr.o fbin.o frsdos.o fsrec.o fbasic.o fdefault.o reals.o tests.o
 
@@ -41,6 +48,12 @@ fsrec.o    : a09.h
 fbasic.o   : a09.h
 fdefault.o : a09.h
 tests.o    : a09.h
+
+install:
+	$(INSTALL_PROGRAM) a09 $(DESTDIR)$(bindir)
+
+uninstall:
+	$(RM) $(DESTDIR)$(bindir)/a09
 
 clean:
 	$(RM) $(shell find . -name '*.o')
