@@ -183,6 +183,7 @@ struct testdata
   tree__s         *Asserts;
   struct unittest *units;
   size_t           nunits;
+  size_t           failed;
   unsigned long    icount;
   mc6809__t        cpu;
   mc6809dis__t     dis;
@@ -2196,6 +2197,7 @@ bool test_init(struct a09 *a09)
     a09->tests->Asserts    = NULL;
     a09->tests->units      = NULL;
     a09->tests->nunits     = 0;
+    a09->tests->failed     = 0;
     a09->tests->icount     = 0;
     a09->tests->cpu.user   = a09->tests;
     a09->tests->cpu.read   = ft_cpu_read;
