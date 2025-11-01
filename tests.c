@@ -1956,7 +1956,7 @@ static bool ftest__endtst(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-void test_run(struct a09 *a09)
+bool test_run(struct a09 *a09)
 {
   assert(a09        != NULL);
   assert(a09->tests != NULL);
@@ -2116,10 +2116,13 @@ void test_run(struct a09 *a09)
       assert(rc < TEST_max);
       message(a09,MSG_WARNING,"W0015: %s: %s: %s",tag,mfaults[rc],data->errbuf);
       data->errbuf[0] = '\0';
+      data->failed++;
     }
   }
   
+  message(a09,MSG_DEBUG,"failed tests: %zu",data->failed);
   a09->infile = infile;
+  return data->failed == 0;
 }
 
 /**************************************************************************/

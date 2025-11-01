@@ -357,7 +357,7 @@ extern bool                  test_align         (struct opcdata *);
 extern bool                  test_org           (struct opcdata *);
 extern bool                  test_rmb           (struct opcdata *);
 extern bool                  test__opt          (struct opcdata *);
-extern void                  test_run           (struct a09 *);
+extern bool                  test_run           (struct a09 *);
 extern bool                  test_fini          (struct a09 *);
 
 /**************************************************************************/
