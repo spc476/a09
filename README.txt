@@ -283,6 +283,8 @@ non-standard pesudo operation for most 6809 assemblers.
 				directive; the others mentioned above only
 				happen when using the test backend.
 
+				All warnings are enabled by default.
+
 			.OPT * ENABLE <warning>
 
 				Enable a given warning.  Note that upon
@@ -301,8 +303,9 @@ non-standard pesudo operation for most 6809 assemblers.
 				code.  This option is used to define
 				variables for the direct page without
 				actually generating data in the output file.
-				Symbols, however, are defined.  Default
-				value is TRUE.
+				Symbols, however, are defined.
+
+				Default value is TRUE.
 
 			.OPT * REAL ('IEEE' | 'MSFP' | 'LBFP' )
 
@@ -311,6 +314,8 @@ non-standard pesudo operation for most 6809 assemblers.
 				('MSFP') floating point format, or the
 				format used by Lennart Benschop's floating
 				point routines.
+
+				Default value depends upon backend.
 
 			.OPT * CT
 
@@ -333,6 +338,8 @@ non-standard pesudo operation for most 6809 assemblers.
 				cases.  This directive can ONLY appear
 				outside of a .TEST directive, given the
 				nature of the assembler.
+
+				Default value is $E000.
 
 			.OPT TEST POKE <address>,<byte>
 
@@ -362,7 +369,7 @@ non-standard pesudo operation for most 6809 assemblers.
 
 					.OPT TEST PROT r,$400	; ro of $400
 					.OPT TEST PROT rw,foo	; rw @ foo
-					.OPT TEST PROT n,$400	; no access
+					.OPT TEST PROT n,$401	; no access
 					.OPT TEST PROT rxt,run
 
 			.OPT TEST RANDOMIZE
@@ -377,12 +384,16 @@ non-standard pesudo operation for most 6809 assemblers.
 				directive, given the nature of the
 				assembler.
 
+				Default value is $FFF0.
+
 			.OPT TEST STACKSIZE <size>
 
 				Set the default stack size for tests.  This
 				can ONLY appear outside of a .TEST
 				directive, given the nature of the
 				assembler.
+
+				Default value is 1024.
 
 			.OPT TEST TRON
 
@@ -397,25 +408,30 @@ non-standard pesudo operation for most 6809 assemblers.
 			.OPT BASIC CODE <line>
 
 				Set the line number for the code to poke the
-				object code into memory.  Defatuls to the
-				next line number after the DATA statements
-				have been generated.
+				object code into memory.
+
+				Default is the next line after DATA
+				statements.
 
 			.OPT BASIC DEFUSRn <address>
 
-				Omit DEFUSRn=<address> in the BASIC output.
+				Emit DEFUSRn=<address> in the BASIC output.
 				This is for code meant to run with either
 				ECB or DECB.  n can be between 0 and 9.
 
 			.OPT BASIC INCR <delta>
 
 				Set the line incrmement for subsequence
-				BASIC lines.  It defaults to 10.
+				BASIC lines.
+
+				Default value is 10.
 
 			.OPT BASIC LINE <line>
 
 				Set the starting line number for the DATA
-				statements.  The default value is 10.
+				statements.
+
+				Default value is 10.
 
 				NOTE: This should appear before any data is
 				generated, otherwise the results are
@@ -433,9 +449,10 @@ non-standard pesudo operation for most 6809 assemblers.
 
 				Used for the CLEAR <size>,<address> BASIC
 				command to reserve string and memory
-				addresses.  If not specified, the default
-				value of 200 will be used for the string
-				space in CB,ECB or DECB.
+				addresses.
+
+				Default value is 200 (default of CB, ECB and
+				DECB).
 
 	.PCLE expr
 
@@ -605,10 +622,8 @@ be potential problems.  The defined warnings are:
 
 	W0002
 
-	        The label wasn't referenced by any other code.  And if the
-	        label is not referenced, why have the label in the first
-	        place?  It could also mean an unused variable whose removal
-	        could save some space.
+	        The label wasn't referenced by any other code.  It could
+	        mean an unused variable whose removal could save some space.
 
 	W0003
 
@@ -699,7 +714,8 @@ be potential problems.  The defined warnings are:
 
 	W0019
 
-		The given floating point format is not supported.
+		The floating point double format is not supported; using
+		single format.
 
 	W0020
 
@@ -732,7 +748,7 @@ They are:
 	rsdos	Radio Shack TRS-80 Color Computer format
 
 		The resulting output can be loaded by Color Basic using the
-		CLOADM or LOADM BASIC command.  The defualt floating point
+		CLOADM or LOADM BASIC command.  The default floating point
 		format is the Microsoft 8-bit floating point format.
 
 	srec	Motorola S-Record output
@@ -804,7 +820,7 @@ They are:
 
 		Supress warnings from the assembler.  This option can be
 		specified multiple times, and multiple warnings can be
-		specified per option.  See the file 'Errors.txt' for the
+		specified per option.  See the file 'Warnings.txt' for the
 		warning tags to use.
 
 	-o filename
