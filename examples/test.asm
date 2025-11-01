@@ -7,8 +7,7 @@
 lfsr		equ	$F6
 
 		org	$4000
-start		bsr	random
-		rts
+start		bra	random
 
 the.byte	fcb	$55
 .word		fdb	$AAAA
