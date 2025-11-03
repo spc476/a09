@@ -74,25 +74,25 @@ static bool eval(
     case OP_ADD:  v1->value = v1->value +  v2->value; break;
     case OP_MUL:  v1->value = v1->value *  v2->value; break;
     case OP_DIV:
-         if (pass == 1)
-           v1->value = 0;
-         else
+         if (v2->value == 0)
          {
-           if (v2->value == 0)
+           if (!v2->defined)
+             return message(a09,MSG_ERROR,"E0052: dividend undefined");
+           else
              return message(a09,MSG_ERROR,"E0008: divide by 0 error");
-           v1->value = v1->value / v2->value;
          }
+         v1->value = v1->value / v2->value;
          break;
          
     case OP_MOD:
-         if (pass == 1)
-           v1->value = 0;
-         else
+         if (v2->value == 0)
          {
-           if (v2->value == 0)
+           if (!v2->defined)
+             return message(a09,MSG_ERROR,"E0052: dividend undefined");
+           else
              return message(a09,MSG_ERROR,"E0008: divide by 0 error");
-           v1->value = v1->value % v2->value;
          }
+         v1->value = v1->value % v2->value;
          break;
          
     case OP_EXP:

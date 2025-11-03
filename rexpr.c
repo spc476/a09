@@ -46,8 +46,7 @@ static bool reval(
                   struct fvalue *restrict v1,
                   enum operator           op,
                   struct fvalue *restrict v2,
-                  bool                    fdouble,
-                  int                     pass
+                  bool                    fdouble
 )
 {
   static char const *const toper[] =
@@ -92,25 +91,25 @@ static bool reval(
       case OP_MUL:  v1->value.d = v1->value.d *  v2->value.d; break;
       case OP_EXP:  v1->value.d = pow(v1->value.d,v2->value.d); break;
       case OP_DIV:
-           if (pass == 1)
-             v1->value.d = 0.0;
-           else
+           if (v2->value.d == 0.0)
            {
-             if (v2->value.d == 0.0)
+             if (!v2->defined)
+               return message(a09,MSG_ERROR,"E0052: dividend undefined");
+             else
                return message(a09,MSG_ERROR,"E0008: divide by 0 error");
-             v1->value.d = v1->value.d / v2->value.d;
            }
+           v1->value.d = v1->value.d / v2->value.d;
            break;
            
       case OP_MOD:
-           if (pass == 1)
-             v1->value.d = 0.0;
-           else
+           if (v2->value.d == 0.0)
            {
-             if (v2->value.d == 0.0)
+             if (!v2->defined)
+               return message(a09,MSG_ERROR,"E0052: dividend undefined");
+             else
                return message(a09,MSG_ERROR,"E0008: divide by 0 error");
-             v1->value.d = fmod(v1->value.d,v2->value.d);
            }
+           v1->value.d = fmod(v1->value.d,v2->value.d);
            break;
     }
   }
@@ -137,25 +136,25 @@ static bool reval(
       case OP_MUL:  v1->value.f = v1->value.f *  v2->value.f; break;
       case OP_EXP:  v1->value.f = powf(v1->value.f,v2->value.f); break;
       case OP_DIV:
-           if (pass == 1)
-             v1->value.f = 0.0f;
-           else
+           if (v2->value.f == 0.0f)
            {
-             if (v2->value.f == 0.0f)
+             if (!v2->defined)
+               return message(a09,MSG_ERROR,"E0052: dividend undefined");
+             else
                return message(a09,MSG_ERROR,"E0008: divide by 0 error");
-             v1->value.f = v1->value.f / v2->value.f;
            }
+           v1->value.f = v1->value.f / v2->value.f;
            break;
            
       case OP_MOD:
-           if (pass == 1)
-             v1->value.f = 0.0f;
-           else
+           if (v2->value.f == 0.0f)
            {
-             if (v2->value.f == 0.0f)
+             if (!v2->defined)
+               return message(a09,MSG_ERROR,"E0052: dividend undefined");
+             else
                return message(a09,MSG_ERROR,"E0008: divide by 0 error");
-             v1->value.f = fmodf(v1->value.f,v2->value.f);
            }
+           v1->value.f = fmodf(v1->value.f,v2->value.f);
            break;
     }
   }
@@ -404,7 +403,7 @@ bool rexpr(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool
       {
         if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
           return message(a09,MSG_ERROR,"E0065: Internal error---expression parser mismatch");
-        if (!reval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp],fdouble,pass))
+        if (!reval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp],fdouble))
           return false;
         vsp++;
         osp++;
@@ -427,7 +426,7 @@ bool rexpr(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool
   {
     if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
       return message(a09,MSG_ERROR,"E0065: Internal error---expression parser mismatch");
-    if (!reval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp],fdouble,pass))
+    if (!reval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp],fdouble))
       return false;
     vsp++;
     osp++;
