@@ -207,6 +207,10 @@ static bool parse_dirext(struct opcdata *opd)
     opd->cycles += 3;
     opd->mode    = AM_EXTENDED;
   }
+  
+  if (!opd->value.defined)
+    return message(opd->a09,MSG_ERROR,"E0108: value needed on pass 1 not defined on pass 1");
+    
   return true;
 }
 

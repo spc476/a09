@@ -734,6 +734,10 @@ be potential problems.  The defined warnings are:
 		transfers program control.  It should not trigger on a jump
 		table.
 
+	W0023
+
+		The use of the .OPT TEST TRON outside of a .TEST directive.
+
   Individual warnings can be supressed by using the appropritate command
 line option.
 
