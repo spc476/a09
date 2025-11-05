@@ -932,3 +932,17 @@ The BASIC backend
 
 		The size of the string storage for the CLEAR BASIC command
 		generated.  It defaults to 200.
+
+Environment Variables
+
+	PATH_SEPARATOR
+
+		The character used to separate directories in a environment
+		variable.  This usually ':' on Unix and ';' on Windows.
+		If not specified, ':' is used.
+
+	A09_INCLUDE_PATH
+
+		A series of paths, using $PATH_SEPARATOR between each entry,
+		where includes files can be found.  Include directories
+		specified on the command line take precedence.

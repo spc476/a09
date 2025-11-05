@@ -232,7 +232,7 @@ static bool add_include_file(struct a09 *a09,char const *filename)
   name[len - 1]               = '\0';
   a09->includes               = includes;
   a09->includes[a09->nincs++] = name;
-  
+  message(a09,MSG_DEBUG,"include '%s'",name);
   return true;
 }
 
@@ -1009,6 +1009,45 @@ static int cleanup(struct a09 *a09,bool success)
 
 /**************************************************************************/
 
+static bool default_include_dirs(struct a09 *a09)
+{
+  assert(a09 != NULL);
+  
+  char const *sep = getenv("PATH_SEPARATOR");
+  char const *inc = getenv("A09_INCLUDE_PATH");
+  char       *copy;
+  char       *path;
+  size_t      len;
+  
+  if (sep == NULL) sep = ":";
+  if (inc == NULL) return true;
+  
+  len  = strlen(inc);
+  copy = malloc(len + 1);
+  if (copy == NULL)
+    return message(a09,MSG_ERROR,"E0046: out of memory");
+  memcpy(copy,inc,len);
+  copy[len] = '\0';
+  
+  do
+  {
+    path = strchr(copy,*sep);
+    if (path != NULL)
+      *path++ = '\0';
+    if (!add_include_file(a09,copy))
+    {
+      free(copy);
+      return false;
+    }
+    copy = path;
+  } while (path != NULL);
+  
+  free(copy);
+  return true;
+}
+
+/**************************************************************************/
+
 int main(int argc,char *argv[])
 {
   int        fi;
@@ -1064,6 +1103,9 @@ int main(int argc,char *argv[])
     return cleanup(&a09,false);
   }
   
+  if (!default_include_dirs(&a09))
+    return cleanup(&a09,false);
+    
   if (a09.runtests)
     if (!test_init(&a09))
       return cleanup(&a09,false);
