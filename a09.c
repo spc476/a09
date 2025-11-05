@@ -1009,17 +1009,21 @@ static int cleanup(struct a09 *a09,bool success)
 
 /**************************************************************************/
 
+#if defined(_WIN32)
+#  define PATH_SEPARATOR ';'
+#else
+#  define PATH_SEPARATOR ':'
+#endif
+
 static bool default_include_dirs(struct a09 *a09)
 {
   assert(a09 != NULL);
   
-  char const *sep = getenv("PATH_SEPARATOR");
   char const *inc = getenv("A09_INCLUDE_PATH");
   char       *cinc;
   char       *copy;
   size_t      len;
   
-  if (sep == NULL) sep = ":";
   if (inc == NULL) return true;
   
   len  = strlen(inc);
@@ -1032,7 +1036,7 @@ static bool default_include_dirs(struct a09 *a09)
   
   do
   {
-    char *path = strchr(copy,*sep);
+    char *path = strchr(copy,PATH_SEPARATOR);
     if (path != NULL)
       *path++ = '\0';
     if (!add_include_dir(a09,copy))

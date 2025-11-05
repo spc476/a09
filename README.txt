@@ -935,14 +935,8 @@ The BASIC backend
 
 Environment Variables
 
-	PATH_SEPARATOR
-
-		The character used to separate directories in a environment
-		variable.  This usually ':' on Unix and ';' on Windows.
-		If not specified, ':' is used.
-
 	A09_INCLUDE_PATH
 
-		A series of paths, using $PATH_SEPARATOR between each entry,
-		where includes files can be found.  Include directories
-		specified on the command line take precedence.
+		A series of paths, using ':' (or ';' on Windows) between
+		each entry, where includes files can be found.  Include
+		directories specified on the command line take precedence.
