@@ -210,7 +210,7 @@ char *add_file_dep(struct a09 *a09,char const *filename)
 
 /**************************************************************************/
 
-static bool add_include_file(struct a09 *a09,char const *filename)
+static bool add_include_dir(struct a09 *a09,char const *filename)
 {
   char   **includes;
   char    *name;
@@ -777,7 +777,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
              message(a09,MSG_ERROR,"E0068: missing option argument");
              return -1;
            }
-           if (!add_include_file(a09,file))
+           if (!add_include_dir(a09,file))
              return -1;
            break;
            
@@ -1034,7 +1034,7 @@ static bool default_include_dirs(struct a09 *a09)
     path = strchr(copy,*sep);
     if (path != NULL)
       *path++ = '\0';
-    if (!add_include_file(a09,copy))
+    if (!add_include_dir(a09,copy))
     {
       free(copy);
       return false;
