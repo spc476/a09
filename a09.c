@@ -1015,8 +1015,8 @@ static bool default_include_dirs(struct a09 *a09)
   
   char const *sep = getenv("PATH_SEPARATOR");
   char const *inc = getenv("A09_INCLUDE_PATH");
+  char       *cinc;
   char       *copy;
-  char       *path;
   size_t      len;
   
   if (sep == NULL) sep = ":";
@@ -1028,21 +1028,22 @@ static bool default_include_dirs(struct a09 *a09)
     return message(a09,MSG_ERROR,"E0046: out of memory");
   memcpy(copy,inc,len);
   copy[len] = '\0';
+  cinc      = copy;
   
   do
   {
-    path = strchr(copy,*sep);
+    char *path = strchr(copy,*sep);
     if (path != NULL)
       *path++ = '\0';
     if (!add_include_dir(a09,copy))
     {
-      free(copy);
+      free(cinc);
       return false;
     }
     copy = path;
-  } while (path != NULL);
+  } while (copy != NULL);
   
-  free(copy);
+  free(cinc);
   return true;
 }
 
