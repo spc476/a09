@@ -146,6 +146,18 @@ static bool block_zero_write(
 
 /**************************************************************************/
 
+static bool frsdos_pass_start(struct format *fmt,struct a09 *a09,int pass)
+{
+  assert(fmt != NULL);
+  (void)a09;
+  (void)pass;
+  
+  fmt->Float = freal__msfp;
+  return true;
+}
+
+/**************************************************************************/
+
 static bool frsdos_align(struct format *fmt,struct opcdata *opd)
 {
   assert(fmt          != NULL);
@@ -466,7 +478,7 @@ bool format_rsdos_init(struct a09 *a09)
   {
     .backend    = BACKEND_RSDOS,
     .cmdline    = frsdos_cmdline,
-    .pass_start = fdefault_pass,
+    .pass_start = frsdos_pass_start,
     .pass_end   = fdefault_pass,
     .write      = frsdos_write,
     .opt        = frsdos__opt,

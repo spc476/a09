@@ -168,6 +168,8 @@ static bool fbasic_pass_start(struct format *fmt,struct a09 *a09,int pass)
   (void)a09;
   assert((pass == 1) || (pass == 2));
   
+  fmt->Float = freal__msfp;
+  
   if (pass == 2)
   {
     struct format_basic *basic = fmt->data;

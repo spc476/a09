@@ -32,6 +32,18 @@ char const format_bin_usage[] = "";
 
 /**************************************************************************/
 
+static bool fbin_pass_start(struct format *fmt,struct a09 *a09,int pass)
+{
+  assert(fmt != NULL);
+  (void)a09;
+  (void)pass;
+  
+  fmt->Float = freal__ieee;
+  return true;
+}
+
+/**************************************************************************/
+
 static bool fbin_align(struct format *fmt,struct opcdata *opd)
 {
   assert(fmt != NULL);
@@ -108,7 +120,7 @@ bool format_bin_init(struct a09 *a09)
   {
     .backend    = BACKEND_BIN,
     .cmdline    = fdefault_cmdline,
-    .pass_start = fdefault_pass,
+    .pass_start = fbin_pass_start,
     .pass_end   = fdefault_pass,
     .write      = fdefault_write,
     .opt        = fdefault__opt,

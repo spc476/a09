@@ -144,6 +144,8 @@ static bool fsrec_pass_start(struct format *fmt,struct a09 *a09,int pass)
   assert(a09          != NULL);
   assert((pass == 1) || (pass == 2));
   
+  fmt->Float = freal__ieee;
+  
   if (pass == 2)
   {
     struct format_srec *format = fmt->data;
