@@ -1396,9 +1396,8 @@ static bool pseudo_include(struct opcdata *opd)
   assert(filename.widx < sizeof(filename.buf));
   filename.buf[filename.widx++] = '\0';
   
-  new.inbuf  = (struct buffer){ .buf = {0}, .widx = 0 , .ridx = 0 };
-  new.infile = add_file_dep(&new,filename.buf);
-  new.in     = fopen(filename.buf,"r");
+  new.inbuf = (struct buffer){ .buf = {0}, .widx = 0 , .ridx = 0 };
+  new.in    = fopen(filename.buf,"r");
   
   if (new.in == NULL)
   {
@@ -1409,10 +1408,15 @@ static bool pseudo_include(struct opcdata *opd)
       snprintf(incfile,sizeof(incfile),"%s/%s",opd->a09->includes[i],filename.buf);
       new.in = fopen(incfile,"r");
       if (new.in != NULL)
+      {
+        new.infile = add_file_dep(&new,incfile);
         break;
-   }
+      }
+    }
   }
-  
+  else
+    new.infile = add_file_dep(&new,filename.buf);
+    
   if (new.in == NULL)
   {
     opd->a09->deps  = new.deps;
