@@ -1456,64 +1456,14 @@ static bool pseudo_include(struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool pseudo_incbin(struct opcdata *opd)
+static bool incbin(struct opcdata *opd,FILE *fp,long len,long start,struct buffer const filename)
 {
   assert(opd != NULL);
+  assert(fp  != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  struct buffer  filename;
-  FILE          *fp;
-  int            c;
-  long           fsize;
-  long           start = 0;
-  long           len   = 0;
+  long fsize;
   
-  if (!parse_string(opd->a09,&filename,opd->buffer))
-    return false;
-    
-  assert(filename.widx < sizeof(filename.buf));
-  filename.buf[filename.widx++] = '\0';
-  
-  /*-------------------------------------------
-  ; check for starting offset and length
-  ;--------------------------------------------*/
-  
-  c = skip_space(opd->buffer);
-  if (c == ',')
-  {
-    struct value v;
-    if (!expr(&v,opd->a09,opd->buffer,opd->pass))
-      return false;
-    if ((opd->pass == 2) && !v.defined)
-      return message(opd->a09,MSG_ERROR,"E0094: value not defined");
-    start = v.value;
-    
-    c = skip_space(opd->buffer);
-    if (c == ',')
-    {
-      bool neg = false;
-      
-      c = skip_space(opd->buffer);
-      if (c == '-')
-        neg = true;
-      else
-        opd->buffer->ridx--;
-        
-      if (!expr(&v,opd->a09,opd->buffer,opd->pass))
-        return false;
-      if ((opd->pass == 2) && !v.defined)
-        return message(opd->a09,MSG_ERROR,"E0094: value not defined");
-      if (v.value == 0)
-        return message(opd->a09,MSG_ERROR,"E0096: size can't be 0");
-      len = v.value;
-      if (neg)
-        len = -len;
-    }
-  }
-  
-  fp = fopen(filename.buf,"rb");
-  if (fp == NULL)
-    return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
   if (fseek(fp,0,SEEK_END) == -1)
     return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
   fsize = ftell(fp);
@@ -1592,8 +1542,73 @@ static bool pseudo_incbin(struct opcdata *opd)
     } while (bsz > 0);
   }
   
-  fclose(fp);
   return true;
+}
+
+/**************************************************************************/
+
+static bool pseudo_incbin(struct opcdata *opd)
+{
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  struct buffer  filename;
+  FILE          *fp;
+  int            c;
+  long           start = 0;
+  long           len   = 0;
+  bool           rc;
+  
+  if (!parse_string(opd->a09,&filename,opd->buffer))
+    return false;
+    
+  assert(filename.widx < sizeof(filename.buf));
+  filename.buf[filename.widx++] = '\0';
+  
+  /*-------------------------------------------
+  ; check for starting offset and length
+  ;--------------------------------------------*/
+  
+  c = skip_space(opd->buffer);
+  if (c == ',')
+  {
+    struct value v;
+    if (!expr(&v,opd->a09,opd->buffer,opd->pass))
+      return false;
+    if ((opd->pass == 2) && !v.defined)
+      return message(opd->a09,MSG_ERROR,"E0094: value not defined");
+    start = v.value;
+    
+    c = skip_space(opd->buffer);
+    if (c == ',')
+    {
+      bool neg = false;
+      
+      c = skip_space(opd->buffer);
+      if (c == '-')
+        neg = true;
+      else
+        opd->buffer->ridx--;
+        
+      if (!expr(&v,opd->a09,opd->buffer,opd->pass))
+        return false;
+      if ((opd->pass == 2) && !v.defined)
+        return message(opd->a09,MSG_ERROR,"E0094: value not defined");
+      if (v.value == 0)
+        return message(opd->a09,MSG_ERROR,"E0096: size can't be 0");
+      len = v.value;
+      if (neg)
+        len = -len;
+    }
+  }
+  
+  fp = fopen(filename.buf,"rb");
+  if (fp == NULL)
+    return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
+
+  rc = incbin(opd,fp,len,start,filename);
+  fclose(fp);
+  return rc;
 }
 
 /**************************************************************************/
