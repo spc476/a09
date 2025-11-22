@@ -1059,6 +1059,11 @@ static bool op_pshpul(struct opcdata *opd)
     }
   }
   
+  if (opd->pass == 1)
+    if ((opd->op->opcode == 0x35) || (opd->op->opcode == 0x37))
+      if (operand == 0x80)
+        message(opd->a09,MSG_WARNING,"W0024: only pulling PC, maybe use RTS?");
+      
   opd->bytes[opd->sz++] = opd->op->opcode;
   opd->bytes[opd->sz++] = operand;
   return true;
