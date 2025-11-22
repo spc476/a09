@@ -1600,7 +1600,7 @@ bool test__opt(struct opcdata *opd)
     else if ((tmp.s == 4) && (memcmp(tmp.text,"TRON",4) == 0))
     {
       if (!data->intest)
-        return message(opd->a09,MSG_WARNING,"W0023: cannot set TRON outside a .TEXT directive");
+        return message(opd->a09,MSG_WARNING,"W0023: cannot set TRON outside a .TEST directive");
       assert(data->nunits > 0);
       data->units[data->nunits-1].tron = true;
     }
