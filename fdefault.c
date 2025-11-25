@@ -118,7 +118,7 @@ bool fdefault__test(struct format *fmt,struct opcdata *opd)
     label                label;
     char                 c;
     
-    if (!read_line(opd->a09->in,&opd->a09->inbuf))
+    if (!read_line(opd->a09,opd->a09->in,&opd->a09->inbuf))
       return false;
       
     opd->a09->lnum++;

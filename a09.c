@@ -238,7 +238,7 @@ static bool add_include_dir(struct a09 *a09,char const *filename)
 
 /**************************************************************************/
 
-bool read_line(FILE *in,struct buffer *buffer)
+bool read_line(struct a09 *a09,FILE *in,struct buffer *buffer)
 {
   assert(in     != NULL);
   assert(buffer != NULL);
@@ -249,25 +249,34 @@ bool read_line(FILE *in,struct buffer *buffer)
   while(!feof(in))
   {
     int c = fgetc(in);
-    if (c == EOF)  return false;
+    if (c == EOF)
+    {
+      if (buffer->widx == 0)
+      {
+        buffer->buf[0] = '\0'; //memset(buffer->buf,0,sizeof(buffer->buf));
+        return true;
+      }
+      else
+        return message(a09,MSG_ERROR,"E0010: unexpected end of input");
+    }
     if (c == '\n') break;
     if (c == '\t')
     {
       for (size_t num = 8 - (buffer->widx & 7) , j = 0 ; j < num ; j++)
       {
         if (buffer->widx == sizeof(buffer->buf)-1)
-          return false;
+          return message(a09,MSG_ERROR,"E0109: input line too long");
         buffer->buf[buffer->widx++] = ' ';
       }
     }
     else if (isprint(c))
     {
       if (buffer->widx == sizeof(buffer->buf)-1)
-        return false;
+        return message(a09,MSG_ERROR,"E0109: input line too long");
       buffer->buf[buffer->widx++] = c;
     }
     else
-      return false;
+      return message(a09,MSG_ERROR,"E0110: invalid character '%c' (%d) on input",(unsigned char)c,(unsigned char)c);
   }
   
   assert(buffer->widx < sizeof(buffer->buf));
@@ -669,8 +678,8 @@ bool assemble_pass(struct a09 *a09,int pass)
     
   while(!feof(a09->in))
   {
-    if (!read_line(a09->in,&a09->inbuf))
-      break;
+    if (!read_line(a09,a09->in,&a09->inbuf))
+      return false;
     a09->lnum++;
     if (!parse_line(a09,&a09->inbuf,pass))
       return false;

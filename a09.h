@@ -316,7 +316,7 @@ extern bool                  enable_warning     (struct a09 *,char const *);
 extern bool                  disable_warning    (struct a09 *,char const *);
 extern bool                  message            (struct a09 *,char const *restrict,char const *restrict,...) __attribute__((format(printf,3,4)));
 extern char                 *add_file_dep       (struct a09 *,char const *);
-extern bool                  read_line          (FILE *,struct buffer *);
+extern bool                  read_line          (struct a09 *,FILE *,struct buffer *);
 extern unsigned char         value_lsb          (struct a09 *,uint16_t,int);
 extern bool                  collect_esc_string (struct a09 *,struct buffer *restirct,struct buffer *restrict,char);
 extern bool                  parse_string       (struct a09 *,struct buffer *restrict,struct buffer *restrict);
