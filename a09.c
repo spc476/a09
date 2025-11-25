@@ -253,7 +253,7 @@ bool read_line(struct a09 *a09,FILE *in,struct buffer *buffer)
     {
       if (buffer->widx == 0)
       {
-        buffer->buf[0] = '\0'; //memset(buffer->buf,0,sizeof(buffer->buf));
+        buffer->buf[0] = '\0';
         return true;
       }
       else
