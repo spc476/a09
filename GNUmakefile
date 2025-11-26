@@ -38,15 +38,16 @@ a09 : a09.o cmdline.o opcodes.o symbol.o expr.o rexpr.o fbin.o frsdos.o fsrec.o 
 
 a09.o      : a09.h
 cmdline.o  : a09.h
-opcodes.o  : a09.h
-symbol.o   : a09.h
 expr.o     : a09.h
-rexpr.o    : a09.h
+fbasic.o   : a09.h
 fbin.o     : a09.h
+fdefault.o : a09.h
 frsdos.o   : a09.h
 fsrec.o    : a09.h
-fbasic.o   : a09.h
-fdefault.o : a09.h
+opcodes.o  : a09.h
+reals.o    : a09.h
+rexpr.o    : a09.h
+symbol.o   : a09.h
 tests.o    : a09.h
 
 install: a09
