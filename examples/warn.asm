@@ -1,11 +1,6 @@
-
-;***************************************************************************
-; Example for every warning as09 will generate.
-; GPL3+ Copyright (C) 2024 by Sean Conner.
-;
 ; * - only with the test format
-;
-;***************************************************************************
+
+		org	$0
 
 .start		lda	<<b16,x		; W0002, W0003, W0010
 		ldb	#$FF12		; W0004
@@ -36,8 +31,35 @@ next16		brn	next8b		; okay (BRN exempted W0012)
 next8b		lbrn	next16b		; okay (BRN exempted W0009, W0012)
 next16b		rts
 
+		bsr	next16b
+		rts			; W0020
+		jsr	<next16b
+		rts			; W0020
+		jsr	>next16b
+		rts			; W0020
+		jsr	32,x
+		rts			; W0020
+
+		puls	a,b
+		rts			; W0021
+		pulu	a,b
+		rts			; no warning
+
+		rts
+		nop			; W0022
+		puls	pc		; W0024
+		pulu	pc		; W0024
+		
+		bsr	next16b
+lab1		rts			; no warning
+		puls	a,b
+lab2		rts			; no warning
+
+		.opt	test tron	; W0023
+
 		.opt	* real msfp
 		.floatd	1e38		; W0019
+
 
 foobar		equ	$20
 b16		equ	$8080
@@ -51,8 +73,8 @@ d		equ	2		; W0013
 ;***********************************************************
 
 	.test	"test"
+	.opt	test	stacksize 1024	; W0018
 	.opt	test	stack	$F000	; W0017
-	.opt	test	stacksize $100	; W0018
 		lbsr	badwrite
 		rts
 
