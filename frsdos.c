@@ -41,6 +41,7 @@ struct format_rsdos
   uint16_t  defusr[10];
   bool      endf;
   bool      org;
+  bool      exec;
 };
 
 /**************************************************************************/
@@ -49,6 +50,7 @@ char const format_rsdos_usage[] =
         "\n"
         "RSDOS format options:\n"
         "\t-B filename\tfilename for BASIC code output\n"
+        "\t-E\t\tinclude EXEC call\n"
         "\t-L line\t\tstarting line # (default 10)\n"
         "\t-N filename\tfilename for RSDOS\n"
         "\t-P size\t\tsize of string pool (default 200)\n";
@@ -198,6 +200,8 @@ static bool frsdos_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     
     if (sym == NULL)
     {
+      if (format->exec)
+        return message(opd->a09,MSG_ERROR,"E0111: missing label on END directive");
       hdr[3] = 0;
       hdr[4] = 0;
     }
@@ -268,6 +272,12 @@ static bool frsdos_end(struct format *fmt,struct opcdata *opd,struct symbol cons
       
       if (defusr && (format->usr != 0))
         return message(opd->a09,MSG_ERROR,"E0072: can't use USR and DEFUSRn at the same time");
+        
+      if (format->exec)
+      {
+        idx += snprintf(&buffer[idx],sizeof(buffer) - idx,":EXEC%u",sym->value);
+        assert(idx < sizeof(buffer));
+      }
       
       basic = fopen(format->name,"w");
       if (basic == NULL)
@@ -377,6 +387,10 @@ static bool frsdos_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,ch
            return message(a09,MSG_ERROR,"E0068: missing option argument");
          break;
          
+    case 'E':
+         format->exec = true;
+         break;
+         
     case 'L':
          if (!arg_uint16_t(&format->line,arg,0,63999u))
            return message(a09,MSG_ERROR,"E0102: line number must be between 1 and 63999");
@@ -463,6 +477,9 @@ static bool frsdos__opt(struct format *fmt,struct opcdata *opd,label *be)
       format->line = val.value;
     }
     
+    else if ((tmp.s == 4) && (memcmp(tmp.text,"EXEC",4) == 0))
+      format->exec = true;
+      
     else
       return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
   }
@@ -515,6 +532,7 @@ bool format_rsdos_init(struct a09 *a09)
     data->usr           = 0;
     data->endf          = false;
     data->org           = false;
+    data->exec          = false;
     a09->format         = callbacks;
     a09->format.data    = data;
     memset(data->defusr,0,sizeof(data->defusr));

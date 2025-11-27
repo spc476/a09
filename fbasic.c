@@ -78,6 +78,7 @@ struct format_basic
   uint16_t defusr[10];
   bool     org;
   bool     init;
+  bool     exec;
   char     buffer[249];
 };
 
@@ -87,6 +88,7 @@ char const format_basic_usage[] =
         "\n"
         "BASIC format options:\n"
         "\t-C line\t\tstarting line # for code (automatic after DATA)\n"
+        "\t-E\t\tinclude EXEC call\n"
         "\t-L line\t\tstarting line # for DATA (default 10)\n"
         "\t-N incr\t\tline increment (default 10)\n"
         "\t-P size\t\tsize of string pool (default 200)\n"
@@ -134,6 +136,10 @@ static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,ch
     case 'C':
          if (!arg_uint16_t(&basic->cline,arg,0,63999u))
            return message(a09,MSG_ERROR,"E0102: line number must be between 1 and 63999");
+         break;
+         
+    case 'E':
+         basic->exec = true;
          break;
          
     case 'L':
@@ -273,6 +279,9 @@ static bool fbasic__opt(struct format *fmt,struct opcdata *opd,label *be)
       basic->cline = val.value;
     }
     
+    else if ((tmp.s == 4) && (memcmp(tmp.text,"EXEC",4) == 0))
+      basic->exec = true;
+      
     else
       return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
   }
@@ -328,7 +337,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
       
     fprintf(
         opd->a09->out,
-        "%u CLEAR%u,%u:FORA=%uTO%u:READB:POKEA,B:NEXT:",
+        "%u CLEAR%u,%u:FORA=%uTO%u:READB:POKEA,B:NEXT",
         basic->cline,
         basic->strspace,
         basic->staddr - 1,
@@ -337,7 +346,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     );
     
     if (basic->usr != 0)
-      fprintf(opd->a09->out,"POKE275,%u:POKE276,%u",basic->usr >> 8,basic->usr & 255);
+      fprintf(opd->a09->out,":POKE275,%u:POKE276,%u",basic->usr >> 8,basic->usr & 255);
       
     basic->idx = 0;
     
@@ -345,7 +354,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     {
       if (basic->defusr[i] != 0)
       {
-        int len = snprintf(&basic->buffer[basic->idx],sizeof(basic->buffer) - basic->idx,"DEFUSR%zu=%u:",i,basic->defusr[i]);
+        int len = snprintf(&basic->buffer[basic->idx],sizeof(basic->buffer) - basic->idx,":DEFUSR%zu=%u",i,basic->defusr[i]);
         assert((unsigned)(basic->idx + len) < sizeof(basic->buffer));
         basic->idx += len;
         defusr      = true;
@@ -359,6 +368,14 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
         
       fwrite(basic->buffer,1,basic->idx - 1,opd->a09->out);
     }
+    
+    if (basic->exec)
+    {
+      if (sym == NULL)
+        return message(opd->a09,MSG_ERROR,"E0111: missing label on END directive");
+      fprintf(opd->a09->out,":EXEC%u",sym->value);
+    }
+    
     fputc('\n',opd->a09->out);
   }
   
@@ -458,6 +475,7 @@ bool format_basic_init(struct a09 *a09)
     basic->usr       = 0;
     basic->org       = false;
     basic->init      = false;
+    basic->exec      = false;
     basic->buffer[0] = '\0';
     a09->format      = callbacks;
     a09->format.data = basic;
