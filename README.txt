@@ -419,6 +419,12 @@ non-standard pesudo operation for most 6809 assemblers.
 				This is for code meant to run with either
 				ECB or DECB.  n can be between 0 and 9.
 
+			.OPT BASIC EXEC
+
+				Emit an EXEC call to the BASIC output.  The
+				address used is the one specified with the
+				END directive.
+
 			.OPT BASIC INCR <delta>
 
 				Set the line incrmement for subsequence
@@ -854,6 +860,11 @@ The RSDOS backend
 		for the local filesystem.  If this is not given, no BASIC
 		file is generated.
 
+	-E
+
+		Generate an EXEC call, using the address given on the END
+		directive.
+
 	-L line
 
 		The line number for the BASIC code.  It defaults to 10, but
@@ -915,6 +926,11 @@ The BASIC backend
 		not given, then the next available line after the DATA
 		statements is used.  It can be any value between 0 and
 		63999.
+
+	-E
+
+		Generate an EXEC call, using the address given on the END
+		directive.
 
 	-L line
 
