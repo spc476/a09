@@ -185,17 +185,18 @@ char *add_file_dep(struct a09 *a09,char const *filename)
       return a09->deps[i];
   }
   
-  deps = realloc(a09->deps,(a09->ndeps + 1) * sizeof(char *));
-  if (deps == NULL)
+  len  = strlen(filename) + 1;
+  name = malloc(len);
+  if (name == NULL)
   {
     message(a09,MSG_ERROR,"E0046: out of memory");
     return NULL;
   }
   
-  len  = strlen(filename) + 1;
-  name = malloc(len);
-  if (name == NULL)
+  deps = realloc(a09->deps,(a09->ndeps + 1) * sizeof(char *));
+  if (deps == NULL)
   {
+    free(name);
     message(a09,MSG_ERROR,"E0046: out of memory");
     return NULL;
   }
@@ -219,15 +220,18 @@ static bool add_include_dir(struct a09 *a09,char const *filename)
   assert(a09      != NULL);
   assert(filename != NULL);
   
-  includes = realloc(a09->includes,(a09->nincs + 1) * sizeof(char *));
-  if (includes == NULL)
-    return message(a09,MSG_ERROR,"E0046: out of memory");
-    
   len  = strlen(filename) + 1;
   name = malloc(len);
   if (name == NULL)
     return message(a09,MSG_ERROR,"E0046: out of memory");
     
+  includes = realloc(a09->includes,(a09->nincs + 1) * sizeof(char *));
+  if (includes == NULL)
+  {
+    free(name);
+    return message(a09,MSG_ERROR,"E0046: out of memory");
+  }
+  
   memcpy(name,filename,len);
   name[len - 1]               = '\0';
   a09->includes               = includes;
