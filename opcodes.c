@@ -2138,7 +2138,7 @@ struct opcode const *op_find(char const *name)
     { "ADDA"    , "aaaaa" , op_idie        ,  2 , 0x8B , 0x00 , BYTE  } ,
     { "ADDB"    , "aaaaa" , op_idie        ,  2 , 0xCB , 0x00 , BYTE  } ,
     { "ADDD"    , "aaaaa" , op_idie        ,  4 , 0xC3 , 0x00 , WORD  } ,
-    { "ALIGN"   , ""      , pseudo_align   ,  4 , 0x00 , 0x00 , false } ,
+    { "ALIGN"   , ""      , pseudo_align   ,  0 , 0x00 , 0x00 , false } ,
     { "ANDA"    , "-aa0-" , op_idie        ,  2 , 0x84 , 0x00 , BYTE  } ,
     { "ANDB"    , "-aa0-" , op_idie        ,  2 , 0xC4 , 0x00 , BYTE  } ,
     { "ANDCC"   , "?????" , op_andcc       ,  3 , 0x1C , 0x00 , BYTE  } ,
