@@ -846,6 +846,11 @@ They are:
 
 		Run any tests in the assembly file.
 
+	-w
+
+		If any warnings are displayed, the assembler will return a
+		failure to the operating system.
+
   Individual backends can have their own command line options that are
 activated after the '-f' option.  They are:
 

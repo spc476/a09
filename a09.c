@@ -147,6 +147,8 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
     (void)rc;
     if ((a09->nowarn[res.quot] & (1 << res.rem)))
       return true;
+    else
+      a09->warning = true;
   }
   
   if (a09->lnum > 0)
@@ -747,6 +749,7 @@ static int usage(char const *prog)
            "\t-o filename\toutput filename\n"
            "\t-r\t\trandomize the testing order (only if running tests)\n"
            "\t-t\t\trun tests\n"
+           "\t-w\t\tfail assembler if warnings\n"
            "\n"
            "\tformats: bin rsdos srec basic\n"
            "%s"
@@ -924,6 +927,10 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            a09->runtests = true;
            break;
            
+      case 'w':
+           a09->fail_warn = true;
+           break;
+           
       default:
            if (!a09->format.cmdline(&a09->format,a09,&arg,c))
            {
@@ -1017,7 +1024,11 @@ static int cleanup(struct a09 *a09,bool success)
   for (size_t i = 0 ; i < a09->nincs ; i++)
     free(a09->includes[i]);
   free(a09->includes);
-  return success ? 0 : 1;
+  
+  if (a09->fail_warn && a09->warning)
+    return 1;
+  else
+    return success ? 0 : 1;
 }
 
 /**************************************************************************/
@@ -1106,6 +1117,8 @@ int main(int argc,char *argv[])
     .cycles          = false,
     .cycles_detailed = false,
     .cycles_total    = false,
+    .fail_warn       = false,
+    .warning         = false,
     .inbuf           = { .buf = {0}, .widx = 0, .ridx = 0 },
   };
   
