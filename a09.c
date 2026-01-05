@@ -1030,7 +1030,6 @@ static int cleanup(struct a09 *a09,bool success)
   for (size_t i = 0 ; i < a09->nincs ; i++)
     free(a09->includes[i]);
   free(a09->includes);
-  
   return success ? 0 : 1;
 }
 
