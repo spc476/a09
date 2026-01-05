@@ -851,6 +851,9 @@ They are:
 		If any warnings are displayed, the assembler will return a
 		failure to the operating system.
 
+		NOTE: this will remove the output and listing file if any
+		tests fail.  This may not be what you want for development.
+
   Individual backends can have their own command line options that are
 activated after the '-f' option.  They are:
 
