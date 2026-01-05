@@ -1009,6 +1009,12 @@ static int cleanup(struct a09 *a09,bool success)
   if (a09->out != NULL) fclose(a09->out);
   if (a09->in  != NULL) fclose(a09->in);
   
+  if (a09->fail_warn && a09->warning)
+  {
+    success    = false;
+    a09->error = true;
+  }
+  
   if (!success)
   {
     if (a09->listfile && a09->error) remove(a09->listfile);
@@ -1025,10 +1031,7 @@ static int cleanup(struct a09 *a09,bool success)
     free(a09->includes[i]);
   free(a09->includes);
   
-  if (a09->fail_warn && a09->warning)
-    return 1;
-  else
-    return success ? 0 : 1;
+  return success ? 0 : 1;
 }
 
 /**************************************************************************/
