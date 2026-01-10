@@ -2131,10 +2131,8 @@ static void free_Asserts(tree__s *tree)
 {
   if (tree != NULL)
   {
-    if (tree->left)
-      free_Asserts(tree->left);
-    if (tree->right)
-      free_Asserts(tree->right);
+    free_Asserts(tree->left);
+    free_Asserts(tree->right);
     struct Assert *Assert = tree2Assert(tree);
     free(Assert->Asserts);
     free(tree);
