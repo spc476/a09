@@ -106,7 +106,7 @@ static bool block_zero_write(
   if (opd->pass == 2)
   {
     if (!format->org)
-      return message(opd->a09,MSG_ERROR,"E0057: ORG directive missing\n");
+      return message(opd->a09,MSG_ERROR,"E0057: ORG directive missing");
       
     /*----------------------------------------------------------------------
     ; If the alignment is less than the RSDOS program header size, then just
@@ -186,7 +186,7 @@ static bool frsdos_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     unsigned char        hdr[5];
     
     if (!format->org)
-      return message(opd->a09,MSG_ERROR,"E0057: ORG directive missing\n");
+      return message(opd->a09,MSG_ERROR,"E0057: ORG directive missing");
       
     if (format->endf)
       return message(opd->a09,MSG_ERROR,"E0056: END section already written");
@@ -363,7 +363,7 @@ static bool frsdos_write(struct format *fmt,struct opcdata *opd,void const *buff
   
   struct format_rsdos *format = fmt->data;
   if (!format->org)
-    return message(opd->a09,MSG_ERROR,"E0057: ORG directive missing\n");
+    return message(opd->a09,MSG_ERROR,"E0057: ORG directive missing");
   return fdefault_write(fmt,opd,buffer,len,instruction);
 }
 
