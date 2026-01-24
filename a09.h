@@ -60,6 +60,7 @@ enum backend
   BACKEND_RSDOS,
   BACKEND_SREC,
   BACKEND_BASIC,
+  BACKEND_DRAGON,
 };
 
 enum admode
@@ -304,6 +305,7 @@ extern char const format_bin_usage[];
 extern char const format_rsdos_usage[];
 extern char const format_srec_usage[];
 extern char const format_basic_usage[];
+extern char const format_dragon_usage[];
 
 extern void                  arg_init           (struct arg *,char **,int);
 extern char                  arg_next           (struct arg *);
@@ -341,6 +343,7 @@ extern bool                  format_bin_init    (struct a09 *);
 extern bool                  format_rsdos_init  (struct a09 *);
 extern bool                  format_srec_init   (struct a09 *);
 extern bool                  format_basic_init  (struct a09 *);
+extern bool                  format_dragon_init (struct a09 *);
 extern bool                  fdefault           (struct format *,struct opcdata *);
 extern bool                  fdefault_end       (struct format *,struct opcdata *,struct symbol const *);
 extern bool                  fdefault_cmdline   (struct format *,struct a09 *,struct arg *,char);

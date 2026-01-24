@@ -747,7 +747,7 @@ be potential problems.  The defined warnings are:
   Individual warnings can be supressed by using the appropritate command
 line option.
 
-  There are four possible backends (or formats) the assembler supports. 
+  There are five possible backends (or formats) the assembler supports.
 They are:
 
 	bin	binary backend
@@ -772,6 +772,12 @@ They are:
 		reserve the appropriate memory and poke the object code into
 		memory.  The default floating poing format is the Microsoft
 		8-bit floating point format.
+
+	dragon	The Dragon 32/64 Computer format
+
+		The resulting output can be loaded by the Dragon 32/64.  The
+		floating point format is currently the Microsoft 8-bit
+		floating point format.
 
   The following command line options are supported:
 

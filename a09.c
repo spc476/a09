@@ -751,7 +751,8 @@ static int usage(char const *prog)
            "\t-t\t\trun tests\n"
            "\t-w\t\tfail assembler if warnings\n"
            "\n"
-           "\tformats: bin rsdos srec basic\n"
+           "\tformats: bin rsdos srec basic dragon\n"
+           "%s"
            "%s"
            "%s"
            "%s"
@@ -761,7 +762,8 @@ static int usage(char const *prog)
            format_bin_usage,
            format_rsdos_usage,
            format_srec_usage,
-           format_basic_usage
+           format_basic_usage,
+           format_dragon_usage
          );
   return -1;
 }
@@ -886,6 +888,11 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            else if (strcmp(format,"basic") == 0)
            {
              if (!format_basic_init(a09))
+               return -1;
+           }
+           else if (strcmp(format,"dragon") == 0)
+           {
+             if (!format_dragon_init(a09))
                return -1;
            }
            else
