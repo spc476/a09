@@ -132,6 +132,7 @@ static bool fdragon_align(struct format *fmt,struct opcdata *opd)
   assert(fmt          != NULL);
   assert(fmt->backend == BACKEND_DRAGON);
   assert(opd          != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
   (void)fmt;
   
   if (opd->pass == 2)
@@ -203,6 +204,8 @@ static bool fdragon_rmb(struct format *fmt,struct opcdata *opd)
   assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_DRAGON);
   assert(opd          != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  (void)fmt;
   
   if (opd->pass == 2)
   {
