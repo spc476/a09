@@ -61,10 +61,10 @@ struct format_rsdos
 char const format_rsdos_usage[] =
         "\n"
         "RSDOS format options:\n"
-        "\t-B filename\tfilename for BASIC code output\n"
+        "\t-B file\t\tfilename for BASIC code output\n"
         "\t-E\t\tinclude EXEC call\n"
         "\t-L line\t\tstarting line # (default 10)\n"
-        "\t-N filename\tfilename for RSDOS\n"
+        "\t-N file\t\tfilename for RSDOS\n"
         "\t-P size\t\tsize of string pool (default 200)\n";
         
 /**************************************************************************/
