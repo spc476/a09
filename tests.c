@@ -716,13 +716,13 @@ static int regsearch(void const *needle,void const *haystack)
 {
   label             const *key   = needle;
   struct labeltable const *value = haystack;
-  int                      rc    = memcmp(key->text,value->label.text,min(key->s,value->label.s));
+  int                      rc    = memcmp(key->text,value->label.text,min(key->len,value->label.len));
   
   if (rc == 0)
   {
-    if (key->s < value->label.s)
+    if (key->len < value->label.len)
       rc = -1;
-    else if (key->s > value->label.s)
+    else if (key->len > value->label.len)
       rc =  1;
   }
   return rc;
@@ -732,24 +732,24 @@ static int regsearch(void const *needle,void const *haystack)
 
 static struct labeltable const mregisters[] =
 {
-  { .label = { .text = "A"    , .s = 1 } , .op = VM_CPUA   } ,
-  { .label = { .text = "B"    , .s = 1 } , .op = VM_CPUB   } ,
-  { .label = { .text = "CC"   , .s = 2 } , .op = VM_CPUCC  } ,
-  { .label = { .text = "CC.C" , .s = 4 } , .op = VM_CPUCCc } ,
-  { .label = { .text = "CC.E" , .s = 4 } , .op = VM_CPUCCe } ,
-  { .label = { .text = "CC.F" , .s = 4 } , .op = VM_CPUCCf } ,
-  { .label = { .text = "CC.H" , .s = 4 } , .op = VM_CPUCCh } ,
-  { .label = { .text = "CC.I" , .s = 4 } , .op = VM_CPUCCi } ,
-  { .label = { .text = "CC.N" , .s = 4 } , .op = VM_CPUCCn } ,
-  { .label = { .text = "CC.V" , .s = 4 } , .op = VM_CPUCCv } ,
-  { .label = { .text = "CC.Z" , .s = 4 } , .op = VM_CPUCCz } ,
-  { .label = { .text = "D"    , .s = 1 } , .op = VM_CPUD   } ,
-  { .label = { .text = "DP"   , .s = 2 } , .op = VM_CPUDP  } ,
-  { .label = { .text = "PC"   , .s = 2 } , .op = VM_CPUPC  } ,
-  { .label = { .text = "S"    , .s = 1 } , .op = VM_CPUS   } ,
-  { .label = { .text = "U"    , .s = 1 } , .op = VM_CPUU   } ,
-  { .label = { .text = "X"    , .s = 1 } , .op = VM_CPUX   } ,
-  { .label = { .text = "Y"    , .s = 1 } , .op = VM_CPUY   } ,
+  { .label = { .text = "A"    , .len = 1 } , .op = VM_CPUA   } ,
+  { .label = { .text = "B"    , .len = 1 } , .op = VM_CPUB   } ,
+  { .label = { .text = "CC"   , .len = 2 } , .op = VM_CPUCC  } ,
+  { .label = { .text = "CC.C" , .len = 4 } , .op = VM_CPUCCc } ,
+  { .label = { .text = "CC.E" , .len = 4 } , .op = VM_CPUCCe } ,
+  { .label = { .text = "CC.F" , .len = 4 } , .op = VM_CPUCCf } ,
+  { .label = { .text = "CC.H" , .len = 4 } , .op = VM_CPUCCh } ,
+  { .label = { .text = "CC.I" , .len = 4 } , .op = VM_CPUCCi } ,
+  { .label = { .text = "CC.N" , .len = 4 } , .op = VM_CPUCCn } ,
+  { .label = { .text = "CC.V" , .len = 4 } , .op = VM_CPUCCv } ,
+  { .label = { .text = "CC.Z" , .len = 4 } , .op = VM_CPUCCz } ,
+  { .label = { .text = "D"    , .len = 1 } , .op = VM_CPUD   } ,
+  { .label = { .text = "DP"   , .len = 2 } , .op = VM_CPUDP  } ,
+  { .label = { .text = "PC"   , .len = 2 } , .op = VM_CPUPC  } ,
+  { .label = { .text = "S"    , .len = 1 } , .op = VM_CPUS   } ,
+  { .label = { .text = "U"    , .len = 1 } , .op = VM_CPUU   } ,
+  { .label = { .text = "X"    , .len = 1 } , .op = VM_CPUX   } ,
+  { .label = { .text = "Y"    , .len = 1 } , .op = VM_CPUY   } ,
 };
 
 /**************************************************************************/
@@ -991,7 +991,7 @@ static bool ft_value(
       return false;
     sym = symbol_find(a09,&label);
     if (sym == NULL)
-      return message(a09,MSG_ERROR,"E0004: unknown symbol '%.*s'",label.s,label.text);
+      return message(a09,MSG_ERROR,"E0004: unknown symbol '%.*s'",label.len,label.text);
     v = sym->value;
     sym->refs++;
   }
@@ -1364,7 +1364,7 @@ bool test__opt(struct opcdata *opd)
   
   if (opd->pass == 1)
   {
-    if ((tmp.s == 3) && (memcmp(tmp.text,"ORG",3) == 0))
+    if ((tmp.len == 3) && (memcmp(tmp.text,"ORG",3) == 0))
     {
       struct value addr;
       
@@ -1382,7 +1382,7 @@ bool test__opt(struct opcdata *opd)
   
   else if (opd->pass == 2)
   {
-    if ((tmp.s == 4) && (memcmp(tmp.text,"PROT",4) == 0))
+    if ((tmp.len == 4) && (memcmp(tmp.text,"PROT",4) == 0))
     {
       struct memprot prot =
       {
@@ -1398,7 +1398,7 @@ bool test__opt(struct opcdata *opd)
       c = skip_space(opd->buffer);
       read_label(opd->buffer,&tmp,c);
       
-      for (size_t i = 0 ; i < tmp.s ; i++)
+      for (size_t i = 0 ; i < tmp.len ; i++)
       {
         switch(toupper(tmp.text[i]))
         {
@@ -1468,7 +1468,7 @@ bool test__opt(struct opcdata *opd)
       }
     }
     
-    else if ((tmp.s == 5) && (memcmp(tmp.text,"POKEW",5) == 0))
+    else if ((tmp.len == 5) && (memcmp(tmp.text,"POKEW",5) == 0))
     {
       struct value addr;
       struct value word;
@@ -1507,7 +1507,7 @@ bool test__opt(struct opcdata *opd)
       }
     }
     
-    else if ((tmp.s == 4) && (memcmp(tmp.text,"POKE",4) == 0))
+    else if ((tmp.len == 4) && (memcmp(tmp.text,"POKE",4) == 0))
     {
       struct value addr;
       struct value byte;
@@ -1543,7 +1543,7 @@ bool test__opt(struct opcdata *opd)
         data->memory[addr.value] = byte.value & 255;
     }
     
-    else if ((tmp.s == 5) && (memcmp(tmp.text,"STACK",5) == 0))
+    else if ((tmp.len == 5) && (memcmp(tmp.text,"STACK",5) == 0))
     {
       struct value sp;
       
@@ -1556,7 +1556,7 @@ bool test__opt(struct opcdata *opd)
       data->sp = sp.value;
     }
     
-    else if ((tmp.s == 9) && (memcmp(tmp.text,"STACKSIZE",9) == 0))
+    else if ((tmp.len == 9) && (memcmp(tmp.text,"STACKSIZE",9) == 0))
     {
       struct value size;
       
@@ -1572,14 +1572,14 @@ bool test__opt(struct opcdata *opd)
       data->stacksize = size.value;
     }
     
-    else if ((tmp.s == 9) && (memcmp(tmp.text,"RANDOMIZE",9) == 0))
+    else if ((tmp.len == 9) && (memcmp(tmp.text,"RANDOMIZE",9) == 0))
     {
       if (data->intest)
         return message(opd->a09,MSG_ERROR,"E0089: can only set outside a .TEST directive");
       opd->a09->rndtests = true;
     }
     
-    else if ((tmp.s == 3) && (memcmp(tmp.text,"ORG",3) == 0))
+    else if ((tmp.len == 3) && (memcmp(tmp.text,"ORG",3) == 0))
     {
       struct value addr;
       
@@ -1594,10 +1594,10 @@ bool test__opt(struct opcdata *opd)
       message(opd->a09,MSG_DEBUG,"testloadpc=%04X",data->testpc);
     }
     
-    else if ((tmp.s == 5) && (memcmp(tmp.text,"DEBUG",5) == 0))
+    else if ((tmp.len == 5) && (memcmp(tmp.text,"DEBUG",5) == 0))
       return message(opd->a09,MSG_DEBUG,"OPT TEST DEBUG");
       
-    else if ((tmp.s == 4) && (memcmp(tmp.text,"TRON",4) == 0))
+    else if ((tmp.len == 4) && (memcmp(tmp.text,"TRON",4) == 0))
     {
       if (!data->intest)
         return message(opd->a09,MSG_WARNING,"W0023: cannot set TRON outside a .TEST directive");
@@ -1606,7 +1606,7 @@ bool test__opt(struct opcdata *opd)
     }
     
     else
-      return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
+      return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.len,tmp.text);
   }
   
   return true;
@@ -1737,8 +1737,8 @@ static bool ftest__test(struct format *fmt,struct opcdata *opd)
     }
     else if ((c == ';') || (c == '\0'))
     {
-      memcpy(data->units[data->nunits].name.buf,opd->a09->label.text,opd->a09->label.s);
-      data->units[data->nunits].name.widx = opd->a09->label.s;
+      memcpy(data->units[data->nunits].name.buf,opd->a09->label.text,opd->a09->label.len);
+      data->units[data->nunits].name.widx = opd->a09->label.len;
     }
     else
       return message(opd->a09,MSG_ERROR,"E0060: syntax error");
@@ -1912,8 +1912,8 @@ static bool ftest__Assert(struct format *fmt,struct opcdata *opd)
       ; last non-local label as the "name".
       ;------------------------------------------------------------------*/
       
-      memcpy(name.buf,opd->a09->label.text,opd->a09->label.s);
-      name.widx = opd->a09->label.s;
+      memcpy(name.buf,opd->a09->label.text,opd->a09->label.len);
+      name.widx = opd->a09->label.len;
       if (!ft_compile(opd->a09,&name,data,Assert,opd->buffer,opd->pass))
         return false;
     }

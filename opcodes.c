@@ -1636,7 +1636,7 @@ static bool pseudo_extdp(struct opcdata *opd)
       return false;
     sym = symbol_find(opd->a09,&label);
     if (sym != NULL)
-      return message(opd->a09,MSG_ERROR,"E0064: symbol '%.*s' already defined",sym->name.s,sym->name.text);
+      return message(opd->a09,MSG_ERROR,"E0064: symbol '%.*s' already defined",sym->name.len,sym->name.text);
     sym = symbol_add(opd->a09,&label,0x80);
     if (sym == NULL)
       return message(opd->a09,MSG_ERROR,"E0046: out of memory");
@@ -1667,7 +1667,7 @@ static bool pseudo_extern(struct opcdata *opd)
       return false;
     sym = symbol_find(opd->a09,&label);
     if (sym != NULL)
-      return message(opd->a09,MSG_ERROR,"E0064: symbol '%.*s' already defined",sym->name.s,sym->name.text);
+      return message(opd->a09,MSG_ERROR,"E0064: symbol '%.*s' already defined",sym->name.len,sym->name.text);
     sym = symbol_add(opd->a09,&label,0x8000);
     if (sym == NULL)
       return message(opd->a09,MSG_ERROR,"E0046: out of memory");
@@ -1879,7 +1879,7 @@ static bool pseudo__opt(struct opcdata *opd)
     read_label(opd->buffer,&tmp,c);
     upper_label(&tmp);
     
-    if ((tmp.s == 4) && (memcmp(tmp.text,"TEST",4) == 0))
+    if ((tmp.len == 4) && (memcmp(tmp.text,"TEST",4) == 0))
       return test__opt(opd);
     else
       return opd->a09->format.opt(&opd->a09->format,opd,&tmp);
@@ -1889,7 +1889,7 @@ static bool pseudo__opt(struct opcdata *opd)
   read_label(opd->buffer,&tmp,c);
   upper_label(&tmp);
   
-  if ((tmp.s == 4) && (memcmp(tmp.text,"USES",4) == 0))
+  if ((tmp.len == 4) && (memcmp(tmp.text,"USES",4) == 0))
   {
     if (opd->pass == 2)
     {
@@ -1915,28 +1915,28 @@ static bool pseudo__opt(struct opcdata *opd)
     return true;
   }
   
-  else if ((tmp.s == 7) && (memcmp(tmp.text,"DISABLE",7) == 0))
+  else if ((tmp.len == 7) && (memcmp(tmp.text,"DISABLE",7) == 0))
   {
     skip_space(opd->buffer);
     opd->buffer->ridx--;
     return disable_warning(opd->a09,&opd->buffer->buf[opd->buffer->ridx]);
   }
   
-  else if ((tmp.s == 6) && (memcmp(tmp.text,"ENABLE",6) == 0))
+  else if ((tmp.len == 6) && (memcmp(tmp.text,"ENABLE",6) == 0))
   {
     skip_space(opd->buffer);
     opd->buffer->ridx--;
     return enable_warning(opd->a09,&opd->buffer->buf[opd->buffer->ridx]);
   }
   
-  else if ((tmp.s == 3) && (memcmp(tmp.text,"OBJ",3) == 0))
+  else if ((tmp.len == 3) && (memcmp(tmp.text,"OBJ",3) == 0))
   {
     c = skip_space(opd->buffer);
     read_label(opd->buffer,&tmp,c);
     upper_label(&tmp);
-    if ((tmp.s == 5) && (memcmp(tmp.text,"FALSE",5) == 0))
+    if ((tmp.len == 5) && (memcmp(tmp.text,"FALSE",5) == 0))
       opd->a09->obj = false;
-    else if ((tmp.s == 4) && (memcmp(tmp.text,"TRUE",4) == 0))
+    else if ((tmp.len == 4) && (memcmp(tmp.text,"TRUE",4) == 0))
       opd->a09->obj = true;
     else
       return message(opd->a09,MSG_ERROR,"E0086: boolean value must be 'true' or 'false'");
@@ -1944,27 +1944,27 @@ static bool pseudo__opt(struct opcdata *opd)
     return true;
   }
   
-  else if ((tmp.s == 4) && (memcmp(tmp.text,"REAL",4) == 0))
+  else if ((tmp.len == 4) && (memcmp(tmp.text,"REAL",4) == 0))
   {
     c = skip_space(opd->buffer);
     read_label(opd->buffer,&tmp,c);
     upper_label(&tmp);
-    if ((tmp.s == 4) && (memcmp(tmp.text,"IEEE",4) == 0))
+    if ((tmp.len == 4) && (memcmp(tmp.text,"IEEE",4) == 0))
       opd->a09->format.Float = freal__ieee;
-    else if ((tmp.s == 4) && (memcmp(tmp.text,"MSFP",4) == 0))
+    else if ((tmp.len == 4) && (memcmp(tmp.text,"MSFP",4) == 0))
       opd->a09->format.Float = freal__msfp;
-    else if ((tmp.s == 4) && (memcmp(tmp.text,"LBFP",4) == 0))
+    else if ((tmp.len == 4) && (memcmp(tmp.text,"LBFP",4) == 0))
       opd->a09->format.Float = freal__lbfp;
     else
-      return message(opd->a09,MSG_ERROR,"E0098: Real format '%.*s' not supported",(int)tmp.s,tmp.text);
+      return message(opd->a09,MSG_ERROR,"E0098: Real format '%.*s' not supported",(int)tmp.len,tmp.text);
       
     return true;
   }
   
-  else if ((tmp.s == 5) && (memcmp(tmp.text,"DEBUG",5) == 0))
+  else if ((tmp.len == 5) && (memcmp(tmp.text,"DEBUG",5) == 0))
     return message(opd->a09,MSG_DEBUG,".OPT * DEBUG");
     
-  else if ((tmp.s == 2) && (memcmp(tmp.text,"CT",2) == 0))
+  else if ((tmp.len == 2) && (memcmp(tmp.text,"CT",2) == 0))
   {
     if (opd->a09->cycles && !opd->a09->cycles_total)
     {
@@ -1974,14 +1974,14 @@ static bool pseudo__opt(struct opcdata *opd)
     return true;
   }
   
-  else if ((tmp.s == 2) && (memcmp(tmp.text,"CC",2) == 0))
+  else if ((tmp.len == 2) && (memcmp(tmp.text,"CC",2) == 0))
   {
     opd->a09->total_cycles = 0;
     return true;
   }
   
   else
-    return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
+    return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.len,tmp.text);
 }
 
 /**************************************************************************/

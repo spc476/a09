@@ -32,13 +32,13 @@ int symstrcmp(void const *restrict needle,void const *restrict haystack)
 {
   label         const *key   = needle;
   struct symbol const *value = haystack;
-  int                  rc    = memcmp(key->text,value->name.text,min(key->s,value->name.s));
+  int                  rc    = memcmp(key->text,value->name.text,min(key->len,value->name.len));
   
   if (rc == 0)
   {
-    if (key->s < value->name.s)
+    if (key->len < value->name.len)
       rc = -1;
-    else if (key->s > value->name.s)
+    else if (key->len > value->name.len)
       rc = 1;
   }
   return rc;
@@ -50,13 +50,13 @@ static int symtreecmp(void const *restrict needle,void const *restrict haystack)
 {
   struct symbol const *key   = needle;
   struct symbol const *value = haystack;
-  int                  rc    = memcmp(key->name.text,value->name.text,min(key->name.s,value->name.s));
+  int                  rc    = memcmp(key->name.text,value->name.text,min(key->name.len,value->name.len));
   
   if (rc == 0)
   {
-    if (key->name.s < value->name.s)
+    if (key->name.len < value->name.len)
       rc = -1;
-    else if (key->name.s > value->name.s)
+    else if (key->name.len > value->name.len)
       rc = 1;
   }
   return rc;
@@ -70,11 +70,11 @@ struct symbol *symbol_add(struct a09 *a09,label const *name,uint16_t value)
   assert(name != NULL);
   
   if (
-          ((name->s == 1) && (toupper(name->text[0]) == 'A'))
-       || ((name->s == 1) && (toupper(name->text[0]) == 'B'))
-       || ((name->s == 1) && (toupper(name->text[0]) == 'D'))
+          ((name->len == 1) && (toupper(name->text[0]) == 'A'))
+       || ((name->len == 1) && (toupper(name->text[0]) == 'B'))
+       || ((name->len == 1) && (toupper(name->text[0]) == 'D'))
      )
-    message(a09,MSG_WARNING,"W0013: label '%.*s' could be mistaken for register in index",name->s,name->text);
+    message(a09,MSG_WARNING,"W0013: label '%.*s' could be mistaken for register in index",name->len,name->text);
     
   struct symbol *sym = symbol_find(a09,name);
   
@@ -105,7 +105,7 @@ struct symbol *symbol_add(struct a09 *a09,label const *name,uint16_t value)
   }
   else
   {
-    message(a09,MSG_ERROR,"E0049: '%.*s' already defined on line %zu",name->s,name->text,sym->ldef);
+    message(a09,MSG_ERROR,"E0049: '%.*s' already defined on line %zu",name->len,name->text,sym->ldef);
     return NULL;
   }
   

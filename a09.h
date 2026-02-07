@@ -115,7 +115,7 @@ enum operator
 
 typedef struct label
 {
-  unsigned char s;
+  unsigned char len;
   char          text[63];
 } label;
 

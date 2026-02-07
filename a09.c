@@ -311,7 +311,7 @@ bool read_label(struct buffer *buffer,label *label,char c)
     c = buffer->buf[buffer->ridx++];
   }
   
-  label->s = i;
+  label->len = i;
   assert(buffer->ridx > 0);
   buffer->ridx--;
   return toolong;
@@ -336,19 +336,19 @@ bool parse_label(label *res,struct buffer *buffer,struct a09 *a09,int pass)
     toolong = read_label(buffer,&tmp,c);
     if (tmp.text[0] == '.')
     {
-      memcpy(res->text,a09->label.text,a09->label.s);
-      size_t s = min(tmp.s,sizeof(tmp.text) - a09->label.s);
-      assert(s <= sizeof(res->text));
-      memcpy(&res->text[a09->label.s],tmp.text,s);
-      res->s = a09->label.s + s;
-      assert(res->s <= sizeof(res->text));
-      if ((pass == 1) && (a09->label.s + tmp.s > sizeof(res->text)))
-        message(a09,MSG_WARNING,"W0001: label '%.*s' exceeds %zu characters",res->s,res->text,sizeof(res->text));
+      memcpy(res->text,a09->label.text,a09->label.len);
+      size_t len = min(tmp.len,sizeof(tmp.text) - a09->label.len);
+      assert(len <= sizeof(res->text));
+      memcpy(&res->text[a09->label.len],tmp.text,len);
+      res->len = a09->label.len + len;
+      assert(res->len <= sizeof(res->text));
+      if ((pass == 1) && (a09->label.len + tmp.len > sizeof(res->text)))
+        message(a09,MSG_WARNING,"W0001: label '%.*s' exceeds %zu characters",res->len,res->text,sizeof(res->text));
     }
     else
     {
       if (toolong && (pass == 1))
-        message(a09,MSG_WARNING,"W0001: label '%.*s' exceeds %zu characters",tmp.s,tmp.text,sizeof(tmp.text));
+        message(a09,MSG_WARNING,"W0001: label '%.*s' exceeds %zu characters",tmp.len,tmp.text,sizeof(tmp.text));
       *res = tmp;
     }
     return true;
@@ -362,7 +362,7 @@ bool parse_label(label *res,struct buffer *buffer,struct a09 *a09,int pass)
 void upper_label(label *res)
 {
   assert(res != NULL);
-  for (size_t i = 0 ; i < res->s ; i++)
+  for (size_t i = 0 ; i < res->len ; i++)
     res->text[i] = toupper(res->text[i]);
 }
 
@@ -426,7 +426,7 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
   {
     if ((opd->sz == 0) && (opd->datasz == 0))
     {
-      if (labelonly && opd->label.s > 0)
+      if (labelonly && opd->label.len > 0)
         fprintf(a09->list,"%04X:                %*s",a09->pc,a09->list_pad,"");
       else
         fprintf(a09->list,"                     %*s",a09->list_pad,"");
@@ -528,7 +528,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     .a09      = a09,
     .op       = NULL,
     .buffer   = buffer,
-    .label    = { .s = 0 },
+    .label    = { .len = 0 },
     .pass     = pass,
     .sz       = 0,
     .data     = false,
@@ -567,9 +567,9 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
       ;---------------------------------------------------------------*/
       struct symbol *sym = symbol_find(a09,&opd.label);
       if (sym == NULL)
-        return message(a09,MSG_ERROR,"E0001: Internal error---'%.*s' should exist, but doesn't",a09->label.s,a09->label.text);
+        return message(a09,MSG_ERROR,"E0001: Internal error---'%.*s' should exist, but doesn't",a09->label.len,a09->label.text);
       if ((sym->type == SYM_ADDRESS) && (sym->value != a09->pc))
-        return message(a09,MSG_ERROR,"E0002: Internal error---out of phase;\n\t'%.*s' = %04X pass 1, %04X pass 2",a09->label.s,a09->label.text,sym->value,a09->pc);
+        return message(a09,MSG_ERROR,"E0002: Internal error---out of phase;\n\t'%.*s' = %04X pass 1, %04X pass 2",a09->label.len,a09->label.text,sym->value,a09->pc);
       a09->lastsym = sym;
     }
     
@@ -577,7 +577,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     ; Check to see if we have a global label in case we have a local label
     ;--------------------------------------------------------------------*/
     
-    if ((pass == 1) && (opd.label.text[0] == '.') && (a09->label.s == 0))
+    if ((pass == 1) && (opd.label.text[0] == '.') && (a09->label.len == 0))
       message(a09,MSG_WARNING,"W0010: missing initial label");
       
     /*-----------------------------------
@@ -585,9 +585,9 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
     ;------------------------------------*/
     
     a09->label = opd.label;
-    char *p    = memchr(a09->label.text,'.',a09->label.s);
+    char *p    = memchr(a09->label.text,'.',a09->label.len);
     if (p != NULL)
-      a09->label.s = (unsigned char)(p - a09->label.text);
+      a09->label.len = (unsigned char)(p - a09->label.text);
   }
   
   c = skip_space(&a09->inbuf);
@@ -964,7 +964,7 @@ static void warning_unused_symbols(struct a09 *a09,tree__s *tree)
     if ((sym->refs == 0) && (sym->type == SYM_ADDRESS))
     {
       a09->lnum = sym->ldef;
-      message(a09,MSG_WARNING,"W0002: symbol '%.*s' defined but not used",sym->name.s,sym->name.text);
+      message(a09,MSG_WARNING,"W0002: symbol '%.*s' defined but not used",sym->name.len,sym->name.text);
     }
     warning_unused_symbols(a09,tree->right);
   }
@@ -999,7 +999,7 @@ static void dump_symbols(FILE *out,tree__s *tree)
              symtypes[sym->type],
              sym->value,
              sym->refs,
-             sym->name.s,sym->name.text
+             sym->name.len,sym->name.text
           );
     }
     dump_symbols(out,tree->right);
@@ -1109,7 +1109,7 @@ int main(int argc,char *argv[])
     .symtab          = NULL,
     .lastsym         = NULL,
     .nowarn          = {0},
-    .label           = { .s = 0, .text = { '\0' } },
+    .label           = { .len = 0, .text = { '\0' } },
     .list_pad        = 0,
     .pc              = 0,
     .dp              = 0,
@@ -1214,7 +1214,7 @@ int main(int argc,char *argv[])
   a09.dp      = 0;
   a09.prevop  = 0x01;
   a09.lastsym = NULL;
-  a09.label   = (label){ .s = 0 , .text = { '\0' } };
+  a09.label   = (label){ .len = 0 , .text = { '\0' } };
   rc          = assemble_pass(&a09,2);
   
   message(&a09,MSG_DEBUG,"Post assembly phases");

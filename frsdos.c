@@ -439,7 +439,7 @@ static bool frsdos__opt(struct format *fmt,struct opcdata *opd,label *be)
   struct format_rsdos *format = fmt->data;
   struct value         val;
   
-  if ((be->s != 5) && (memcmp(be->text,"BASIC",5) != 0))
+  if ((be->len != 5) && (memcmp(be->text,"BASIC",5) != 0))
     return true;
     
   if (opd->pass == 2)
@@ -449,51 +449,51 @@ static bool frsdos__opt(struct format *fmt,struct opcdata *opd,label *be)
     read_label(opd->buffer,&tmp,c);
     upper_label(&tmp);
     
-    if ((tmp.s == 3) && (memcmp(tmp.text,"USR",3) == 0))
+    if ((tmp.len == 3) && (memcmp(tmp.text,"USR",3) == 0))
     {
       if (!expr(&val,opd->a09,opd->buffer,opd->pass))
         return false;
       format->usr = val.value;
     }
     
-    else if ((tmp.s == 7) && (memcmp(tmp.text,"DEFUSR",6) == 0))
+    else if ((tmp.len == 7) && (memcmp(tmp.text,"DEFUSR",6) == 0))
     {
       if (!isdigit(tmp.text[6]))
-        return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
+        return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.len,tmp.text);
       if (!expr(&val,opd->a09,opd->buffer,opd->pass))
         return false;
       format->defusr[(size_t)(tmp.text[6] - '0')] = val.value;
     }
     
-    else if ((tmp.s == 8) && (memcmp(tmp.text,"STRSPACE",8) == 0))
+    else if ((tmp.len == 8) && (memcmp(tmp.text,"STRSPACE",8) == 0))
     {
       if (!expr(&val,opd->a09,opd->buffer,opd->pass))
         return false;
       format->strspace = val.value;
     }
     
-    else if ((tmp.s == 4) && (memcmp(tmp.text,"LINE",4) == 0))
+    else if ((tmp.len == 4) && (memcmp(tmp.text,"LINE",4) == 0))
     {
       if (!expr(&val,opd->a09,opd->buffer,opd->pass))
         return false;
       format->line = val.value;
     }
     
-    else if ((tmp.s == 4) && (memcmp(tmp.text,"INCR",4) == 0))
+    else if ((tmp.len == 4) && (memcmp(tmp.text,"INCR",4) == 0))
       return true;
       
-    else if ((tmp.s == 4) && (memcmp(tmp.text,"CODE",4) == 0))
+    else if ((tmp.len == 4) && (memcmp(tmp.text,"CODE",4) == 0))
     {
       if (!expr(&val,opd->a09,opd->buffer,opd->pass))
         return false;
       format->line = val.value;
     }
     
-    else if ((tmp.s == 4) && (memcmp(tmp.text,"EXEC",4) == 0))
+    else if ((tmp.len == 4) && (memcmp(tmp.text,"EXEC",4) == 0))
       format->exec = true;
       
     else
-      return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.s,tmp.text);
+      return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.len,tmp.text);
   }
   
   return true;

@@ -240,7 +240,7 @@ static bool rvalue(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int p
     if (sym == NULL)
     {
       if (pass == 2)
-        return message(a09,MSG_ERROR,"E0004: unknown symbol '%.*s'",label.s,label.text);
+        return message(a09,MSG_ERROR,"E0004: unknown symbol '%.*s'",label.len,label.text);
         
       pv->defined      = false;
       pv->external     = false;
