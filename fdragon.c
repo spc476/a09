@@ -110,7 +110,7 @@ static bool fdragon_pass_end(struct format *fmt,struct a09 *a09,int pass)
     hdr[1] = 0x02;
     hdr[2] = dragon->load >>   8;
     hdr[3] = dragon->load &  255;
-    hdr[4] = (len >> 8)   &  255;
+    hdr[4] = len          >>   8;
     hdr[5] = len          &  255;
     hdr[6] = dragon->exec >>   8;
     hdr[7] = dragon->exec &  255;
