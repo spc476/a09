@@ -841,7 +841,8 @@ They are:
 
 	-o filename
 
-		Specify the output file name.  Defaults to 'a09.obj'.
+		Specify the output file name.  Defaults to 'a09.obj'.  To
+		get output on stdout, use a filename of '-'.
 
 	-r
 

@@ -731,7 +731,7 @@ static int usage(char const *prog)
 {
   fprintf(
            stderr,
-           "usage: %s [options] [files...]\n"
+           "usage: %s [options] [file]\n"
            "\t-I dir\t\tadd directory for include files\n"
            "\t-M\t\tgenerate Makefile dependencies on stdout\n"
            "\t-T\t\trun tests with TAP output\n"
@@ -752,6 +752,9 @@ static int usage(char const *prog)
            "\t-w\t\tfail assembler if warnings\n"
            "\n"
            "\tformats: bin rsdos srec basic dragon\n"
+           "\n"
+           "\tIf no file given, code read via stdin\n"
+           "\tTo generate output on stdout, use '-o-'\n"
            "%s"
            "%s"
            "%s"
@@ -1196,12 +1199,16 @@ int main(int argc,char *argv[])
     return cleanup(&a09,true);
   }
   
-  a09.out  = fopen(a09.outfile,"wb");
-  
-  if (a09.out == NULL)
+  if (strcmp(a09.outfile,"-") == 0)
+    a09.out = stdout;
+  else
   {
-    perror(a09.outfile);
-    return cleanup(&a09,false);
+    a09.out = fopen(a09.outfile,"wb");
+    if (a09.out == NULL)
+    {
+      perror(a09.outfile);
+      return cleanup(&a09,false);
+    }
   }
   
   if (a09.listfile != NULL)
