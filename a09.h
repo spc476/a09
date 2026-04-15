@@ -322,7 +322,7 @@ extern bool                  message            (struct a09 *,char const *restri
 extern char                 *add_file_dep       (struct a09 *,char const *);
 extern bool                  read_line          (struct a09 *,FILE *,struct buffer *);
 extern unsigned char         value_lsb          (struct a09 *,uint16_t,int);
-extern bool                  collect_esc_string (struct a09 *,struct buffer *restirct,struct buffer *restrict,char);
+extern bool                  collect_esc_string (struct a09 *,struct buffer *restrict,struct buffer *restrict,char);
 extern bool                  parse_string       (struct a09 *,struct buffer *restrict,struct buffer *restrict);
 extern bool                  read_label         (struct buffer *,label *,char);
 extern bool                  parse_label        (label *,struct buffer *,struct a09 *,int);
