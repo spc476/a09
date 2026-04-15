@@ -768,7 +768,7 @@ static int usage(char const *prog)
            format_basic_usage,
            format_dragon_usage
          );
-  return -1;
+  return 1;
 }
 
 /**************************************************************************/
