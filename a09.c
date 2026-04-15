@@ -1095,7 +1095,7 @@ int main(int argc,char *argv[])
   bool       rc;
   struct a09 a09 =
   {
-    .infile          = argv[0],
+    .infile          = NULL,
     .outfile         = "a09.obj",
     .listfile        = NULL,
     .corefile        = NULL,
