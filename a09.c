@@ -1147,7 +1147,7 @@ int main(int argc,char *argv[])
     
     if (a09.in == NULL)
     {
-      message(&a09,MSG_ERROR,"E9999: can't process input");
+      message(&a09,MSG_ERROR,"E0083: can't process input");
       return cleanup(&a09,false);
     }
     
@@ -1155,7 +1155,17 @@ int main(int argc,char *argv[])
     {
       char   buffer[BUFSIZ];
       size_t bytes = fread(buffer,1,sizeof(buffer),stdin);
+      if (ferror(stdin))
+      {
+        message(&a09,MSG_ERROR,"E0083: can't process input");
+        return cleanup(&a09,false);
+      }
       fwrite(buffer,1,bytes,a09.in);
+      if (ferror(a09.in))
+      {
+        message(&a09,MSG_ERROR,"E0083: can't process input");
+        return cleanup(&a09,false);
+      }
     }
     rewind(a09.in);
   }

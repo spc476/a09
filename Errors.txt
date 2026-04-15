@@ -80,7 +80,7 @@ E0079: no matching .TEST
 E0080: not an index register
 E0081: missing A, B, or D register
 E0082: missing index register
-E0083: 
+E0083: can't process input
 E0084: undefined protection bit '%c'
 E0085: unknown flag '%c'
 E0086: boolean value must be 'true' or 'false'
