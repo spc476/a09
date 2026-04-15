@@ -1139,8 +1139,32 @@ int main(int argc,char *argv[])
     
   if (fi == argc)
   {
-    message(&a09,MSG_ERROR,"E0083: no input file specified");
-    return cleanup(&a09,false);
+    a09.infile = "(stdin)";
+    a09.in     = tmpfile();
+    
+    if (a09.in == NULL)
+    {
+      message(&a09,MSG_ERROR,"E9999: can't process input");
+      return cleanup(&a09,false);
+    }
+    
+    while(!feof(stdin))
+    {
+      char   buffer[BUFSIZ];
+      size_t bytes = fread(buffer,1,sizeof(buffer),stdin);
+      fwrite(buffer,1,bytes,a09.in);
+    }
+    rewind(a09.in);
+  }
+  else
+  {
+    a09.infile = add_file_dep(&a09,argv[fi]);
+    a09.in     = fopen(a09.infile,"r");
+    if (a09.in == NULL)
+    {
+      perror(a09.infile);
+      return cleanup(&a09,false);
+    }
   }
   
   if (!default_include_dirs(&a09))
@@ -1150,14 +1174,6 @@ int main(int argc,char *argv[])
     if (!test_init(&a09))
       return cleanup(&a09,false);
       
-  a09.infile = add_file_dep(&a09,argv[fi]);
-  a09.in     = fopen(a09.infile,"r");
-  if (a09.in == NULL)
-  {
-    perror(a09.infile);
-    return cleanup(&a09,false);
-  }
-  
   if (!assemble_pass(&a09,1))
     return cleanup(&a09,false);
     
