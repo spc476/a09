@@ -1200,7 +1200,10 @@ int main(int argc,char *argv[])
   }
   
   if (strcmp(a09.outfile,"-") == 0)
-    a09.out = stdout;
+  {
+    a09.outfile = "(stdout)";
+    a09.out     = stdout;
+  }
   else
   {
     a09.out = fopen(a09.outfile,"wb");
