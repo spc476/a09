@@ -746,7 +746,7 @@ static int usage(char const *prog)
            "\t-h\t\thelp (this text)\n"
            "\t-l file\t\tlist filename\n"
            "\t-n Wxxxx\tsupress the given warnings\n"
-           "\t-o file\t\toutput filename\n"
+           "\t-o file\t\toutput filename (a09.obj)\n"
            "\t-r\t\trandomize the testing order (only if running tests)\n"
            "\t-t\t\trun tests\n"
            "\t-w\t\tfail assembler if warnings\n"
