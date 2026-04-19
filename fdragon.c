@@ -73,10 +73,9 @@ static bool fdragon_pass_start(struct format *fmt,struct a09 *a09,int pass)
   fmt->Float = freal__msfp; /* XXX okay? */
   
   if (pass == 2)
-  {
     if (fseek(a09->out,9,SEEK_SET) == -1)
       return message(a09,MSG_ERROR,"E0038: %s",strerror(errno));
-  }
+      
   return true;
 }
 
@@ -136,11 +135,9 @@ static bool fdragon_align(struct format *fmt,struct opcdata *opd)
   (void)fmt;
   
   if (opd->pass == 2)
-  {
     if (fseek(opd->a09->out,opd->datasz,SEEK_CUR) == -1)
       return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
-  }
-  
+      
   return true;
 }
 
