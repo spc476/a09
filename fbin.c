@@ -53,11 +53,9 @@ static bool fbin_align(struct format *fmt,struct opcdata *opd)
   (void)fmt;
   
   if (opd->pass == 2)
-  {
     if (fseek(opd->a09->out,opd->datasz,SEEK_CUR) == -1)
       return message(opd->a09,MSG_ERROR,"E0038: %s",strerror(errno));
-  }
-  
+      
   return true;
 }
 
