@@ -49,6 +49,9 @@ next16b		rts
 		nop			; W0022
 		puls	pc		; W0024
 		pulu	pc		; W0024
+
+		lda	<$8000		; W0025
+		ldb	<$80
 		
 		bsr	next16b
 lab1		rts			; no warning

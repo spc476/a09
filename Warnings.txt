@@ -22,4 +22,5 @@ W0021: PULS followed by RTS, maybe add ',PC' to PULS?
 W0022: possible dead code
 W0023: cannot set TRON outside a .TEST directive
 W0024: only pulling PC, maybe use RTS?
+W0025: address not in current DP
 W9999: FEATURE NOT FINISHED

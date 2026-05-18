@@ -749,6 +749,12 @@ be potential problems.  The defined warnings are:
 		PULS PC was found, could be replaced with the single byte
                 RTS instruction.
 
+	W0025
+
+		The most significant byte of the address does not match
+                the current DP setting on a forced direct page addressing
+                mode.
+
   Individual warnings can be supressed by using the appropritate command
 line option.
 

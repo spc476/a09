@@ -807,6 +807,9 @@ static bool op_idie(struct opcdata *opd)
          return true;
          
     case AM_DIRECT:
+         if (opd->pass == 2)
+           if ((opd->value.value >> 8) != opd->a09->dp)
+             message(opd->a09,MSG_WARNING,"W0025: address not in current DP");
          opd->bytes[opd->sz++] = opd->op->opcode  + 0x10;
          opd->bytes[opd->sz++] = opd->value.value & 255;
          return true;
@@ -849,6 +852,9 @@ static bool op_die(struct opcdata *opd)
          return message(opd->a09,MSG_ERROR,"E0026: immediate mode not supported for opcode");
          
     case AM_DIRECT:
+         if (opd->pass == 2)
+           if ((opd->value.value >> 8) != opd->a09->dp)
+             message(opd->a09,MSG_WARNING,"W0025: address not in current DP");
          opd->bytes[opd->sz++] = opd->op->opcode  + ((opd->op->opcode < 0x80) ? 0x00 : 0x10);
          opd->bytes[opd->sz++] = opd->value.value & 255;
          return true;
