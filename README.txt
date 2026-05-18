@@ -744,6 +744,11 @@ be potential problems.  The defined warnings are:
 
 		The use of the .OPT TEST TRON outside of a .TEST directive.
 
+	W0024
+
+		PULS PC was found, could be replaced with the single byte
+                RTS instruction.
+
   Individual warnings can be supressed by using the appropritate command
 line option.
 
