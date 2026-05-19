@@ -52,6 +52,12 @@ next16b		rts
 
 		lda	<$8000		; W0025
 		ldb	<$80
+
+	.opt	*	exaddr true
+		lda	$40		; W0026
+		sta	$40		; W0026
+		lda	$4000		; W0027
+		sta	$4000		; W0027
 		
 		bsr	next16b
 lab1		rts			; no warning

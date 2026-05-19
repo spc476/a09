@@ -737,7 +737,8 @@ static int usage(char const *prog)
            "\t-T\t\trun tests with TAP output\n"
            "\t-c file\t\tcore file (of 6809 VM) name (only if running tests)\n"
            "\t-d\t\tdebug output\n"
-           "\t-e ('c'|'d'|'f'|'t')\n"
+           "\t-e ('a' | 'c'|'d'|'f'|'t')\n"
+           "\t\ta\texplicit addressing mode required\n"
            "\t\tc\tadd cycles to listing file\n"
            "\t\td\tadd detailed cycles\n"
            "\t\tf\tadd flags to listing file\n"
@@ -832,7 +833,9 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            
            while(*extra != '\0')
            {
-             if (*extra == 'c')
+             if (*extra == 'a')
+               a09->exaddr = true;
+             else if (*extra == 'c')
              {
                if (!a09->cycles_detailed)
                  a09->list_pad += 9;
@@ -1131,6 +1134,7 @@ int main(int argc,char *argv[])
     .cycles_total    = false,
     .fail_warn       = false,
     .warning         = false,
+    .exaddr          = false,
     .inbuf           = { .buf = {0}, .widx = 0, .ridx = 0 },
   };
   

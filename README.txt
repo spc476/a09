@@ -94,7 +94,7 @@ foo     equ     $01
         lda     >foo	; force extended (16-bit) address
         lda     bar	; used extended, beause of forward reference
         lda     <bar	; force use of direct address
-        lda     foo,x	; uses 5-bit offset because value is known 
+        lda     foo,x	; uses 5-bit offset because value is known
         lda     <foo,x	; force use of 8-bit offset
         lda     >foo,x	; force use of 16-bit offset
         lda     bar,x	; uses 16-bit offset because of forward reference
@@ -273,6 +273,16 @@ non-standard pesudo operation for most 6809 assemblers.
 		instead of the command line.  The following options are
 		always available:
 
+			.OPT * CC
+
+				Clear the total cycle count in the listing
+				file.
+
+			.OPT * CT
+
+				Generate a total cycle count in the listing
+				file.
+
 			.OPT * DISABLE <warning>
 
 				Disable the given warning (see list below).
@@ -292,10 +302,11 @@ non-standard pesudo operation for most 6809 assemblers.
 				default.  This is typically used to
 				re-enable a warning after being disabled.
 
-			.OPT * USES <label>
+			.OPT * EXADDR ('TRUE' | 'FALSE')
 
-				Mark a label as being used.  This is used to
-				supress W0002 warnings.
+				Enable or disable warnings if explicit
+				addressing for direct and extended addresses
+				are not used.
 
 			.OPT * OBJ ('TRUE' | 'FALSE')
 
@@ -317,15 +328,10 @@ non-standard pesudo operation for most 6809 assemblers.
 
 				Default value depends upon backend.
 
-			.OPT * CT
+			.OPT * USES <label>
 
-				Generate a total cycle count in the listing
-				file.
-
-			.OPT * CC
-
-				Clear the total cycle count in the listing
-				file.
+				Mark a label as being used.  This is used to
+				supress W0002 warnings.
 
 		The following options are only used when running tests.  The
 		following options can appear inside or outside a .TEST
@@ -506,7 +512,7 @@ non-standard pesudo operation for most 6809 assemblers.
 	ASCII 'string'h
 	ASCII 'string'z
 
-		(Non-standard) Place the ASCII string into the program. 
+		(Non-standard) Place the ASCII string into the program.
 		Unlike FCC, this understands the following escape sequences:
 
 			\a	ASCII character BEL (7)
@@ -552,7 +558,7 @@ non-standard pesudo operation for most 6809 assemblers.
 
 	EXTERN label
 
-		(Non-standard) The given label is an external reference. 
+		(Non-standard) The given label is an external reference.
 		This is accepted and the label will be "defined" but
 		otherwise, this currently does nothing.
 
@@ -634,7 +640,7 @@ be potential problems.  The defined warnings are:
 	W0003
 
 		A value that is outside the range of -16 to 15 is being
-		forced to a 5-bit range by the use of '<<'.  
+		forced to a 5-bit range by the use of '<<'.
 
 	W0004
 
@@ -671,9 +677,9 @@ be potential problems.  The defined warnings are:
 
 	W0010
 
-		A local label was found before a non-local label was used. 
+		A local label was found before a non-local label was used.
 		The resulting label will be used, but there is no way to
-		reference it when the next non-local label is defined. 
+		reference it when the next non-local label is defined.
 		Perhaps this could be an error.
 
 	W0011
@@ -818,11 +824,15 @@ They are:
 
 		Print additional debugging information while assembling.
 
-	-e ('c' | 'd' | 'f' | 't')
+	-e ('a' | 'c' | 'd' | 'f' | 't')
 
-		Add to the listing file cycle counts ('c'), detailed cycle
-		counts ('d') with total cycles ('t') and/or flags modified
-		('f') for each instruction.
+		a - mandate explicit addressing modes
+			'<' for direct addressing
+			'>' for extended addressing
+		c - add cycle counts to listing file
+		d - add detailed counts to listing file
+		f - add instruction flags to listing file
+		t - add total cycles to listing file
 
 	-f format
 

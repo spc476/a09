@@ -197,6 +197,7 @@ struct a09
   bool              cycles_total;
   bool              fail_warn;
   bool              warning;
+  bool              exaddr;
 };
 
 struct symbol

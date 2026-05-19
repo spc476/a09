@@ -810,6 +810,8 @@ static bool op_idie(struct opcdata *opd)
          if (opd->pass == 2)
            if ((opd->value.value >> 8) != opd->a09->dp)
              message(opd->a09,MSG_WARNING,"W0025: address not in current DP");
+         if (opd->a09->exaddr && (opd->value.bits == 0))
+           message(opd->a09,MSG_WARNING,"W0026: direct address not explicitely given");
          opd->bytes[opd->sz++] = opd->op->opcode  + 0x10;
          opd->bytes[opd->sz++] = opd->value.value & 255;
          return true;
@@ -818,6 +820,8 @@ static bool op_idie(struct opcdata *opd)
          return finish_index_bytes(opd);
          
     case AM_EXTENDED:
+         if (opd->a09->exaddr && (opd->value.bits == 0))
+           message(opd->a09,MSG_WARNING,"W0027: extended address not explicitely given");
          opd->bytes[opd->sz++] = opd->op->opcode  +  0x30;
          opd->bytes[opd->sz++] = opd->value.value >> 8;
          opd->bytes[opd->sz++] = opd->value.value &  255;
@@ -855,6 +859,8 @@ static bool op_die(struct opcdata *opd)
          if (opd->pass == 2)
            if ((opd->value.value >> 8) != opd->a09->dp)
              message(opd->a09,MSG_WARNING,"W0025: address not in current DP");
+         if (opd->a09->exaddr && (opd->value.bits == 0))
+           message(opd->a09,MSG_WARNING,"W0026: direct address not explicitely given");
          opd->bytes[opd->sz++] = opd->op->opcode  + ((opd->op->opcode < 0x80) ? 0x00 : 0x10);
          opd->bytes[opd->sz++] = opd->value.value & 255;
          return true;
@@ -863,6 +869,8 @@ static bool op_die(struct opcdata *opd)
          return finish_index_bytes(opd);
          
     case AM_EXTENDED:
+         if (opd->a09->exaddr && (opd->value.bits == 0))
+           message(opd->a09,MSG_WARNING,"W0027: extended address not explicitely given");
          opd->bytes[opd->sz++] = opd->op->opcode  +  ((opd->op->opcode < 0x80) ? 0x70 : 0x30);
          opd->bytes[opd->sz++] = opd->value.value >> 8;
          opd->bytes[opd->sz++] = opd->value.value &  255;
@@ -1986,6 +1994,20 @@ static bool pseudo__opt(struct opcdata *opd)
     return true;
   }
   
+  else if ((tmp.len == 6) && (memcmp(tmp.text,"EXADDR",6) == 0))
+  {
+    c = skip_space(opd->buffer);
+    read_label(opd->buffer,&tmp,c);
+    upper_label(&tmp);
+    if ((tmp.len == 5) && (memcmp(tmp.text,"FALSE",5) == 0))
+      opd->a09->exaddr = false;
+    else if ((tmp.len == 4) && (memcmp(tmp.text,"TRUE",4) == 0))
+      opd->a09->exaddr = true;
+    else
+      return message(opd->a09,MSG_ERROR,"E0086: boolean value must be 'true' or 'false'");
+      
+    return true;
+  }
   else
     return message(opd->a09,MSG_ERROR,"E0087: option '%.*s' not supported",tmp.len,tmp.text);
 }
