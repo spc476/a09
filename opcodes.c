@@ -1550,7 +1550,7 @@ static bool incbin(struct opcdata *opd,FILE *fp,long len,long start,struct buffe
         opd->data     = true;
         opd->truncate = bsz > sizeof(opd->bytes);
         fill          = true;
-        memcpy(opd->bytes,buffer,opd->sz);
+        memcpy(opd->bytes,buffer,min(opd->sz,sizeof(opd->bytes)));
       }
       
       if (opd->a09->obj)
