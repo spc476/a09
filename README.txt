@@ -843,6 +843,7 @@ They are:
 			rsdos	- executable format for Coco BASIC
 			srec	- Motorola SREC format
 			basic   - output BASIC code to load code into memory
+			dragon  - executable format for the Dragon 32/64
 
 	-h
 
