@@ -737,7 +737,7 @@ static int usage(char const *prog)
            "\t-T\t\trun tests with TAP output\n"
            "\t-c file\t\tcore file (of 6809 VM) name (only if running tests)\n"
            "\t-d\t\tdebug output\n"
-           "\t-e ('a' | 'c'|'d'|'f'|'t')\n"
+           "\t-e ('a'|'c'|'d'|'f'|'t')\n"
            "\t\ta\texplicit addressing mode required\n"
            "\t\tc\tadd cycles to listing file\n"
            "\t\td\tadd detailed cycles\n"
