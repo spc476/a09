@@ -35,7 +35,7 @@ static unsigned char value_5bit(struct a09 *a09,uint16_t value,int pass)
   assert(a09 != NULL);
   assert((pass == 1) || (pass == 2));
   
-  if ((pass == 2) && (value >= 16) && (value <= 65519))
+  if ((pass == 2) && (value >= 16) && (value <= 65519u))
     message(a09,MSG_WARNING,"W0003: 16-bit value truncated to 5 bits");
   return value & 31;
 }
@@ -47,7 +47,7 @@ unsigned char value_lsb(struct a09 *a09,uint16_t value,int pass)
   assert(a09 != NULL);
   assert((pass == 1) || (pass == 2));
   
-  if ((pass == 2) && (value >= 256) && (value <= 65407))
+  if ((pass == 2) && (value >= 256) && (value <= 65407u))
     message(a09,MSG_WARNING,"W0004: 16-bit value truncated to 8 bits");
   return value & 255;
 }
@@ -570,7 +570,7 @@ static bool parse_operand(struct opcdata *opd)
              opd->bits            = 16;
              if (opd->pass == 2)
              {
-               if ((opd->value.value < 16) || (opd->value.value > 65519))
+               if ((opd->value.value < 16) || (opd->value.value > 65519u))
                {
                  if (indexindirect)
                    message(opd->a09,MSG_WARNING,"W0007: offset could be 8-bits, maybe use '<'?");
@@ -581,7 +581,7 @@ static bool parse_operand(struct opcdata *opd)
                  message(opd->a09,MSG_WARNING,"W0007: offset could be 8-bits, maybe use '<'?");
              }
            }
-           else if ((opd->value.value < 16) || (opd->value.value > 65519))
+           else if ((opd->value.value < 16) || (opd->value.value > 65519u))
            {
              /*------------------------------------------------------------
              ; if the bit size is unspecified, and we have a 0 offset, use

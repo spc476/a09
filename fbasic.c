@@ -332,7 +332,7 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     fwrite(basic->buffer,1,basic->idx - 1,opd->a09->out);
     fputc('\n',opd->a09->out);
     
-    if (basic->cline == 64000)
+    if (basic->cline == 64000u)
       basic->cline = basic->dline + basic->incr;
       
     fprintf(
@@ -467,7 +467,7 @@ bool format_basic_init(struct a09 *a09)
   if (basic != NULL)
   {
     basic->idx       = 0;
-    basic->cline     = 64000; /* no defined line number */
+    basic->cline     = 64000u; /* no defined line number */
     basic->dline     = 10;
     basic->incr      = 10;
     basic->strspace  = 200;

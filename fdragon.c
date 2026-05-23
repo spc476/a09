@@ -102,7 +102,7 @@ static bool fdragon_pass_end(struct format *fmt,struct a09 *a09,int pass)
       
     assert(len >= 9);
     len    -= 9; /* remove header length */
-    if (len > 65527)
+    if (len > 65527L)
       return message(a09,MSG_ERROR,"E0112: length exceeds memory space");
       
     hdr[0] = 0x55;
