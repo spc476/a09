@@ -1356,7 +1356,8 @@ static bool pseudo_fcc(struct opcdata *opd)
   
   if (opd->pass == 2)
   {
-    opd->sz = min(textstring.widx,sizeof(opd->bytes));
+    opd->sz = (uint16_t)min(textstring.widx,sizeof(opd->bytes));
+    assert(opd->sz <= sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (opd->a09->obj)
     {
@@ -1386,7 +1387,8 @@ static bool pseudo_ascii(struct opcdata *opd)
   
   if (opd->pass == 2)
   {
-    opd->sz = min(textstring.widx,sizeof(opd->bytes));
+    opd->sz = (uint16_t)min(textstring.widx,sizeof(opd->bytes));
+    assert(opd->sz <= sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (opd->a09->obj)
     {
@@ -1546,7 +1548,8 @@ static bool incbin(struct opcdata *opd,FILE *fp,long len,long start,struct buffe
       
       if (!fill)
       {
-        opd->sz       = min(bsz,sizeof(opd->bytes));
+        opd->sz       = (uint16_t)min(bsz,sizeof(opd->bytes));
+        assert(opd->sz <= sizeof(opd->bytes));
         opd->data     = true;
         opd->truncate = bsz > sizeof(opd->bytes);
         fill          = true;
@@ -1783,7 +1786,8 @@ static bool pseudo_fcs(struct opcdata *opd)
   if (opd->pass == 2)
   {
     textstring.buf[textstring.widx - 1] |= 0x80;
-    opd->sz = min(textstring.widx,sizeof(opd->bytes));
+    opd->sz = (uint16_t)min(textstring.widx,sizeof(opd->bytes));
+    assert(opd->sz <= sizeof(opd->bytes));
     memcpy(opd->bytes,textstring.buf,opd->sz);
     if (opd->a09->obj)
     {
