@@ -571,6 +571,13 @@ non-standard pesudo operation for most 6809 assemblers.
 		Place the ASCII string, delimited by the first non-space
 		character, into the program.
 
+	FCN /string/
+
+		(Non-standard) Place the ASCII string, delimited by the
+		first non-space character, into the program.  The string is
+		terminated by a NUL character to indicate the end of the
+		string.
+
 	FCS /string/
 
 		(Standard for OS-9) Place the ASCII string, delimited by the

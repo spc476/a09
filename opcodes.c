@@ -84,7 +84,7 @@ static bool collect_string(
   if ((c == ';') || (c == '\0'))
     return true;
   else
-    return message(a09,MSG_ERROR,"E0107: FCC/FCS only accepts one operand");
+    return message(a09,MSG_ERROR,"E0107: FCC/FCS/FCN only accepts one operand");
 }
 
 /**************************************************************************/
@@ -1797,6 +1797,40 @@ static bool pseudo_fcs(struct opcdata *opd)
 
 /**************************************************************************/
 
+static bool pseudo_fcn(struct opcdata *opd)
+{
+  assert(opd      != NULL);
+  assert(opd->a09 != NULL);
+  
+  struct buffer textstring;
+  char          c = skip_space(opd->buffer);
+  
+  if (c == '\0')
+    return message(opd->a09,MSG_ERROR,"E0010: unexpected end of input");
+  if (!collect_string(opd->a09,&textstring,opd->buffer,c))
+    return false;
+  
+  if (textstring.widx == sizeof(textstring.buf))
+    return message(opd->a09,MSG_ERROR,"E0071: string too long");
+    
+  textstring.buf[textstring.widx++] = '\0';
+  opd->data                         = true;
+  opd->datasz                       = textstring.widx + 1;
+  opd->truncate                     = opd->datasz > sizeof(opd->bytes);
+  
+  if (opd->pass == 2)
+  {
+    opd->sz = min(textstring.widx,sizeof(opd->bytes));
+    memcpy(opd->bytes,textstring.buf,opd->sz);
+    if (opd->a09->obj)
+      if (!opd->a09->format.write(&opd->a09->format,opd,textstring.buf,textstring.widx,DATA))
+        return false;
+  }
+  return true;
+}
+
+/**************************************************************************/
+
 static bool pseudo__assert(struct opcdata *opd)
 {
   assert(opd      != NULL);
@@ -2225,6 +2259,7 @@ struct opcode const *op_find(char const *name)
     { "EXTERN"  , ""      , pseudo_extern  ,  0 , 0x00 , 0x00 , false } ,
     { "FCB"     , ""      , pseudo_fcb     ,  0 , 0x00 , 0x00 , false } ,
     { "FCC"     , ""      , pseudo_fcc     ,  0 , 0x00 , 0x00 , false } ,
+    { "FCN"     , ""      , pseudo_fcn     ,  0 , 0x00 , 0x00 , false } ,
     { "FCS"     , ""      , pseudo_fcs     ,  0 , 0x00 , 0x00 , false } ,
     { "FDB"     , ""      , pseudo_fdb     ,  0 , 0x00 , 0x00 , false } ,
     { "INC"     , "-aaa-" , op_die         ,  4 , 0x0C , 0x00 , BYTE  } ,
