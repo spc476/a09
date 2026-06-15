@@ -540,6 +540,10 @@ non-standard pesudo operation for most 6809 assemblers.
 			'Z'	A NUL byte is appended to the string to mark
 				the end of the string.
 
+	DEPHASE
+
+		(Non-standard) Closes out a PHASE directive.
+
 	END [label]
 
 		Mark the end of the assembly file, with an optional label.
@@ -612,6 +616,16 @@ non-standard pesudo operation for most 6809 assemblers.
 
 		Start the assembly process at the address specified by expr.
 		If not specified, assembly starts at address 0.
+
+	PHASE expr
+
+		(Non-standard) Assemble the code as if assembled at the
+		address specified by expr, but assemble the code at the
+		given address as specified by ORG.  Example:
+
+			ORG	$1000	; assemble the code at this address
+			PHASE	$8000	; but assemble as if we were
+					; assembling at $8000.
 
 	PUBLIC label
 
@@ -767,6 +781,23 @@ be potential problems.  The defined warnings are:
 		The most significant byte of the address does not match
                 the current DP setting on a forced direct page addressing
                 mode.
+
+	W0026
+
+		Explicit addressing has been selected, but the given address
+		in an instruction does not include an explicit 8 bit address
+		override.
+
+	W0027
+
+		Explicit addressing has been selected, but the given address
+		in an instruction does not include an explicit 16 bit
+		address override.
+
+	W0028
+
+		A DEPHASE directive was seen without a corresponding PHASE
+		directive.
 
   Individual warnings can be supressed by using the appropritate command
 line option.

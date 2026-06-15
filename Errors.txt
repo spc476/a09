@@ -110,3 +110,5 @@ E0109: input line too long
 E0110: invalid character '%c' (%d) on input
 E0111: missing label on END directive
 E0112: length exceeds memory space
+E0113: missing DEPHASE pseudoop
+E0114: missing value for PHASE

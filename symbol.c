@@ -88,7 +88,7 @@ struct symbol *symbol_add(struct a09 *a09,label const *name,uint16_t value)
       sym->tree.height = 0;
       sym->name        = *name;
       sym->type        = SYM_ADDRESS;
-      sym->value       = value;
+      sym->value       = value + a09->phase;
       sym->filename    = a09->infile;
       sym->ldef        = a09->lnum;
       sym->bits        = a09->dp == value >> 8 ? 8 : 16;

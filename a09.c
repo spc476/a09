@@ -568,8 +568,8 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
       struct symbol *sym = symbol_find(a09,&opd.label);
       if (sym == NULL)
         return message(a09,MSG_ERROR,"E0001: Internal error---'%.*s' should exist, but doesn't",a09->label.len,a09->label.text);
-      if ((sym->type == SYM_ADDRESS) && (sym->value != a09->pc))
-        return message(a09,MSG_ERROR,"E0002: Internal error---out of phase;\n\t'%.*s' = %04X pass 1, %04X pass 2",a09->label.len,a09->label.text,sym->value,a09->pc);
+      if ((sym->type == SYM_ADDRESS) && (sym->value != (uint16_t)(a09->pc + a09->phase)))
+        return message(a09,MSG_ERROR,"E0002: Internal error---out of phase;\n\t'%.*s' = %04X pass 1, %04X pass 2",a09->label.len,a09->label.text,sym->value,(uint16_t)(a09->pc + a09->phase));
       a09->lastsym = sym;
     }
     
@@ -1118,6 +1118,7 @@ int main(int argc,char *argv[])
     .label           = { .len = 0, .text = { '\0' } },
     .list_pad        = 0,
     .pc              = 0,
+    .phase           = 0,
     .dp              = 0,
     .prevop          = 0x01, /* not a valid opcode */
     .prevpb          = 0,    /* filled by PULx, TFR, EXT */

@@ -181,6 +181,7 @@ struct a09
   label             label;
   int               list_pad;
   uint16_t          pc;
+  uint16_t          phase;
   unsigned char     dp;
   unsigned char     prevop;
   unsigned char     prevpb;

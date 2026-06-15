@@ -25,4 +25,5 @@ W0024: only pulling PC, maybe use RTS?
 W0025: address not in current DP
 W0026: direct address not explicitely given
 W0027: extended address not explicitely given
+W0028: DEPHASE missing corresponding PHASE
 W9999: FEATURE NOT FINISHED

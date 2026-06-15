@@ -1199,6 +1199,9 @@ static bool pseudo_org(struct opcdata *opd)
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
+  if (opd->a09->phase != 0)
+    return message(opd->a09,MSG_ERROR,"E0113: missing DEPHASE pseudoop");
+    
   if (!parse_dirext(opd))
     return message(opd->a09,MSG_ERROR,"E0039: missing value for ORG");
     
@@ -2167,6 +2170,34 @@ static bool pseudo__pcle(struct opcdata *opd)
 
 /**************************************************************************/
 
+static bool pseudo_phase(struct opcdata *opd)
+{
+  assert(opd      != NULL);
+  assert(opd->a09 != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (!parse_dirext(opd))
+    return message(opd->a09,MSG_ERROR,"E0114: missing value for PHASE");
+    
+  opd->a09->phase = opd->value.value - opd->a09->pc;
+  return true;
+}
+
+/**************************************************************************/
+
+static bool pseudo_dephase(struct opcdata *opd)
+{
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->a09->phase == 0)
+    message(opd->a09,MSG_WARNING,"W0028: DEPHASE missing corresponding PHASE");
+  opd->a09->phase = 0;
+  return true;
+}
+
+/**************************************************************************/
+
 static int opcode_cmp(void const *needle,void const *haystack)
 {
   char          const *key    = needle;
@@ -2250,6 +2281,7 @@ struct opcode const *op_find(char const *name)
     { "DEC"     , "-aaa-" , op_die         ,  4 , 0x0A , 0x00 , BYTE  } ,
     { "DECA"    , "-aaa-" , op_inh         ,  2 , 0x4A , 0x00 , BYTE  } ,
     { "DECB"    , "-aaa-" , op_inh         ,  2 , 0x5A , 0x00 , BYTE  } ,
+    { "DEPHASE" , ""      , pseudo_dephase ,  0 , 0x00 , 0x00 , false } ,
     { "END"     , ""      , pseudo_end     ,  0 , 0x00 , 0x00 , false } ,
     { "EORA"    , "-aa0-" , op_idie        ,  2 , 0x88 , 0x00 , BYTE  } ,
     { "EORB"    , "-aa0-" , op_idie        ,  2 , 0xC8 , 0x00 , BYTE  } ,
@@ -2314,6 +2346,7 @@ struct opcode const *op_find(char const *name)
     { "ORB"     , "0aa0-" , op_idie        ,  2 , 0xCA , 0x00 , BYTE  } ,
     { "ORCC"    , "?????" , op_orcc        ,  3 , 0x1A , 0x00 , BYTE  } ,
     { "ORG"     , ""      , pseudo_org     ,  0 , 0x00 , 0x00 , false } ,
+    { "PHASE"   , ""      , pseudo_phase   ,  0 , 0x00 , 0x00 , false } ,
     { "PSHS"    , "-----" , op_pshpul      ,  5 , 0x34 , 0x00 , BYTE  } ,
     { "PSHU"    , "-----" , op_pshpul      ,  5 , 0x36 , 0x00 , BYTE  } ,
     { "PUBLIC"  , ""      , pseudo_public  ,  0 , 0x00 , 0x00 , false } ,
