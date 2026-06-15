@@ -69,6 +69,8 @@ lab2		rts			; no warning
 		.opt	* real msfp
 		.floatd	1e38		; W0019
 
+		dephase			; W0028
+
 
 foobar		equ	$20
 b16		equ	$8080
