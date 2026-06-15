@@ -180,9 +180,9 @@ static bool rvalue(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int p
   if (c == '*')
   {
     if (fdouble)
-      pv->value.d = a09->pc;
+      pv->value.d = a09->pc + a09->phase;
     else
-      pv->value.f = a09->pc;
+      pv->value.f = a09->pc + a09->phase;
     return true;
   }
   
