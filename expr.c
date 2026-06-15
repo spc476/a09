@@ -179,7 +179,7 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
   
   if (c == '*')
   {
-    pv->value = a09->pc;
+    pv->value = a09->pc + a09->phase;
     return true;
   }
   
