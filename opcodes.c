@@ -638,7 +638,7 @@ static bool parse_operand(struct opcdata *opd)
            
          if (opd->value.bits == 0)
          {
-           uint16_t pc    = opd->a09->pc + 2 + (opd->op->page != 0);
+           uint16_t pc    = (uint16_t)(opd->a09->pc + opd->a09->phase) + 2 + (opd->op->page != 0);
            uint16_t delta = opd->value.value - pc;
            
            if (opd->value.unknownpass1)
@@ -762,7 +762,7 @@ static bool finish_index_bytes(struct opcdata *opd)
   {
     if (opd->pcrel)
     {
-      uint16_t pc      = opd->a09->pc + opd->sz + 1;
+      uint16_t pc      = (uint16_t)(opd->a09->pc + opd->a09->phase) + opd->sz + 1;
       uint16_t dt      = opd->value.value - pc;
       opd->value.value = dt;
     }
@@ -771,7 +771,7 @@ static bool finish_index_bytes(struct opcdata *opd)
   else if (opd->bits == 16)
   {
     if (opd->pcrel)
-      opd->value.value = opd->value.value - (opd->a09->pc + opd->sz + 2);
+      opd->value.value = opd->value.value - ((uint16_t)(opd->a09->pc + opd->a09->phase) + opd->sz + 2);
     opd->bytes[opd->sz++] = opd->value.value >> 8;
     opd->bytes[opd->sz++] = opd->value.value & 255;
   }
