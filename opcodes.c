@@ -326,8 +326,12 @@ static bool parse_operand(struct opcdata *opd)
              c                    = opd->buffer->buf[++opd->buffer->ridx];
            }
            else
+           {
+             if (indexindirect)
+               return message(opd->a09,MSG_ERROR,"E0021: syntax error in index mode");
              opd->value.postbyte |= 0x02;
-             
+           }
+           
            switch(toupper(c))
            {
              case 'X':
