@@ -268,6 +268,52 @@ static bool rvalue(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int p
   if (!rc)
     return message(a09,MSG_ERROR,"E0006: not a value");
     
+  return rc;
+}
+
+/**************************************************************************/
+
+static bool rfactor(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool fdouble)
+{
+  assert(pv     != NULL);
+  assert(a09    != NULL);
+  assert(buffer != NULL);
+  assert((pass == 1) || (pass == 2));
+  
+  bool neg = false;
+  
+  memset(pv,0,sizeof(struct fvalue));
+  char c = skip_space(buffer);
+  if (c == '\0')
+    return message(a09,MSG_ERROR,"E0010: unexpected end of input");
+    
+  if (c == '-')
+  {
+    neg = true;
+    c   = skip_space(buffer);
+  }
+  else if (c == '+')
+    c = buffer->buf[buffer->ridx++];
+    
+  if (c == '(')
+  {
+    c = skip_space(buffer);
+    if (c == '\0')
+      return message(a09,MSG_ERROR,"E0010: unexpected end of input");
+    buffer->ridx--;
+    if (!rexpr(pv,a09,buffer,pass,fdouble))
+      return false;
+    c = skip_space(buffer);
+    if (c != ')')
+      return message(a09,MSG_ERROR,"E0011: missing right parenthesis");
+  }
+  else
+  {
+    buffer->ridx--;
+    if (!rvalue(pv,a09,buffer,pass,fdouble))
+      return false;
+  }
+
   /*---------------------------------------------------------------------
   ; Check for an exclamation mark, which we're using to denote factorial.
   ; 0! is 1 (by definition).  A negative number is an error.
@@ -314,52 +360,6 @@ static bool rvalue(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int p
   else if (c != '\0')
     buffer->ridx--;
     
-  return rc;
-}
-
-/**************************************************************************/
-
-static bool rfactor(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool fdouble)
-{
-  assert(pv     != NULL);
-  assert(a09    != NULL);
-  assert(buffer != NULL);
-  assert((pass == 1) || (pass == 2));
-  
-  bool neg = false;
-  
-  memset(pv,0,sizeof(struct fvalue));
-  char c = skip_space(buffer);
-  if (c == '\0')
-    return message(a09,MSG_ERROR,"E0010: unexpected end of input");
-    
-  if (c == '-')
-  {
-    neg = true;
-    c   = skip_space(buffer);
-  }
-  else if (c == '+')
-    c = buffer->buf[buffer->ridx++];
-    
-  if (c == '(')
-  {
-    c = skip_space(buffer);
-    if (c == '\0')
-      return message(a09,MSG_ERROR,"E0010: unexpected end of input");
-    buffer->ridx--;
-    if (!rexpr(pv,a09,buffer,pass,fdouble))
-      return false;
-    c = skip_space(buffer);
-    if (c != ')')
-      return message(a09,MSG_ERROR,"E0011: missing right parenthesis");
-  }
-  else
-  {
-    buffer->ridx--;
-    if (!rvalue(pv,a09,buffer,pass,fdouble))
-      return false;
-  }
-  
   if (neg)
   {
     if (fdouble)
