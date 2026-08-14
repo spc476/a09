@@ -162,6 +162,27 @@ bool arg_unsigned_long(
 
 /**************************************************************************/
 
+bool arg_unsigned_int(
+        unsigned int      *pv,
+        struct arg        *arg,
+        unsigned long int  low,
+        unsigned long int  high
+)
+{
+  assert(pv != NULL);
+  assert(low < high);
+  assert(check_arg(arg));
+  
+  unsigned long int value;
+  
+  if (!arg_unsigned_long(&value,arg,low,high))
+    return false;
+  *pv = value;
+  return true;
+}
+
+/**************************************************************************/
+
 bool arg_size_t(
         size_t        *pv,
         struct arg    *arg,

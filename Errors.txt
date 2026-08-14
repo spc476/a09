@@ -112,3 +112,4 @@ E0111: missing label on END directive
 E0112: length exceeds memory space
 E0113: missing DEPHASE pseudoop
 E0114: missing value for PHASE
+E0115: value exceeds limit of %lu

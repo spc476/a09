@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include "a09.h"
 
@@ -749,6 +750,7 @@ static int usage(char const *prog)
            "\t-n Wxxxx\tsupress the given warnings\n"
            "\t-o file\t\toutput filename (default a09.obj)\n"
            "\t-r\t\trandomize the testing order (only if running tests)\n"
+           "\t-s seed\t\tseed randomizer for testing order\n"
            "\t-t\t\trun tests\n"
            "\t-w\t\tfail assembler if warnings\n"
            "\n"
@@ -936,6 +938,14 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            a09->rndtests = true;
            break;
            
+      case 's':
+           if (!arg_unsigned_int(&a09->seed,&arg,0,UINT_MAX))
+           {
+             message(a09,MSG_ERROR,"E0115: value exceeds limit of %u",UINT_MAX);
+             return -1;
+           }
+           break;
+           
       case 't':
            a09->runtests = true;
            break;
@@ -1116,6 +1126,7 @@ int main(int argc,char *argv[])
     .lastsym         = NULL,
     .nowarn          = {0},
     .label           = { .len = 0, .text = { '\0' } },
+    .seed            = 0,
     .list_pad        = 0,
     .pc              = 0,
     .phase           = 0,

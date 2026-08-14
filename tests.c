@@ -1978,7 +1978,10 @@ bool test_run(struct a09 *a09)
   if ((a09->rndtests) && (data->nunits > 1))
   {
     message(a09,MSG_DEBUG,"Randomizing tests");
-    srand(time(NULL)); /* XXX is there a better way? */
+    
+    if (a09->seed == 0)
+      a09->seed = time(NULL); /* XXX is there a better way? */
+    srand(a09->seed);
     for (size_t i = data->nunits ; i > 1 ; i--)
     {
       size_t j = rand() % i;
@@ -2118,6 +2121,12 @@ bool test_run(struct a09 *a09)
       data->errbuf[0] = '\0';
       data->failed++;
     }
+  }
+  
+  if (a09->tapout)
+  {
+    if (a09->tapout && a09->rndtests && (data->nunits > 1))
+      printf("# seed=%u\n",a09->seed);
   }
   
   message(a09,MSG_DEBUG,"failed tests: %zu",data->failed);

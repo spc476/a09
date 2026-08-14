@@ -179,6 +179,7 @@ struct a09
   struct symbol    *lastsym;
   unsigned char     nowarn[10000 / CHAR_BIT];
   label             label;
+  unsigned int      seed;
   int               list_pad;
   uint16_t          pc;
   uint16_t          phase;
@@ -314,6 +315,7 @@ extern char                  arg_next           (struct arg *);
 extern char                 *arg_arg            (struct arg *);
 extern int                   arg_done           (struct arg *);
 extern bool                  arg_unsigned_long  (unsigned long int *,struct arg *,unsigned long int,unsigned long int);
+extern bool                  arg_unsigned_int   (unsigned int      *,struct arg *,unsigned long int,unsigned long int);
 extern bool                  arg_size_t         (size_t            *,struct arg *,unsigned long int,unsigned long int);
 extern bool                  arg_uint16_t       (uint16_t          *,struct arg *,unsigned long int,unsigned long int);
 extern bool                  arg_uint8_t        (uint8_t           *,struct arg *,unsigned long int,unsigned long int);
