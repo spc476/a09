@@ -396,7 +396,10 @@ static bool frsdos_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,ch
   {
     case 'B':
          if ((format->name = arg_arg(arg)) == NULL)
-           return message(a09,MSG_ERROR,"E0068: missing option argument");
+         {
+           fprintf(stderr,"-B: missing file name\n");
+           return false;
+         }
          break;
          
     case 'E':
@@ -405,17 +408,26 @@ static bool frsdos_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,ch
          
     case 'L':
          if (!arg_uint16_t(&format->line,arg,0,63999u))
-           return message(a09,MSG_ERROR,"E0102: line number must be between 1 and 63999");
+         {
+           fprintf(stderr,"-L: line number must be between 1 and 63999\n");
+           return false;
+         }
          break;
          
     case 'N':
          if ((format->basicf = arg_arg(arg)) == NULL)
-           return message(a09,MSG_ERROR,"E0068: missing option argument");
+         {
+           fprintf(stderr,"-N: missing file name\n");
+           return false;
+         }
          break;
          
     case 'P':
          if (!arg_uint16_t(&format->strspace,arg,0,22*1024))
-           return message(a09,MSG_ERROR,"E0103: string space must be between 0 and 22528");
+         {
+           fprintf(stderr,"-P: string space must be between 0 and 22528\n");
+           return false;
+         }
          break;
          
     default:

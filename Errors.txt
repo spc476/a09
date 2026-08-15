@@ -50,12 +50,12 @@ E0049: '%.*s' already defined on line %zu
 E0050: not a label
 E0051: value for ALIGN must be known in pass 1
 E0052: dividend undefined
-E0053: format '%s' not supported
+E0053:
 E0054: Internal error---no header written?
 E0055: object size too large
 E0056: END section already written
 E0057: ORG directive missing
-E0058: improper warning tag '%.4s'
+E0058:
 E0059: syntax error---mixing up immedate and indexed modes?
 E0060: syntax error
 E0061: '%c' not allowed in literal number
@@ -64,9 +64,9 @@ E0063: missing value for SET
 E0064: symbol '%.*s' already defined
 E0065: Internal error---expression parser mismatch
 E0066: expression too complex
-E0067: record size must be between 1 and 252
-E0068: missing option argument
-E0069: address exceeds address space
+E0067:
+E0068:
+E0069:
 E0070: %s: %s
 E0071: string too long
 E0072: can't use USR and DEFUSRn at the same time
@@ -98,11 +98,11 @@ E0097: %s: contains no data
 E0098: Real format '%.*s' not supported
 E0099: Can't reserve 0 bytes of memory
 E0100: Can only assign test code outside a .TEST directive
-E0101: line increment must be between 1 and 65535
-E0102: line number must be between 1 and 63999
-E0103: string space must be between 0 and 22528
+E0101:
+E0102:
+E0103:
 E0104: BASIC format does not support multiple ORG directives
-E0105: unsupported extra option
+E0105:
 E0106: PC %04X exceeds given limit %04X
 E0107: FCC/FCS/FCN only accepts one operand
 E0108: value needed on pass 1 not defined on pass 1
@@ -112,4 +112,4 @@ E0111: missing label on END directive
 E0112: length exceeds memory space
 E0113: missing DEPHASE pseudoop
 E0114: missing value for PHASE
-E0115: value exceeds limit of %lu
+E0115:

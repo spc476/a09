@@ -2008,11 +2008,15 @@ bool test_run(struct a09 *a09)
     struct unittest *unit = &data->units[i];
     char const      *tag  = "";
     int              rc;
-    div_t            res = div((int)i,CHAR_BIT);
-    if (a09->notest[res.quot] & (1 << res.rem))
+    
+    if (i < sizeof(a09->notest) * CHAR_BIT)
     {
-      printf("ok %zu - # SKIP %s %s:%zu %s\n",i + 1,unit->name.buf,unit->filename,unit->line,tag);
-      continue;
+      div_t            res = div((int)i,CHAR_BIT);
+      if (a09->notest[res.quot] & (1 << res.rem))
+      {
+        printf("ok %zu - # SKIP %s %s:%zu %s\n",i + 1,unit->name.buf,unit->filename,unit->line,tag);
+        continue;
+      }
     }
     
     a09->infile = unit->filename;

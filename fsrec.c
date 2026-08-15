@@ -100,17 +100,26 @@ static bool fsrec_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,cha
   {
     case 'R':
          if (!arg_size_t(&format->recsize,arg,1,252))
-           return message(a09,MSG_ERROR,"E0067: record size must be between 1 and 252");
+         {
+           fprintf(stderr,"-R: record size must be between 1 and 252\n");
+           return false;
+         }
          break;
          
     case 'L':
          if (!arg_uint16_t(&format->addr,arg,0,65535u))
-           return message(a09,MSG_ERROR,"E0069: address exceeds address space");
+         {
+           fprintf(stderr,"-L: address exceeds address space\n");
+           return false;
+         }
          break;
          
     case 'E':
          if (!arg_uint16_t(&format->exec,arg,0,65535u))
-           return message(a09,MSG_ERROR,"E0069: address exceeds address space");
+         {
+           fprintf(stderr,"-E: address exceeds address space\n");
+           return false;
+         }
          format->execf = true;
          break;
          
@@ -124,7 +133,10 @@ static bool fsrec_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,cha
          
     case '0':
          if ((format->S0file = arg_arg(arg)) == NULL)
-           return message(a09,MSG_ERROR,"E0068: missing option argument");
+         {
+           fprintf(stderr,"-0: missing file name\n");
+           return false;
+         }
          break;
          
     default:

@@ -137,6 +137,14 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
         
   va_list ap;
   
+  /*-----------------------------------------------------------------------
+  ; a few cases where this is called during command line parocessing, so if
+  ; the input file isn't defined, just bail right now.
+  ;------------------------------------------------------------------------*/
+  
+  if (a09->infile == NULL)
+    return true;
+    
   if ((tag == MSG_DEBUG) && !a09->debug)
     return true;
     
@@ -226,13 +234,17 @@ static bool add_include_dir(struct a09 *a09,char const *filename)
   len  = strlen(filename) + 1;
   name = malloc(len);
   if (name == NULL)
-    return message(a09,MSG_ERROR,"E0046: out of memory");
-    
+  {
+    perror(filename);
+    return false;
+  }
+  
   includes = realloc(a09->includes,(a09->nincs + 1) * sizeof(char *));
   if (includes == NULL)
   {
     free(name);
-    return message(a09,MSG_ERROR,"E0046: out of memory");
+    perror(filename);
+    return false;
   }
   
   memcpy(name,filename,len);
@@ -710,17 +722,26 @@ static bool nowarnlist(struct a09 *a09,char const *warnings)
   assert(a09 != NULL);
   
   if (warnings == NULL)
-    return message(a09,MSG_ERROR,"E0068: missing option argument");
-    
+  {
+    fprintf(stderr,"-n: missing list of warnings\n");
+    return false;
+  }
+  
   while(true)
   {
     if (!disable_warning(a09,warnings))
-      return message(a09,MSG_ERROR,"E0058: improper warning tag '%.4s'",warnings);
+    {
+      fprintf(stderr,"-n: improper warning tag '%s'\n",warnings);
+      return false;
+    }
     warnings += 5;
     if (*warnings == '\0')
       break;
     if (*warnings++ != ',')
-      return message(a09,MSG_ERROR,"E0023: missing expected comma");
+    {
+      fprintf(stderr,"-n: missing expected comma\n");
+      return false;
+    }
   }
   
   return true;
@@ -732,9 +753,12 @@ static bool notest(struct a09 *a09,char const *list)
 {
   assert(a09  != NULL);
   
-  if (list == NULL)
-    return message(a09,MSG_ERROR,"E0068: missing option argument"); // XXX
-    
+  if (list == NULL) // XXX
+  {
+    fprintf(stderr,"-x: missing list of tests\n");
+    return false;
+  }
+  
   for (char const *p = list ; ; )
   {
     unsigned long int  v;
@@ -743,7 +767,10 @@ static bool notest(struct a09 *a09,char const *list)
     errno = 0;
     v     = strtoul(p,(char **)&p,0);
     if ((errno != 0) || (v > 1023uL))
-      return message(a09,MSG_ERROR,"E9999: invalid test number");
+    {
+      fprintf(stderr,"-x: invalid test number\n");
+      return false;
+    }
     res = div((int)v - 1,CHAR_BIT);
     a09->notest[res.quot] |= 1 << res.rem;
     
@@ -762,11 +789,17 @@ static bool notest(struct a09 *a09,char const *list)
       errno = 0;
       v2    = strtoul(p,(char **)&p,0);
       if ((errno != 0) || (v2 > 1023uL))
-        return message(a09,MSG_ERROR,"E9999: invalue test number");
-        
+      {
+        fprintf(stderr,"-x: invalid test number\n");
+        return false;
+      }
+      
       if (v2 <= v)
-        return message(a09,MSG_ERROR,"E9999: not a valid range");
-        
+      {
+        fprintf(stderr,"-x: not a valid range\n");
+        return false;
+      }
+      
       for ( v = v + 1 ; v <= v2 ; v++)
       {
         res = div((int)v - 1,CHAR_BIT);
@@ -781,10 +814,16 @@ static bool notest(struct a09 *a09,char const *list)
         continue;
       }
       else
-        return message(a09,MSG_ERROR,"E9999: invalid test number");
+      {
+        fprintf(stderr,"-x: invalid test number\n");
+        return false;
+      }
     }
     else
-      return message(a09,MSG_ERROR,"E9999: invalid specification: %s",list);
+    {
+      fprintf(stderr,"-x: invalid specification '%s'\n",list);
+      return false;
+    }
   }
   return true;
 }
@@ -864,7 +903,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       case 'I':
            if ((file = arg_arg(&arg)) == NULL)
            {
-             message(a09,MSG_ERROR,"E0068: missing option argument");
+             fprintf(stderr,"-I: missing paths\n");
              return -1;
            }
            if (!add_include_dir(a09,file))
@@ -883,7 +922,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       case 'c':
            if ((a09->corefile = arg_arg(&arg)) == NULL)
            {
-             message(a09,MSG_ERROR,"E0068: missing option argument");
+             fprintf(stderr,"-c: missing file name\n");
              return -1;
            }
            break;
@@ -895,7 +934,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       case 'e':
            if ((extra = arg_arg(&arg)) == NULL)
            {
-             message(a09,MSG_ERROR,"E0068: missing option argument");
+             fprintf(stderr,"-e: missing argument\n");
              return -1;
            }
            
@@ -925,7 +964,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
                a09->cycles_total = true;
              else
              {
-               message(a09,MSG_ERROR,"E0105: unsupported extra option");
+               fprintf(stderr,"-e: unsupported option '%c'\n",*extra);
                return -1;
              }
              extra++;
@@ -941,7 +980,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            
            if (format == NULL)
            {
-             message(a09,MSG_ERROR,"E0068: missing option argument");
+             fprintf(stderr,"-f: missing format\n");
              return -1;
            }
            else if (strcmp(format,"bin") == 0)
@@ -971,7 +1010,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            }
            else
            {
-             message(a09,MSG_ERROR,"E0053: format '%s' not supported",format);
+             fprintf(stderr,"-f: '%s' not supported\n",format);
              return -1;
            }
            break;
@@ -982,7 +1021,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       case 'l':
            if ((a09->listfile = arg_arg(&arg)) == NULL)
            {
-             message(a09,MSG_ERROR,"E0068: missing option argument");
+             fprintf(stderr,"-l: missing file name\n");
              return -1;
            }
            break;
@@ -995,7 +1034,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       case 'o':
            if ((a09->outfile = arg_arg(&arg)) == NULL)
            {
-             message(a09,MSG_ERROR,"E0068: missing option argument");
+             fprintf(stderr,"-o: missing output file name\n");
              return -1;
            }
            break;
@@ -1007,7 +1046,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       case 's':
            if (!arg_unsigned_int(&a09->seed,&arg,0,UINT_MAX))
            {
-             message(a09,MSG_ERROR,"E0115: value exceeds limit of %u",UINT_MAX);
+             fprintf(stderr,"-s: value exceeds limit of %u\n",UINT_MAX);
              return -1;
            }
            break;
@@ -1099,9 +1138,9 @@ static int cleanup(struct a09 *a09,bool success)
 {
   assert(a09 != NULL);
   
-  if (a09->runtests)    test_fini(a09);
-  if (a09->out != NULL) fclose(a09->out);
-  if (a09->in  != NULL) fclose(a09->in);
+  if (a09->runtests && (a09->tests != NULL)) test_fini(a09);
+  if (a09->out != NULL)                      fclose(a09->out);
+  if (a09->in  != NULL)                      fclose(a09->in);
   
   if (a09->fail_warn && a09->warning)
   {
