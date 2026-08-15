@@ -909,6 +909,12 @@ They are:
 		Run the tests in a random order.  This only has an affect
 		when the '-t' option is used.
 
+	-s
+
+		Initialize the random seed generator when randominzing
+		tests.  The TAP output will always print out the seed used
+		when running randomized tests.
+
 	-t
 
 		Run any tests in the assembly file.
@@ -920,6 +926,25 @@ They are:
 
 		NOTE: this will remove the output and listing file if any
 		tests fail.  This may not be what you want for development.
+
+	-x testnums
+
+		Exclude the listed tests from being run.  The argument can
+		specify a single test:
+
+			-x 4
+
+		A range of tests:
+
+			-x 4-10
+
+		A list of individual tests:
+
+			-x 2,4,6
+
+		Or both:
+
+			-x 4,6-10,12
 
   Individual backends can have their own command line options that are
 activated after the '-f' option.  They are:

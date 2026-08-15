@@ -200,6 +200,7 @@ struct a09
   bool              fail_warn;
   bool              warning;
   bool              exaddr;
+  unsigned char     notest[1024 / CHAR_BIT];
 };
 
 struct symbol

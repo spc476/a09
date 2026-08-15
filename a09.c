@@ -25,7 +25,7 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <limits.h>
-
+#include <errno.h>
 #include "a09.h"
 
 /**************************************************************************
@@ -728,6 +728,69 @@ static bool nowarnlist(struct a09 *a09,char const *warnings)
 
 /**************************************************************************/
 
+static bool notest(struct a09 *a09,char const *list)
+{
+  assert(a09  != NULL);
+  
+  if (list == NULL)
+    return message(a09,MSG_ERROR,"E0068: missing option argument"); // XXX
+    
+  for (char const *p = list ; ; )
+  {
+    unsigned long int  v;
+    div_t              res;
+    
+    errno = 0;
+    v     = strtoul(p,(char **)&p,0);
+    if ((errno != 0) || (v > 1023uL))
+      return message(a09,MSG_ERROR,"E9999: invalid test number");
+    res = div((int)v - 1,CHAR_BIT);
+    a09->notest[res.quot] |= 1 << res.rem;
+    
+    if (*p == '\0')
+      break;
+    else if (*p == ',')
+    {
+      p++;
+      continue;
+    }
+    else if (*p == '-')
+    {
+      unsigned long int v2;
+      
+      p++;
+      errno = 0;
+      v2    = strtoul(p,(char **)&p,0);
+      if ((errno != 0) || (v2 > 1023uL))
+        return message(a09,MSG_ERROR,"E9999: invalue test number");
+        
+      if (v2 <= v)
+        return message(a09,MSG_ERROR,"E9999: not a valid range");
+        
+      for ( v = v + 1 ; v <= v2 ; v++)
+      {
+        res = div((int)v - 1,CHAR_BIT);
+        a09->notest[res.quot] |= 1 << res.rem;
+      }
+      
+      if (*p == '\0')
+        break;
+      else if (*p == ',')
+      {
+        p++;
+        continue;
+      }
+      else
+        return message(a09,MSG_ERROR,"E9999: invalid test number");
+    }
+    else
+      return message(a09,MSG_ERROR,"E9999: invalid specification: %s",list);
+  }
+  return true;
+}
+
+/**************************************************************************/
+
 static int usage(char const *prog)
 {
   fprintf(
@@ -753,11 +816,14 @@ static int usage(char const *prog)
            "\t-s seed\t\tseed randomizer for testing order\n"
            "\t-t\t\trun tests\n"
            "\t-w\t\tfail assembler if warnings\n"
+           "\t-x numlist\tskip running given tests\n"
            "\n"
            "\tformats: bin rsdos srec basic dragon\n"
            "\n"
            "\tIf no file given, code read via stdin\n"
            "\tTo generate output on stdout, use '-o-'\n"
+           "\n"
+           "\tFormat for numlist: N1,N2,N3-N4\n"
            "%s"
            "%s"
            "%s"
@@ -954,6 +1020,11 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            a09->fail_warn = true;
            break;
            
+      case 'x':
+           if (!notest(a09,arg_arg(&arg)))
+             return -1;
+           break;
+           
       default:
            if (!a09->format.cmdline(&a09->format,a09,&arg,c))
            {
@@ -1112,7 +1183,6 @@ int main(int argc,char *argv[])
     .outfile         = "a09.obj",
     .listfile        = NULL,
     .corefile        = NULL,
-    .tests           = NULL,
     .deps            = NULL,
     .includes        = NULL,
     .ndeps           = 0,
@@ -1120,6 +1190,8 @@ int main(int argc,char *argv[])
     .in              = NULL,
     .out             = NULL,
     .list            = NULL,
+    .tests           = NULL,
+    .inbuf           = { .buf = {0}, .widx = 0, .ridx = 0 },
     .lnum            = 0,
     .total_cycles    = 0,
     .symtab          = NULL,
@@ -1147,7 +1219,7 @@ int main(int argc,char *argv[])
     .fail_warn       = false,
     .warning         = false,
     .exaddr          = false,
-    .inbuf           = { .buf = {0}, .widx = 0, .ridx = 0 },
+    .notest          = {0},
   };
   
   format_bin_init(&a09);
@@ -1274,7 +1346,7 @@ int main(int argc,char *argv[])
   if (rc)
     if (a09.runtests && !a09.error)
       rc = test_run(&a09);
-    
+      
   if (rc)
     warning_unused_symbols(&a09,a09.symtab);
     

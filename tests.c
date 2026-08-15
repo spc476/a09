@@ -1274,7 +1274,7 @@ bool test_pass_start(struct a09 *a09,int pass)
   (void)pass;
   
   struct testdata *test = a09->tests;
-
+  
   message(a09,MSG_DEBUG,"testpc=%04X",test->testpc);
   
   if (test->passinit == 0)
@@ -2008,6 +2008,12 @@ bool test_run(struct a09 *a09)
     struct unittest *unit = &data->units[i];
     char const      *tag  = "";
     int              rc;
+    div_t            res = div((int)i,CHAR_BIT);
+    if (a09->notest[res.quot] & (1 << res.rem))
+    {
+      printf("ok %zu - # SKIP %s %s:%zu %s\n",i + 1,unit->name.buf,unit->filename,unit->line,tag);
+      continue;
+    }
     
     a09->infile = unit->filename;
     for (size_t j = 0 ; j < data->stacksize ; j++)
