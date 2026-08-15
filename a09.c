@@ -791,10 +791,10 @@ static bool notest(struct a09 *a09,char const *list)
 
 /**************************************************************************/
 
-static int usage(char const *prog,FILE *out)
+static int usage(char const *prog)
 {
   fprintf(
-           out,
+           stdout,
            "usage: %s [options] [file]\n"
            "\t-I dir\t\tadd directory for include files\n"
            "\t-M\t\tgenerate Makefile dependencies on stdout\n"
@@ -977,7 +977,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            break;
            
       case 'h':
-           return usage(argv[0],stdout);
+           return usage(argv[0]);
            
       case 'l':
            if ((a09->listfile = arg_arg(&arg)) == NULL)
@@ -1029,7 +1029,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            if (!a09->format.cmdline(&a09->format,a09,&arg,c))
            {
              fprintf(stderr,"unsupported option '%c'\n",c);
-             return usage(argv[0],stderr);
+             return -1;
            }
            break;
     }
