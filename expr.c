@@ -31,7 +31,6 @@
 ****************************************************************************/
 
 #include <string.h>
-#include <ctype.h>
 #include <stdlib.h>
 #include <assert.h>
 
@@ -194,7 +193,7 @@ static bool value(struct value *pv,struct a09 *a09,struct buffer *buffer,int pas
     buffer->ridx--;
     rc = s2num(a09,&pv->value,buffer,10);
   }
-  else if ((c == '_') || (c == '.') || isalpha(c))
+  else if (isID(c))
   {
     struct symbol *sym;
     label          label;

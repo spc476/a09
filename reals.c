@@ -125,7 +125,7 @@ bool freal__ieee(struct format *fmt,struct opcdata *opd)
     
     opd->truncate = opd->datasz > sizeof(opd->bytes);
     char c        = skip_space(opd->buffer);
-    if ((c == ';') || (c == '\0'))
+    if (isEOL(c))
       return true;
     if (c != ',')
       return message(opd->a09,MSG_ERROR,"E0034: missing comma");
@@ -196,7 +196,7 @@ static bool freal_40b(struct format *fmt,struct opcdata *opd,int bias)
     
     opd->truncate = opd->datasz > sizeof(opd->bytes);
     char c        = skip_space(opd->buffer);
-    if ((c == ';') || (c == '\0'))
+    if (isEOL(c))
       return true;
     if (c != ',')
       return message(opd->a09,MSG_ERROR,"E0034: missing comma");

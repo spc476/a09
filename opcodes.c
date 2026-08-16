@@ -81,7 +81,7 @@ static bool collect_string(
   }
   
   c = skip_space(rbuf);
-  if ((c == ';') || (c == '\0'))
+  if (isEOL(c))
     return true;
   else
     return message(a09,MSG_ERROR,"E0107: FCC/FCS/FCN only accepts one operand");
@@ -244,7 +244,7 @@ static unsigned char acc_register(char c)
 
 static bool check_index_register(struct a09 *a09,char c)
 {
-  if ((c == '\0') || (c == ';') || (c == '+') || (c == ']') || isspace(c))
+  if (isEOL(c) || (c == '+') || (c == ']') || isspace(c))
     return true;
   return message(a09,MSG_ERROR,"E0016: invalid index register");
 }
@@ -253,7 +253,7 @@ static bool check_index_register(struct a09 *a09,char c)
 
 static bool check_pc_register(struct a09 *a09,char c)
 {
-  if ((c == '\0') || (c == ';') || (c == ']') || isspace(c))
+  if (isEOL(c) || (c == ']') || isspace(c))
     return true;
   return message(a09,MSG_ERROR,"E0016: invalid index register");
 }
@@ -267,7 +267,7 @@ static bool parse_operand(struct opcdata *opd)
   bool  indexindirect = false;
   char  c             = skip_space(opd->buffer);
   
-  if ((c == ';') || (c == '\0'))
+  if (isEOL(c))
   {
     opd->mode = AM_INHERENT;
     return true;
@@ -279,7 +279,7 @@ static bool parse_operand(struct opcdata *opd)
       return false;
       
     c = skip_space(opd->buffer);
-    if ((c != ';') && (c != '\0'))
+    if (!isEOL(c))
     {
       if (c == ',')
         return message(opd->a09,MSG_ERROR,"E0059: syntax error---mixing up immedate and indexed modes?");
@@ -359,7 +359,7 @@ static bool parse_operand(struct opcdata *opd)
     
     c = skip_space(opd->buffer);
     
-    if ((c == ';') || (c == '\0') || isspace(c))
+    if (isEOL(c) || isspace(c))
     {
       if (indexindirect)
         return message(opd->a09,MSG_ERROR,"E0019: missing end of index indirect mode");
@@ -391,7 +391,7 @@ static bool parse_operand(struct opcdata *opd)
       }
       return true;
     }
-    else if ((c == ';') || (c == '\0') || isspace(c))
+    else if (isEOL(c) || isspace(c))
     {
       if (indexindirect)
         return message(opd->a09,MSG_ERROR,"E0019: missing end of index indirect mode");
@@ -446,7 +446,7 @@ static bool parse_operand(struct opcdata *opd)
              c = opd->buffer->buf[++opd->buffer->ridx];
            }
            
-           if ((c == ';') || (c == '\0') || isspace(c))
+           if (isEOL(c) || isspace(c))
              return true;
              
            return message(opd->a09,MSG_ERROR,"E0022: invalid accumulator register in index mode");
@@ -461,7 +461,7 @@ static bool parse_operand(struct opcdata *opd)
     
   c = skip_space(opd->buffer);
   
-  if ((c == ';') || (c == '\0'))
+  if (isEOL(c))
   {
     if (indexindirect)
       return message(opd->a09,MSG_ERROR,"E0019: missing end of index indirect mode");
@@ -1058,7 +1058,7 @@ static bool op_pshpul(struct opcdata *opd)
   {
     opd->buffer->ridx--;
     
-    while(!isspace(c) && (c != ';') && (c != '0'))
+    while(!isspace(c) && !isEOL(c))
     {
       struct indexregs const *reg;
       
@@ -1068,9 +1068,7 @@ static bool op_pshpul(struct opcdata *opd)
       operand           |= reg->pushpull;
       opd->ecycles      += reg->bit16 ? 2 : 1;
       c = skip_space(opd->buffer);
-      if (c == '\0')
-        break;
-      if (c == ';')
+      if (isEOL(c))
         break;
       if (c != ',')
         return message(opd->a09,MSG_ERROR,"E0032: missing comma in register list");
@@ -1241,7 +1239,7 @@ static bool pseudo_end(struct opcdata *opd)
   assert((opd->pass == 1) || (opd->pass == 2));
   
   c = skip_space(opd->buffer);
-  if ((c != ';') && (c != '\0'))
+  if (!isEOL(c))
   {
     opd->buffer->ridx--;
     
@@ -1287,7 +1285,7 @@ static bool pseudo_fcb(struct opcdata *opd)
     
     opd->truncate = opd->datasz > sizeof(opd->bytes);
     char c        = skip_space(opd->buffer);
-    if ((c == ';') || (c == '\0'))
+    if (isEOL(c))
       return true;
     if (c != ',')
       return message(opd->a09,MSG_ERROR,"E0034: missing comma");
@@ -1335,7 +1333,7 @@ static bool pseudo_fdb(struct opcdata *opd)
     
     opd->truncate = opd->datasz > sizeof(opd->bytes);
     char c        = skip_space(opd->buffer);
-    if ((c == ';') || (c == '\0'))
+    if (isEOL(c))
       return true;
     if (c != ',')
       return message(opd->a09,MSG_ERROR,"E0034: missing comma");
@@ -1650,7 +1648,7 @@ static bool pseudo_extdp(struct opcdata *opd)
     label          label;
     char           c = skip_space(opd->buffer);
     
-    if ((c == ';') || (c == '\0'))
+    if (isEOL(c))
       return message(opd->a09,MSG_ERROR,"E0045: EXTDP missing label");
     opd->buffer->ridx--;
     if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))
@@ -1681,7 +1679,7 @@ static bool pseudo_extern(struct opcdata *opd)
     label          label;
     char           c = skip_space(opd->buffer);
     
-    if ((c == ';') || (c == '\0'))
+    if (isEOL(c))
       return message(opd->a09,MSG_ERROR,"E0047: EXTERN missing label");
     opd->buffer->ridx--;
     if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))

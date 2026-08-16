@@ -20,7 +20,6 @@
 *
 ****************************************************************************/
 
-#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
@@ -981,7 +980,7 @@ static bool ft_value(
     buffer->ridx--;
     rc = s2num(a09,&v,buffer,10);
   }
-  else if ((c == '_') || (c == '.') || isalpha(c))
+  else if (isID(c))
   {
     struct symbol *sym;
     label          label;
@@ -1060,7 +1059,7 @@ static bool ft_factor(
   assert(pass   == 2);
   
   char c = skip_space(buffer);
-  if ((c == '\0') || (c == ';'))
+  if (isEOL(c))
     return message(a09,MSG_ERROR,"E0010: unexpected end of input");
     
   if (c == '-')
@@ -1418,7 +1417,7 @@ bool test__opt(struct opcdata *opd)
       if (!expr(&low,opd->a09,opd->buffer,opd->pass))
         return false;
       c = skip_space(opd->buffer);
-      if ((c == ';') || (c == '\0'))
+      if (isEOL(c))
         high = low;
       else if (c != ',')
         return message(opd->a09,MSG_ERROR,"E0023: missing expected comma");
@@ -1735,7 +1734,7 @@ static bool ftest__test(struct format *fmt,struct opcdata *opd)
       if (!collect_esc_string(opd->a09,&data->units[data->nunits].name,opd->buffer,c))
         return false;
     }
-    else if ((c == ';') || (c == '\0'))
+    else if (isEOL(c))
     {
       memcpy(data->units[data->nunits].name.buf,opd->a09->label.text,opd->a09->label.len);
       data->units[data->nunits].name.widx = opd->a09->label.len;
@@ -1754,7 +1753,7 @@ static bool ft_timingp(struct buffer *buffer)
 {
   assert(buffer != NULL);
   char c = skip_space(buffer);
-  if ((c == ';') || (c == '\0'))
+  if (isEOL(c))
     return false;
   buffer->ridx--;
   return strncmp(buffer->buf,"timing",6);

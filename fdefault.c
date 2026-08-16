@@ -126,7 +126,7 @@ bool fdefault__test(struct format *fmt,struct opcdata *opd)
     
     parse_label(&label,&opd->a09->inbuf,opd->a09,opd->pass);
     c = skip_space(&opd->a09->inbuf);
-    if ((c == ';') || (c == '\0'))
+    if (isEOL(c))
       continue;
       
     opd->a09->inbuf.ridx--;

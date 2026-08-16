@@ -31,7 +31,6 @@
 ****************************************************************************/
 
 #include <string.h>
-#include <ctype.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <math.h>
@@ -227,7 +226,7 @@ static bool rvalue(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int p
     rc            = !((p == &buffer->buf[buffer->ridx]) || (errno != 0));
     buffer->ridx += p - &buffer->buf[buffer->ridx];
   }
-  else if ((c == '_') || (c == '.') || isalpha(c))
+  else if (isID(c))
   {
     struct symbol *sym;
     label          label;

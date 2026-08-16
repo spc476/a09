@@ -23,7 +23,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <ctype.h>
 #include <limits.h>
 #include <errno.h>
 #include "a09.h"
@@ -315,7 +314,7 @@ bool read_label(struct buffer *buffer,label *label,char c)
   
   size_t i = 0;
   
-  while((c == '.') || (c == '_') || (c == '$') || isalnum(c))
+  while(isLabel(c))
   {
     if (i < sizeof(label->text))
       label->text[i++] = c;
@@ -343,7 +342,7 @@ bool parse_label(label *res,struct buffer *buffer,struct a09 *a09,int pass)
   char  c = buffer->buf[buffer->ridx];
   bool  toolong;
   
-  if ((c == '.') || (c == '_') || isalpha(c))
+  if (isID(c))
   {
     buffer->ridx++;
     toolong = read_label(buffer,&tmp,c);
@@ -605,7 +604,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   
   c = skip_space(&a09->inbuf);
   
-  if ((c == ';') || (c == '\0'))
+  if (isEOL(c))
     return print_list(a09,&opd,true);
     
   a09->inbuf.ridx--; // ungetc()

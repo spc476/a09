@@ -38,6 +38,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <limits.h>
+#include <ctype.h>
 #include <assert.h>
 
 #include <cgilib8/tree.h>
@@ -403,6 +404,29 @@ static inline struct symbol *symbol_find(struct a09 *a09,label const *name)
     return NULL;
 }
 
+/**************************************************************************
+* The following are legal per C99 7.26.2 ('is' is not followed by a lower
+* case letter).
+***************************************************************************/
+
+static inline bool isID(char c) /* starts a label */
+{
+  return (c == '.') || (c == '_') || isalpha(c);
+}
+
 /**************************************************************************/
+
+static inline bool isLabel(char c) /* is a label */
+{
+  return (c == '.') || (c == '_') || (c == '$') || isalnum(c);
+}
+
+/**************************************************************************/
+
+static inline bool isEOL(char c)
+{
+  return (c == ';')   /* marks comment */
+      || (c == '\0'); /* marks C EOL   */
+}
 
 #endif
