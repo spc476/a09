@@ -391,7 +391,7 @@ bool parse_op(struct buffer *buffer,struct opcode const **pop)
   for (size_t i = 0 ; i < 10 ; i++)
   {
     c = buffer->buf[buffer->ridx];
-    if (isspace(c) || (c == '\0'))
+    if (isspace(c) || isEOL(c))
     {
       top[i] = '\0';
       *pop   = op_find(top);
