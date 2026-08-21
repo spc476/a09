@@ -397,7 +397,7 @@ bool parse_op(struct buffer *buffer,struct opcode const **pop)
       *pop   = op_find(top);
       return *pop != NULL;
     }
-    else if (!isalpha(c) && !isdigit(c) && (c != '.'))
+    else if (!isOp(c))
       break;
       
     top[i] = toupper(c);

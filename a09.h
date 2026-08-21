@@ -429,4 +429,11 @@ static inline bool isEOL(char c)
       || (c == '\0'); /* marks C EOL   */
 }
 
+/**************************************************************************/
+
+static inline bool isOp(char c)
+{
+  return isalnum(c) || (c == '.');
+}
+
 #endif
