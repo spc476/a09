@@ -1,6 +1,6 @@
 #############################################################################
 #
-#   Structures and function definitions for as09 (6809 assembler)
+#   Build the a09 assembler
 #   Copyright (C) 2023 Sean Conner
 #
 #   This program is free software: you can redistribute it and/or modify
