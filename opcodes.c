@@ -1026,7 +1026,7 @@ static bool sop_findreg(struct indexregs const **ir,char const *src,char skip)
   
   char what[3] = { toupper(src[0]) , toupper(src[1]) , '\0' };
   
-  for (size_t i = 0 ; i < sizeof(index) / sizeof(index[0]) ; i++)
+  for (size_t i = 0 ; i < ITEMS(index) ; i++)
   {
     if (memcmp(what,&index[i].reg[1],index[i].reg[0]) == 0)
     {

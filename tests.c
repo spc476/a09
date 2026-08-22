@@ -321,7 +321,7 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
   uint16_t         result;
   uint16_t         value;
   uint16_t         addr;
-  size_t           sp = sizeof(stack) / sizeof(stack[0]);
+  size_t           sp = ITEMS(stack);
   size_t           ip = 0;
   int              rc;
   
@@ -624,7 +624,7 @@ static bool runvm(struct a09 *a09,mc6809__t *cpu,struct vmcode *test)
            break;
            
       case VM_EXIT:
-           assert(sp == (sizeof(stack) / sizeof(stack[0]) - 1));
+           assert(sp == ITEMS(stack) - 1);
            return stack[sp] != 0;
     }
   }
@@ -1158,14 +1158,14 @@ static bool ft_expr(
   
   struct optable const *op;
   struct optable const *ostack[15];
-  size_t                osp = sizeof(ostack) / sizeof(ostack[0]);
+  size_t                osp = ITEMS(ostack);
   
   if (!ft_factor(prog,max,pvip,data,a09,buffer,pass))
     return false;
     
   while((op = get_op(buffer)) != NULL)
   {
-    while(osp < sizeof(ostack) / sizeof(ostack[0]))
+    while(osp < ITEMS(ostack))
     {
       if (
                (ostack[osp]->pri >  op->pri)
@@ -1189,14 +1189,14 @@ static bool ft_expr(
       return false;
   }
   
-  while(osp < sizeof(ostack) / sizeof(ostack[0]))
+  while(osp < ITEMS(ostack))
   {
     if (*pvip == max)
       return message(a09,MSG_ERROR,"E0065: Internal error---expression parser mismatch");
     prog[(*pvip)++] = ostack[osp++]->op;
   }
   
-  assert(osp == sizeof(ostack) / sizeof(ostack[0]));
+  assert(osp == ITEMS(ostack));
   return true;
 }
 
@@ -1225,7 +1225,7 @@ static bool ft_compile(
   if (!ft_expr(program,sizeof(program)/sizeof(program[0]),&vip,data,a09,buffer,pass))
     return false;
     
-  if (vip == sizeof(program) / sizeof(program[0]))
+  if (vip == ITEMS(program))
     return message(a09,MSG_ERROR,"E0066: expression too complex");
     
   program[vip++] = VM_EXIT;

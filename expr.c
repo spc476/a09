@@ -441,8 +441,8 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   struct optable const *op;
   struct value          vstack[15];
   struct optable const *ostack[15];
-  size_t                vsp  = sizeof(vstack) / sizeof(vstack[0]);
-  size_t                osp  = sizeof(ostack) / sizeof(ostack[0]);
+  size_t                vsp  = ITEMS(vstack);
+  size_t                osp  = ITEMS(ostack);
   
   assert(pv     != NULL);
   assert(a09    != NULL);
@@ -454,14 +454,14 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
     
   while((op = get_op(buffer)) != NULL)
   {
-    while(osp < sizeof(ostack) / sizeof(ostack[0]))
+    while(osp < ITEMS(ostack))
     {
       if (
                (ostack[osp]->pri >  op->pri)
            || ((ostack[osp]->pri == op->pri) && (op->as == AS_LEFT))
          )
       {
-        if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
+        if (vsp >= ITEMS(vstack) - 1)
           return message(a09,MSG_ERROR,"E0065: Internal error---expression parser mismatch");
         if (!eval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp],pass))
           return false;
@@ -482,9 +482,9 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
       return false;
   }
   
-  while(osp < sizeof(ostack) / sizeof(ostack[0]))
+  while(osp < ITEMS(ostack))
   {
-    if (vsp >= (sizeof(vstack) / sizeof(vstack[0])) - 1)
+    if (vsp >= ITEMS(vstack) - 1)
       return message(a09,MSG_ERROR,"E0065: Internal error---expression parser mismatch");
     if (!eval(a09,&vstack[vsp + 1],ostack[osp]->op,&vstack[vsp],pass))
       return false;
@@ -492,8 +492,8 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
     osp++;
   }
   
-  assert(osp ==  sizeof(ostack) / sizeof(ostack[0]));
-  assert(vsp == (sizeof(vstack) / sizeof(vstack[0]) - 1));
+  assert(osp == ITEMS(ostack));
+  assert(vsp == ITEMS(vstack)-1);
   
   *pv = vstack[vsp];
   return true;

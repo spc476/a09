@@ -43,6 +43,8 @@
 
 #include <cgilib8/tree.h>
 
+#define ITEMS(x) (sizeof(x) / sizeof(x[0]))
+
 enum
 {
   BYTE,
