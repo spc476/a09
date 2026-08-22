@@ -393,7 +393,7 @@ bool parse_op(struct buffer *buffer,struct opcode const **pop)
     c = buffer->buf[buffer->ridx];
     if (isspace(c) || isEOL(c))
     {
-      top[i] = '\0';
+      memset(&top[i],0,10 - i);
       *pop   = op_find(top);
       return *pop != NULL;
     }

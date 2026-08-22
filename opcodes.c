@@ -2205,7 +2205,7 @@ static int opcode_cmp(void const *needle,void const *haystack)
   char          const *key    = needle;
   struct opcode const *opcode = haystack;
   
-  return (strcmp(key,opcode->name));
+  return memcmp(key,opcode->name,sizeof(opcode->name));
 }
 
 /**************************************************************************/
