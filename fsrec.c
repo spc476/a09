@@ -90,7 +90,7 @@ static bool fsrec_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,cha
   assert(fmt          != NULL);
   assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_SREC);
-  assert(a09          != NULL);
+  (void)a09;
   assert(arg          != NULL);
   assert(c            != '\0');
   

@@ -497,7 +497,7 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
         
         if (a09->cycles && !opd->data)
         {
-          char tcyc[8];
+          char tcyc[42];
           
           if (a09->cycles_detailed && (opd->ecycles > 0))
             snprintf(tcyc,sizeof(tcyc),"[%zu+%zu]",opd->cycles,opd->ecycles);

@@ -125,7 +125,7 @@ static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,ch
   assert(fmt          != NULL);
   assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_BASIC);
-  assert(a09          != NULL);
+  (void)a09;
   assert(arg          != NULL);
   assert(c            != '\0');
   
