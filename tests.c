@@ -1163,11 +1163,8 @@ static bool ft_expr(
   if (!ft_factor(prog,max,pvip,data,a09,buffer,pass))
     return false;
     
-  while(true)
+  while((op = get_op(buffer)) != NULL)
   {
-    if ((op = get_op(buffer)) == NULL)
-      break;
-      
     while(osp < sizeof(ostack) / sizeof(ostack[0]))
     {
       if (

@@ -452,11 +452,8 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   if (!factor(&vstack[--vsp],a09,buffer,pass))
     return false;
     
-  while(true)
+  while((op = get_op(buffer)) != NULL)
   {
-    if ((op = get_op(buffer)) == NULL)
-      break;
-      
     while(osp < sizeof(ostack) / sizeof(ostack[0]))
     {
       if (
