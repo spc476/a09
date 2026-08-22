@@ -385,15 +385,15 @@ bool parse_op(struct buffer *buffer,struct opcode const **pop)
   assert(buffer != NULL);
   assert(pop    != NULL);
   
-  char top[10];
+  char top[sizeof((**pop).name)];
   char c = 0;
   
-  for (size_t i = 0 ; i < 10 ; i++)
+  for (size_t i = 0 ; i < sizeof(top) ; i++)
   {
     c = buffer->buf[buffer->ridx];
     if (isspace(c) || isEOL(c))
     {
-      memset(&top[i],0,10 - i);
+      memset(&top[i],0,sizeof(top) - i);
       *pop   = op_find(top);
       return *pop != NULL;
     }
