@@ -2210,7 +2210,7 @@ static int opcode_cmp(void const *needle,void const *haystack)
 
 /**************************************************************************/
 
-struct opcode const *op_find(char const *name)
+bool parse_op(struct buffer *buffer,struct opcode const **pop)
 {
   static struct opcode const opcodes[] =
   {
@@ -2388,15 +2388,30 @@ struct opcode const *op_find(char const *name)
     { "TSTB"    , "-aa0-" , op_inh         ,  2 , 0x5D , 0x00 , BYTE  } ,
   };
   
-  assert(name != NULL);
+  assert(buffer != NULL);
+  assert(pop    != NULL);
   
-  return bsearch(
-        name,
-        opcodes,
-        sizeof(opcodes)/sizeof(opcodes[0]),
-        sizeof(opcodes[0]),
-        opcode_cmp
-  );
+  char top[sizeof((**pop).name)];
+  char c = '\0';
+  
+  for (size_t i = 0 ; i < sizeof(top) ; i++)
+  {
+    c = buffer->buf[buffer->ridx];
+    if (isspace(c) || isEOL(c))
+    {
+      memset(&top[i],0,sizeof(top) - i);
+      *pop = bsearch(top,opcodes,sizeof(opcodes)/sizeof(opcodes[0]),sizeof(opcodes[0]),opcode_cmp);
+      return *pop != NULL;
+    }
+    else if (!isOp(c))
+      break;
+      
+    top[i] = toupper(c);
+    buffer->ridx++;
+  }
+  
+  assert(c != '\0');
+  return false;
 }
 
 /**************************************************************************/

@@ -380,36 +380,6 @@ void upper_label(label *res)
 
 /**************************************************************************/
 
-bool parse_op(struct buffer *buffer,struct opcode const **pop)
-{
-  assert(buffer != NULL);
-  assert(pop    != NULL);
-  
-  char top[sizeof((**pop).name)];
-  char c = 0;
-  
-  for (size_t i = 0 ; i < sizeof(top) ; i++)
-  {
-    c = buffer->buf[buffer->ridx];
-    if (isspace(c) || isEOL(c))
-    {
-      memset(&top[i],0,sizeof(top) - i);
-      *pop   = op_find(top);
-      return *pop != NULL;
-    }
-    else if (!isOp(c))
-      break;
-      
-    top[i] = toupper(c);
-    buffer->ridx++;
-  }
-  
-  assert(c != 0);
-  return false;
-}
-
-/**************************************************************************/
-
 char skip_space(struct buffer *buffer)
 {
   assert(buffer != NULL);
