@@ -212,7 +212,7 @@ char *add_file_dep(struct a09 *a09,char const *filename)
   }
   
   memcpy(name,filename,len);
-  name[len - 1]          = '\0';
+  name[len - 1]           = '\0';
   a09->deps               = deps;
   a09->deps[a09->ndeps++] = name;
   
