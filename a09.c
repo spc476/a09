@@ -1231,9 +1231,11 @@ int main(int argc,char *argv[])
   };
   
   format_bin_init(&a09);
-  fi = parse_command(argc,argv,&a09);
   
-  if (fi == -1)
+  if (!default_include_dirs(&a09))
+    return cleanup(&a09,false);
+    
+  if ((fi = parse_command(argc,argv,&a09)) == -1)
     return cleanup(&a09,false);
     
   if (fi == argc)
@@ -1276,9 +1278,6 @@ int main(int argc,char *argv[])
     }
   }
   
-  if (!default_include_dirs(&a09))
-    return cleanup(&a09,false);
-    
   if (a09.runtests)
     if (!test_init(&a09))
       return cleanup(&a09,false);
