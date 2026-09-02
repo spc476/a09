@@ -377,8 +377,8 @@ bool rexpr(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int pass,bool
   struct optable const *op;
   struct fvalue         vstack[15];
   struct optable const *ostack[15];
-  size_t                vsp  = ITEMS(vstack);
-  size_t                osp  = ITEMS(ostack);
+  size_t                vsp = ITEMS(vstack);
+  size_t                osp = ITEMS(ostack);
   
   assert(pv     != NULL);
   assert(a09    != NULL);

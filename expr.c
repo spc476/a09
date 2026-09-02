@@ -441,8 +441,8 @@ bool expr(struct value *pv,struct a09 *a09,struct buffer *buffer,int pass)
   struct optable const *op;
   struct value          vstack[15];
   struct optable const *ostack[15];
-  size_t                vsp  = ITEMS(vstack);
-  size_t                osp  = ITEMS(ostack);
+  size_t                vsp = ITEMS(vstack);
+  size_t                osp = ITEMS(ostack);
   
   assert(pv     != NULL);
   assert(a09    != NULL);
