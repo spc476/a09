@@ -145,8 +145,8 @@ static bool block_zero_write(
       hdr[0] = 0;
       hdr[1] = 0;
       hdr[2] = 0;
-      hdr[3] = addr >> 8;
-      hdr[4] = addr & 255;
+      hdr[3] = addr >>   8;
+      hdr[4] = addr &  255;
       
       if (fwrite(hdr,1,sizeof(hdr),opd->a09->out) != sizeof(hdr))
         return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
@@ -219,8 +219,8 @@ static bool frsdos_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     }
     else
     {
-      hdr[3] = sym->value >> 8;
-      hdr[4] = sym->value & 255;
+      hdr[3] = sym->value >>   8;
+      hdr[4] = sym->value &  255;
     }
     
     if (fwrite(hdr,1,sizeof(hdr),opd->a09->out) != sizeof(hdr))
@@ -334,8 +334,8 @@ static bool frsdos_org(struct format *fmt,struct opcdata *opd)
     hdr[0] = 0;
     hdr[1] = 0;
     hdr[2] = 0;
-    hdr[3] = opd->value.value >> 8;
-    hdr[4] = opd->value.value & 255;
+    hdr[3] = opd->value.value >>   8;
+    hdr[4] = opd->value.value &  255;
     
     if (fwrite(hdr,1,sizeof(hdr),opd->a09->out) != sizeof(hdr))
       return message(opd->a09,MSG_ERROR,"E0040: failed writing object file");
