@@ -412,14 +412,14 @@ static inline struct symbol *symbol_find(struct a09 *a09,label const *name)
 
 static inline bool isID(char c) /* starts a label */
 {
-  return (c == '.') || (c == '_') || isalpha(c);
+  return isalpha(c) || (c == '.') || (c == '_');
 }
 
 /**************************************************************************/
 
 static inline bool isLabel(char c) /* is a label */
 {
-  return (c == '.') || (c == '_') || (c == '$') || isalnum(c);
+  return isalnum(c) || (c == '.') || (c == '_') || (c == '$');
 }
 
 /**************************************************************************/
