@@ -93,6 +93,8 @@ char arg_next(struct arg *arg)
     
   if (arg->argv[arg->ci][arg->si] == '\0')
     return '\0';
+  else if (arg->argv[arg->ci][arg->si] == *OPT)
+    return '\0';
   else
     return arg->argv[arg->ci][arg->si++];
 }
