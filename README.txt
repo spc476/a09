@@ -834,7 +834,8 @@ They are:
 		floating point format is currently the Microsoft 8-bit
 		floating point format.
 
-  The following command line options are supported:
+  The following command line options are supported (on Windows, the leading
+dash '-' is replaced by a slash '/'):
 
 	-I directory
 
