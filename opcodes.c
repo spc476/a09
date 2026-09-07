@@ -2295,6 +2295,7 @@ bool parse_op(struct buffer *buffer,struct opcode const **pop)
     { "FCC"     , ""      , pseudo_fcc     ,  0 , 0x00 , 0x00 , false } ,
     { "FCN"     , ""      , pseudo_fcn     ,  0 , 0x00 , 0x00 , false } ,
     { "FCS"     , ""      , pseudo_fcs     ,  0 , 0x00 , 0x00 , false } ,
+    { "FCZ"     , ""      , pseudo_fcn     ,  0 , 0x00 , 0x00 , false } ,
     { "FDB"     , ""      , pseudo_fdb     ,  0 , 0x00 , 0x00 , false } ,
     { "INC"     , "-aaa-" , op_die         ,  4 , 0x0C , 0x00 , BYTE  } ,
     { "INCA"    , "-aaa-" , op_inh         ,  2 , 0x4C , 0x00 , BYTE  } ,
