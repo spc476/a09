@@ -277,17 +277,9 @@ bool read_line(struct a09 *a09,FILE *in,struct buffer *buffer)
       else
         return message(a09,MSG_ERROR,"E0010: unexpected end of input");
     }
-    if (c == '\n') break;
-    if (c == '\t')
-    {
-      for (size_t num = 8 - (buffer->widx & 7) , j = 0 ; j < num ; j++)
-      {
-        if (buffer->widx == sizeof(buffer->buf)-1)
-          return message(a09,MSG_ERROR,"E0109: input line too long");
-        buffer->buf[buffer->widx++] = ' ';
-      }
-    }
-    else if (isprint(c))
+    if (c == '\n')
+      break;
+    else if ((c == '\t') || ((c >= ' ') && (c <= '~')))
     {
       if (buffer->widx == sizeof(buffer->buf)-1)
         return message(a09,MSG_ERROR,"E0109: input line too long");
@@ -488,7 +480,18 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
       }
     }
     
-    fprintf(a09->list," %5zu | %s\n",a09->lnum,a09->inbuf.buf);
+    fprintf(a09->list," %5zu | ",a09->lnum);
+    for (size_t i = 0 , w = 0 ; i < a09->inbuf.widx ; i++)
+    {
+      if (a09->inbuf.buf[i] == '\t')
+      {
+        for (size_t num = 8 - (w & 7) , j = 0 ; j < num ; j++)
+          fputc(' ',a09->list), w++;
+      }
+      else
+        fputc(a09->inbuf.buf[i],a09->list) , w++;
+    }
+    fputc('\n',a09->list);
   }
   
   opd->includehack = false;
