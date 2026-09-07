@@ -589,6 +589,13 @@ non-standard pesudo operation for most 6809 assemblers.
 		character in the string has bit-7 set to indicate the end
 		of the string.
 
+	FCZ /string/
+
+		(Non-standard) Plase the ASCII string, delimited by the
+                first non-space character, into the program.  The string is
+                terminated by a NUL character to indicate the end of the
+                string (this is the same as FCN).
+
 	FDB expr[,expr...]
 
 		Form Double Byte
