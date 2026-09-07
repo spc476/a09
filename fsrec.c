@@ -53,7 +53,7 @@ char const format_srec_usage[] =
         OC "R size\t\tset #bytes per record (min=1, max=252, default=34)\n"
         OC "Z\t\tforce zero byte data to be written\n"
         "\n"
-        "NOTE:\tS0 record will be truncated to max record size\n";
+        "\tS0 record will be truncated to max record size\n";
         
 /**************************************************************************/
 
