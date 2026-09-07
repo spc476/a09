@@ -87,11 +87,11 @@ struct format_basic
 char const format_basic_usage[] =
         "\n"
         "BASIC format options:\n"
-        "\t-C line\t\tstarting line # for code (automatic after DATA)\n"
-        "\t-E\t\tinclude EXEC call\n"
-        "\t-L line\t\tstarting line # for DATA (default 10)\n"
-        "\t-N incr\t\tline increment (default 10)\n"
-        "\t-P size\t\tsize of string pool (default 200)\n"
+        OC "C line\t\tstarting line # for code (automatic after DATA)\n"
+        OC "E\t\tinclude EXEC call\n"
+        OC "L line\t\tstarting line # for DATA (default 10)\n"
+        OC "N incr\t\tline increment (default 10)\n"
+        OC "P size\t\tsize of string pool (default 200)\n"
         "\n";
         
 /**************************************************************************/

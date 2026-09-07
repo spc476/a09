@@ -46,12 +46,12 @@ struct format_srec
 char const format_srec_usage[] =
         "\n"
         "SREC format options:\n"
-        "\t-0 file\t\tcreate S0 record from file\n"
-        "\t-E addr\t\texecution address\n"
-        "\t-L addr\t\tinitial load address\n"
-        "\t-O\t\tforce override of load and exec address\n"
-        "\t-R size\t\tset #bytes per record (min=1, max=252, default=34)\n"
-        "\t-Z\t\tforce zero byte data to be written\n"
+        OC "0 file\t\tcreate S0 record from file\n"
+        OC "E addr\t\texecution address\n"
+        OC "L addr\t\tinitial load address\n"
+        OC "O\t\tforce override of load and exec address\n"
+        OC "R size\t\tset #bytes per record (min=1, max=252, default=34)\n"
+        OC "Z\t\tforce zero byte data to be written\n"
         "\n"
         "NOTE:\tS0 record will be truncated to max record size\n";
         

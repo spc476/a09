@@ -73,7 +73,7 @@ char arg_next(struct arg *arg)
   if (arg->si == 0)
   {
     assert(arg->argv[arg->ci][0] != '\0');
-    if (arg->argv[arg->ci][0] != '-')
+    if (arg->argv[arg->ci][0] != *OPT)
       return '\0';
     arg->si++;
     if (arg->argv[arg->ci][1] == '\0')
@@ -84,11 +84,11 @@ char arg_next(struct arg *arg)
   {
     arg->ci++;
     arg->si = 0;
-    if ((arg->ci == arg->argc) || (arg->argv[arg->ci][0] != '-'))
+    if ((arg->ci == arg->argc) || (arg->argv[arg->ci][0] != *OPT))
       return '\0';
   }
   
-  if (arg->argv[arg->ci][arg->si] == '-')
+  if (arg->argv[arg->ci][arg->si] == *OPT)
     arg->si++;
     
   if (arg->argv[arg->ci][arg->si] == '\0')

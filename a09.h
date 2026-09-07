@@ -43,6 +43,15 @@
 
 #include <cgilib8/tree.h>
 
+#if defined(_WIN32)
+#  define PATH_SEPARATOR ';'
+#  define OPT            "/"
+#else
+#  define PATH_SEPARATOR ':'
+#  define OPT            "-"
+#endif
+
+#define OC        "\t" OPT
 #define ITEMS(x) (sizeof(x) / sizeof(x[0]))
 
 enum

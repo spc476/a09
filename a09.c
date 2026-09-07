@@ -804,32 +804,32 @@ static int usage(char const *prog)
   fprintf(
            stdout,
            "usage: %s [options] [file]\n"
-           "\t-I dir\t\tadd directory for include files\n"
-           "\t-M\t\tgenerate Makefile dependencies on stdout\n"
-           "\t-T\t\trun tests with TAP output\n"
-           "\t-c file\t\tcore file (of 6809 VM) name (only if running tests)\n"
-           "\t-d\t\tdebug output\n"
-           "\t-e ('a'|'c'|'d'|'f'|'t')\n"
+           OC "I dir\t\tadd directory for include files\n"
+           OC "M\t\tgenerate Makefile dependencies on stdout\n"
+           OC "T\t\trun tests with TAP output\n"
+           OC "c file\t\tcore file (of 6809 VM) name (only if running tests)\n"
+           OC "d\t\tdebug output\n"
+           OC "e ('a'|'c'|'d'|'f'|'t')\n"
            "\t\ta\texplicit addressing mode required\n"
            "\t\tc\tadd cycles to listing file\n"
            "\t\td\tadd detailed cycles\n"
            "\t\tf\tadd flags to listing file\n"
            "\t\tt\ttotal cycles\n"
-           "\t-f format\toutput format (default bin)\n"
-           "\t-h\t\thelp (this text)\n"
-           "\t-l file\t\tlist filename\n"
-           "\t-n Wxxxx\tsupress the given warnings\n"
-           "\t-o file\t\toutput filename (default a09.obj)\n"
-           "\t-r\t\trandomize the testing order (only if running tests)\n"
-           "\t-s seed\t\tseed randomizer for testing order\n"
-           "\t-t\t\trun tests\n"
-           "\t-w\t\tfail assembler if warnings\n"
-           "\t-x numlist\tskip running given tests\n"
+           OC "f format\toutput format (default bin)\n"
+           OC "h\t\thelp (this text)\n"
+           OC "l file\t\tlist filename\n"
+           OC "n Wxxxx\tsupress the given warnings\n"
+           OC "o file\t\toutput filename (default a09.obj)\n"
+           OC "r\t\trandomize the testing order (only if running tests)\n"
+           OC "s seed\t\tseed randomizer for testing order\n"
+           OC "t\t\trun tests\n"
+           OC "w\t\tfail assembler if warnings\n"
+           OC "x numlist\tskip running given tests\n"
            "\n"
            "\tformats: bin rsdos srec basic dragon\n"
            "\n"
            "\tIf no file given, code read via stdin\n"
-           "\tTo generate output on stdout, use '-o-'\n"
+           "\tTo generate output on stdout, use '" OPT "o-'\n"
            "\n"
            "\tFormat for numlist: N1,N2,N3-N4\n"
            "%s"
@@ -1136,12 +1136,6 @@ static int cleanup(struct a09 *a09,bool success)
 }
 
 /**************************************************************************/
-
-#if defined(_WIN32)
-#  define PATH_SEPARATOR ';'
-#else
-#  define PATH_SEPARATOR ':'
-#endif
 
 static bool default_include_dirs(struct a09 *a09)
 {
