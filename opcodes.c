@@ -2161,10 +2161,10 @@ static bool pseudo__pcle(struct opcdata *opd)
   if (opd->pass == 2)
   {
     message(opd->a09,MSG_DEBUG,"PC: %04X limit: %04X",opd->a09->pc,opd->value.value);
-    if (opd->a09->pc <= opd->value.value)
+    if ((uint16_t)(opd->a09->pc + opd->a09->phase) <= opd->value.value)
       return true;
     else
-      return message(opd->a09,MSG_ERROR,"E0106: PC %04X exceeds given limit %04X",opd->a09->pc,opd->value.value);
+      return message(opd->a09,MSG_ERROR,"E0106: PC %04X exceeds given limit %04X",(uint16_t)(opd->a09->pc + opd->a09->phase),opd->value.value);
   }
   
   return true;
