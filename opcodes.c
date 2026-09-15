@@ -927,7 +927,7 @@ static bool op_br(struct opcdata *opd)
   {
     uint16_t delta = opd->value.value - (opd->a09->pc + 2);
     
-    if ((opd->pass == 2) && (opd->op->opcode != 0x21)) /* BRN is exempted */
+    if ((opd->pass == 2) && (opd->op->opcode != 0x21) && (opd->op->opcode != 0x8D)) /* BRN,BSR is exempted */
     {
       if (delta == 0)
         message(opd->a09,MSG_WARNING,"W0012: branch to next location, maybe remove?");
@@ -968,7 +968,7 @@ static bool op_lbr(struct opcdata *opd)
   {
     uint16_t delta = opd->value.value - (opd->a09->pc + (opd->op->page ? 4 : 3));
     
-    if ((opd->pass == 2) && (opd->op->opcode != 0x21))
+    if ((opd->pass == 2) && (opd->op->opcode != 0x21) && (opd->op->opcode != 0x17))
     {
       if (delta == 0)
         message(opd->a09,MSG_WARNING,"W0012: branch to next location, maybe remove?");
