@@ -1429,7 +1429,7 @@ static bool pseudo_include(struct opcdata *opd)
     
     for (size_t i = 0 ; i < opd->a09->nincs ; i++)
     {
-      snprintf(incfile,sizeof(incfile),"%s/%s",opd->a09->includes[i],filename.buf);
+      snprintf(incfile,sizeof(incfile),"%s" DS "%s",opd->a09->includes[i],filename.buf);
       new.in = fopen(incfile,"r");
       if (new.in != NULL)
       {

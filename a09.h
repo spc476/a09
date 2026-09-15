@@ -46,9 +46,11 @@
 #if defined(_WIN32)
 #  define PATH_SEPARATOR ';'
 #  define OPT            "/"
+#  define DS             "\\"
 #else
 #  define PATH_SEPARATOR ':'
 #  define OPT            "-"
+#  define DS             "/"
 #endif
 
 #define OC        "\t" OPT

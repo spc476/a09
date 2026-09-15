@@ -237,7 +237,7 @@ static bool frsdos_end(struct format *fmt,struct opcdata *opd,struct symbol cons
       
       if (format->basicf == NULL)
       {
-        char const *p = strrchr(opd->a09->outfile,'/');
+        char const *p = strrchr(opd->a09->outfile,*DS);
         if (p == NULL)
           p = opd->a09->outfile;
         format->basicf = rsdfn;
