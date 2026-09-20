@@ -174,32 +174,32 @@ struct Assert
 
 struct testdata
 {
-  struct a09      *a09;
+  struct a09       *a09;
   bool            (*fmtwrite)(struct format *,struct opcdata *,void const *,size_t,bool);
   bool            (*fmtrmb)  (struct format *,struct opcdata *);
   bool            (*fmtorg)  (struct format *,struct opcdata *);
   bool            (*fmtalign)(struct format *,struct opcdata *);
-  tree__s         *Asserts;
-  struct unittest *units;
-  size_t           nunits;
-  size_t           failed;
-  unsigned long    icount;
-  mc6809__t        cpu;
-  mc6809dis__t     dis;
-  int              passinit;
-  uint16_t         addr;
-  uint16_t         sp;
-  uint16_t         stacksize;
-  uint16_t         inittestpc;
-  uint16_t         testpc;
-  uint16_t         resumepc;
-  uint8_t          fill;
-  bool             tron;
-  bool             timing;
-  bool             intest;
-  char             errbuf[128];
-  mc6809byte__t    memory[65536u];
-  struct memprot   prot  [65536u];
+  tree__s          *Asserts;
+  struct unittest  *units;
+  size_t            nunits;
+  size_t            failed;
+  unsigned long     icount;
+  mc6809__t         cpu;
+  mc6809dis__t      dis;
+  int               passinit;
+  uint16_t          addr;
+  uint16_t          sp;
+  uint16_t          stacksize;
+  uint16_t          inittestpc;
+  uint16_t          testpc;
+  uint16_t          resumepc;
+  uint8_t           fill;
+  bool              tron;
+  bool              timing;
+  bool              intest;
+  char              errbuf[128];
+  mc6809byte__t     memory[65536u];
+  struct memprot    prot  [65536u];
 };
 
 struct labeltable
