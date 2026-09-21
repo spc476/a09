@@ -1196,7 +1196,7 @@ int main(int argc,char *argv[])
     .out             = NULL,
     .list            = NULL,
     .tests           = NULL,
-    .inbuf           = { .buf = {0}, .widx = 0, .ridx = 0 },
+    .inbuf           = { .buf = { '\0' }, .widx = 0, .ridx = 0 },
     .lnum            = 0,
     .total_cycles    = 0,
     .symtab          = NULL,
