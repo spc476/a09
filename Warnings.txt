@@ -1,3 +1,4 @@
+W0000: FEATURE NOT FINISHED
 W0001: label '%.*s' exceeds %zu characters
 W0002: symbol '%.*s' defined but not used
 W0003: 16-bit value truncated to 5 bits
@@ -26,4 +27,4 @@ W0025: address not in current DP
 W0026: direct address not explicitely given
 W0027: extended address not explicitely given
 W0028: DEPHASE missing corresponding PHASE
-W9999: FEATURE NOT FINISHED
+W0029: %s

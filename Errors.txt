@@ -50,12 +50,12 @@ E0049: '%.*s' already defined on line %zu
 E0050: not a label
 E0051: value for ALIGN must be known in pass 1
 E0052: dividend undefined
-E0053:
+E0053: missing value for IF
 E0054: Internal error---no header written?
 E0055: object size too large
 E0056: END section already written
 E0057: ORG directive missing
-E0058:
+E0058: value for IF must be defined for pass 1
 E0059: syntax error---mixing up immedate and indexed modes?
 E0060: syntax error
 E0061: '%c' not allowed in literal number
@@ -64,9 +64,9 @@ E0063: missing value for SET
 E0064: symbol '%.*s' already defined
 E0065: Internal error---expression parser mismatch
 E0066: expression too complex
-E0067:
-E0068:
-E0069:
+E0067: IFDEF missing label
+E0068: label must be defined on pass 1
+E0069: IFDEF missing label
 E0070: %s: %s
 E0071: string too long
 E0072: can't use USR and DEFUSRn at the same time

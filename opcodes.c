@@ -1723,7 +1723,7 @@ static bool pseudo__code(struct opcdata *opd)
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 1)
-    message(opd->a09,MSG_WARNING,"W9999: FEATURE NOT FINISHED");
+    message(opd->a09,MSG_WARNING,"W0000: FEATURE NOT FINISHED");
   return opd->a09->format.code(&opd->a09->format,opd);
 }
 
@@ -1735,7 +1735,7 @@ static bool pseudo__dp(struct opcdata *opd)
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (opd->pass == 1)
-    message(opd->a09,MSG_WARNING,"W9999: FEATURE NOT FINISHED");
+    message(opd->a09,MSG_WARNING,"W0000: FEATURE NOT FINISHED");
   return opd->a09->format.dp(&opd->a09->format,opd);
 }
 
@@ -2273,10 +2273,10 @@ static bool pseudo_if(struct opcdata *opd)
   assert((opd->pass == 1) || (opd->pass == 2));
   
   if (!parse_dirext(opd))
-    return message(opd->a09,MSG_ERROR,"E9999: missing value for IF");
+    return message(opd->a09,MSG_ERROR,"E0053: missing value for IF");
   
   if ((opd->pass == 1) && opd->value.unknownpass1)
-    return message(opd->a09,MSG_ERROR,"E9999: value for IF must be defined for pass 1");
+    return message(opd->a09,MSG_ERROR,"E0058: value for IF must be defined for pass 1");
   
   if (opd->value.value == 0)
     skip_block(opd);
@@ -2295,10 +2295,10 @@ static bool pseudo_ifdef(struct opcdata *opd)
   char           c = skip_space(opd->buffer);
   
   if (isEOL(c))
-    return message(opd->a09,MSG_ERROR,"E9999: IFDEF missing label");
+    return message(opd->a09,MSG_ERROR,"E0067: IFDEF missing label");
   opd->buffer->ridx--;
   if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))
-    return message(opd->a09,MSG_ERROR,"E9999: label must be defined on pass 1");
+    return message(opd->a09,MSG_ERROR,"E0068: label must be defined on pass 1");
   sym = symbol_find(opd->a09,&label);
   
   if (sym == NULL)
@@ -2318,10 +2318,10 @@ static bool pseudo_ifndef(struct opcdata *opd)
   char           c = skip_space(opd->buffer);
   
   if (isEOL(c))
-    return message(opd->a09,MSG_ERROR,"E9999: IFDEF missing label");
+    return message(opd->a09,MSG_ERROR,"E0069: IFDEF missing label");
   opd->buffer->ridx--;
   if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))
-    return message(opd->a09,MSG_ERROR,"E9999: label must be defined on pass 1");
+    return message(opd->a09,MSG_ERROR,"E0068: label must be defined on pass 1");
   sym = symbol_find(opd->a09,&label);
   
   if (sym != NULL)
@@ -2363,7 +2363,7 @@ static bool pseudo__error(struct opcdata *opd)
       return false;
     assert(msg.widx < sizeof(msg.buf));
     msg.buf[msg.widx++] = '\0';
-    message(opd->a09,MSG_ERROR,"E9999: %s",msg.buf);
+    message(opd->a09,MSG_ERROR,"E0038: %s",msg.buf);
   }
   return false;
 }
@@ -2384,7 +2384,7 @@ static bool pseudo__warn(struct opcdata *opd)
       return false;
     assert(msg.widx < sizeof(msg.buf));
     msg.buf[msg.widx++] = '\0';
-    message(opd->a09,MSG_WARNING,"W9999: %s",msg.buf);
+    message(opd->a09,MSG_WARNING,"W0029: %s",msg.buf);
   }
   return true;
 }
