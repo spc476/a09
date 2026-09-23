@@ -1354,6 +1354,10 @@ int main(int argc,char *argv[])
   if ((fi = parse_command(argc,argv,&a09)) == -1)
     return cleanup(&a09,false);
     
+  if (a09.runtests)
+    if (!test_init(&a09))
+      return cleanup(&a09,false);
+      
   if (fi == argc)
   {
     a09.infile = "(stdin)";
@@ -1394,10 +1398,6 @@ int main(int argc,char *argv[])
     }
   }
   
-  if (a09.runtests)
-    if (!test_init(&a09))
-      return cleanup(&a09,false);
-      
   if (!assemble_pass(&a09,1))
     return cleanup(&a09,false);
     
