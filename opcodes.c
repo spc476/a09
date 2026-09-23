@@ -2349,6 +2349,48 @@ static bool pseudo_endif(struct opcdata *opd)
 
 /**************************************************************************/
 
+static bool pseudo__error(struct opcdata *opd)
+{
+  assert(opd      != NULL);
+  assert(opd->a09 != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->pass == 1)
+  {
+    struct buffer msg;
+  
+    if (!parse_string(opd->a09,&msg,opd->buffer))
+      return false;
+    assert(msg.widx < sizeof(msg.buf));
+    msg.buf[msg.widx++] = '\0';
+    message(opd->a09,MSG_ERROR,"E9999: %s",msg.buf);
+  }
+  return false;
+}
+
+/**************************************************************************/
+
+static bool pseudo__warn(struct opcdata *opd)
+{
+  assert(opd      != NULL);
+  assert(opd->a09 != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (opd->pass == 1)
+  {
+    struct buffer msg;
+    
+    if (!parse_string(opd->a09,&msg,opd->buffer))
+      return false;
+    assert(msg.widx < sizeof(msg.buf));
+    msg.buf[msg.widx++] = '\0';
+    message(opd->a09,MSG_WARNING,"W9999: %s",msg.buf);
+  }
+  return true;
+}
+
+/**************************************************************************/
+
 static int opcode_cmp(void const *needle,void const *haystack)
 {
   char          const *key    = needle;
@@ -2368,6 +2410,7 @@ bool parse_op(struct buffer *buffer,struct opcode const **pop)
     { ".CODE"   , ""      , pseudo__code   ,  0 , 0x00 , 0x00 , false } ,
     { ".DP"     , ""      , pseudo__dp     ,  0 , 0x00 , 0x00 , false } ,
     { ".ENDTST" , ""      , pseudo__endtst ,  0 , 0x00 , 0x00 , false } , // test
+    { ".ERROR"  , ""      , pseudo__error  ,  0 , 0x00 , 0x00 , false } ,
     { ".FLOAT"  , ""      , pseudo__float  ,  0 , 0x00 , 0x00 , false } ,
     { ".FLOATD" , ""      , pseudo__float  ,  0 , 0x01 , 0x00 , false } ,
     { ".NOTEST" , ""      , pseudo__notest ,  0 , 0x00 , 0x00 , false } , // test
@@ -2376,6 +2419,7 @@ bool parse_op(struct buffer *buffer,struct opcode const **pop)
     { ".TEST"   , ""      , pseudo__test   ,  0 , 0x00 , 0x00 , false } , // test
     { ".TROFF"  , ""      , pseudo__troff  ,  0 , 0x00 , 0x00 , false } , // test
     { ".TRON"   , ""      , pseudo__tron   ,  0 , 0x00 , 0x00 , false } , // test
+    { ".WARN"   , ""      , pseudo__warn   ,  0 , 0x00 , 0x00 , false } ,
     { "ABX"     , "-----" , op_inh         ,  3 , 0x3A , 0x00 , BYTE  } ,
     { "ADCA"    , "aaaaa" , op_idie        ,  2 , 0x89 , 0x00 , BYTE  } ,
     { "ADCB"    , "aaaaa" , op_idie        ,  2 , 0xC9 , 0x00 , BYTE  } ,
