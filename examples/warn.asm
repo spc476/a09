@@ -1,6 +1,9 @@
 ; * - only with the test format
 
 		org	$0
+	.code				; W0000
+	.dp				; W0000
+	.warn "This is a warning"	; W0029
 
 .start		lda	<<b16,x		; W0002, W0003, W0010
 		ldb	#$FF12		; W0004
