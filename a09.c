@@ -256,6 +256,101 @@ static bool add_include_dir(struct a09 *a09,char const *filename)
 
 /**************************************************************************/
 
+static bool add_define(struct a09 *a09,char const *def)
+{
+  label          define;
+  unsigned long  val;
+  struct symbol *sym;
+  char const    *eq = strchr(def,'=');
+  
+  if (eq == NULL)
+  {
+    size_t len = strlen(def);
+    if (len > sizeof(define.text))
+    {
+      fprintf(stderr,"define name '%s' too long\n",def);
+      return false;
+    }
+    define.len = len;
+    memcpy(define.text,def,define.len);
+    val = 1;
+  }
+  else
+  {
+    char *end;
+    char const *tval = eq + 1;
+    bool  not        = false;
+    bool  neg        = false;
+    
+    if ((size_t)(eq - def) > sizeof(define.text))
+    {
+      fprintf(stderr,"define name '%s' too long\n",def);
+      return false;
+    }
+    
+    define.len = (unsigned char)(eq - def);
+    memcpy(define.text,def,define.len);
+    eq++;
+    
+    if (eq[0] == '\0')
+    {
+      fprintf(stderr,"-D missing value\n");
+      return false;
+    }
+    else if (eq[0] == '-')
+    {
+      neg = true;
+      eq++;
+    }
+    else if (eq[0] == '~')
+    {
+      not = true;
+      eq++;
+    }
+    
+    errno = 0;
+    val   = strtoul(eq,&end,0);
+    if (errno != 0)
+    {
+      fprintf(stderr,"value '%s' unparsable\n",tval);
+      return false;
+    }
+    if (val > 65535uL)
+    {
+      fprintf(stderr,"value '%s' exceeds 16 bits\n",tval);
+      return false;
+    }
+    
+    if (neg)
+      val = -val;
+    else if (not)
+      val = ~val;
+  }
+  
+  if (define.len == 1)
+    if ((toupper(define.text[0]) == 'A') || (toupper(define.text[0]) == 'B') || (toupper(define.text[0]) == 'D'))
+      fprintf(stderr,"define '%*s' could be mistaken for register in index",define.len,define.text);
+  
+  sym = symbol_find(a09,&define);
+  if (sym != NULL)
+  {
+    fprintf(stderr,"define '%.*s' is already defined\n",define.len,define.text);
+    return false;
+  }
+  
+  sym = symbol_add(a09,&define,val);
+  if (sym == NULL)
+  {
+    fprintf(stderr,"could not allocate memory\n");
+    return false;
+  }
+  
+  sym->type = SYM_EQU;
+  return true;
+}
+
+/**************************************************************************/
+
 bool read_line(struct a09 *a09,FILE *in,struct buffer *buffer)
 {
   assert(in     != NULL);
@@ -807,6 +902,7 @@ static int usage(char const *prog)
   fprintf(
            stdout,
            "usage: %s [options] [file]\n"
+           OC "D define\tdefine value\n"
            OC "I dir\t\tadd directory for include files\n"
            OC "M\t\tgenerate Makefile dependencies on stdout\n"
            OC "T\t\trun tests with TAP output\n"
@@ -835,6 +931,7 @@ static int usage(char const *prog)
            "\tTo generate output on stdout, use '" OPT "o-'\n"
            "\n"
            "\tFormat for numlist: N1,N2,N3-N4\n"
+           "\tFormat for define: name[=number]\n"
            "%s"
            "%s"
            "%s"
@@ -869,9 +966,20 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
     char const *file;
     char const *format;
     char const *extra;
+    char const *def;
     
     switch(c)
     {
+      case 'D':
+           if ((def = arg_arg(&arg)) == NULL)
+           {
+             fprintf(stderr,"-D: missing define\n");
+             return -1;
+           }
+           if (!add_define(a09,def))
+             return -1;
+           break;
+           
       case 'I':
            if ((file = arg_arg(&arg)) == NULL)
            {
