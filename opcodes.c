@@ -2215,6 +2215,140 @@ static bool pseudo_dephase(struct opcdata *opd)
 
 /**************************************************************************/
 
+static bool skip_block(struct opcdata *opd)
+{
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  unsigned int depth = 1;
+  
+  print_list(opd->a09,opd,false);
+  
+  while(!feof(opd->a09->in))
+  {
+    struct opcode const *op;
+    label                label;
+    char                 c;
+    
+    if (!read_line(opd->a09,opd->a09->in,&opd->a09->inbuf))
+      return false;
+    
+    opd->a09->lnum++;
+    parse_label(&label,&opd->a09->inbuf,opd->a09,opd->pass);
+    c = skip_space(&opd->a09->inbuf);
+    if (isEOL(c))
+      continue;
+    opd->a09->inbuf.ridx--;
+    if (!parse_op(&opd->a09->inbuf,&op))
+      return message(opd->a09,MSG_ERROR,"E0003: unknown opcode");
+
+    if (strcmp(op->name,"IF") == 0)
+      depth++;
+    else if (strcmp(op->name,"IFDEF") == 0)
+      depth++;
+    else if (strcmp(op->name,"IFNDEF") == 0)
+      depth++;
+    else if (strcmp(op->name,"ELSE") == 0)
+    {
+      if (depth == 1)
+        return true;
+    }
+    else if (strcmp(op->name,"ENDIF") == 0)
+    {
+      if (--depth == 0)
+        return true;
+    }
+    else
+      print_list(opd->a09,opd,false);
+  }
+  
+  return message(opd->a09,MSG_ERROR,"E0010: unexpected end of input");
+}
+
+/**************************************************************************/
+
+static bool pseudo_if(struct opcdata *opd)
+{
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (!parse_dirext(opd))
+    return message(opd->a09,MSG_ERROR,"E9999: missing value for IF");
+  
+  if ((opd->pass == 1) && opd->value.unknownpass1)
+    return message(opd->a09,MSG_ERROR,"E9999: value for IF must be defined for pass 1");
+  
+  if (opd->value.value == 0)
+    skip_block(opd);
+  return true;
+}
+
+/**************************************************************************/
+
+static bool pseudo_ifdef(struct opcdata *opd)
+{
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+
+  struct symbol *sym;
+  label          label;
+  char           c = skip_space(opd->buffer);
+  
+  if (isEOL(c))
+    return message(opd->a09,MSG_ERROR,"E9999: IFDEF missing label");
+  opd->buffer->ridx--;
+  if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))
+    return message(opd->a09,MSG_ERROR,"E9999: label must be defined on pass 1");
+  sym = symbol_find(opd->a09,&label);
+  
+  if (sym == NULL)
+    skip_block(opd);
+  return true;
+}
+
+/**************************************************************************/
+
+static bool pseudo_ifndef(struct opcdata *opd)
+{
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+
+  struct symbol *sym;
+  label          label;
+  char           c = skip_space(opd->buffer);
+  
+  if (isEOL(c))
+    return message(opd->a09,MSG_ERROR,"E9999: IFDEF missing label");
+  opd->buffer->ridx--;
+  if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))
+    return message(opd->a09,MSG_ERROR,"E9999: label must be defined on pass 1");
+  sym = symbol_find(opd->a09,&label);
+  
+  if (sym != NULL)
+    skip_block(opd);
+  return true;
+}
+
+/**************************************************************************/
+
+static bool pseudo_else(struct opcdata *opd)
+{
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  skip_block(opd);
+  return true;
+}
+
+/**************************************************************************/
+
+static bool pseudo_endif(struct opcdata *opd)
+{
+  (void)opd;
+  return true;
+}
+
+/**************************************************************************/
+
 static int opcode_cmp(void const *needle,void const *haystack)
 {
   char          const *key    = needle;
@@ -2299,7 +2433,9 @@ bool parse_op(struct buffer *buffer,struct opcode const **pop)
     { "DECA"    , "-aaa-" , op_inh         ,  2 , 0x4A , 0x00 , BYTE  } ,
     { "DECB"    , "-aaa-" , op_inh         ,  2 , 0x5A , 0x00 , BYTE  } ,
     { "DEPHASE" , ""      , pseudo_dephase ,  0 , 0x00 , 0x00 , false } ,
+    { "ELSE"    , ""      , pseudo_else    ,  0 , 0x00 , 0x00 , false } ,
     { "END"     , ""      , pseudo_end     ,  0 , 0x00 , 0x00 , false } ,
+    { "ENDIF"   , ""      , pseudo_endif   ,  0 , 0x00 , 0x00 , false } ,
     { "EORA"    , "-aa0-" , op_idie        ,  2 , 0x88 , 0x00 , BYTE  } ,
     { "EORB"    , "-aa0-" , op_idie        ,  2 , 0xC8 , 0x00 , BYTE  } ,
     { "EQU"     , ""      , pseudo_equ     ,  0 , 0x00 , 0x00 , false } ,
@@ -2312,6 +2448,9 @@ bool parse_op(struct buffer *buffer,struct opcode const **pop)
     { "FCS"     , ""      , pseudo_fcs     ,  0 , 0x00 , 0x00 , false } ,
     { "FCZ"     , ""      , pseudo_fcn     ,  0 , 0x00 , 0x00 , false } ,
     { "FDB"     , ""      , pseudo_fdb     ,  0 , 0x00 , 0x00 , false } ,
+    { "IF"      , ""      , pseudo_if      ,  0 , 0x00 , 0x00 , false } ,
+    { "IFDEF"   , ""      , pseudo_ifdef   ,  0 , 0x00 , 0x00 , false } ,
+    { "IFNDEF"  , ""      , pseudo_ifndef  ,  0 , 0x00 , 0x00 , false } ,
     { "INC"     , "-aaa-" , op_die         ,  4 , 0x0C , 0x00 , BYTE  } ,
     { "INCA"    , "-aaa-" , op_inh         ,  2 , 0x4C , 0x00 , BYTE  } ,
     { "INCB"    , "-aaa-" , op_inh         ,  2 , 0x5C , 0x00 , BYTE  } ,
