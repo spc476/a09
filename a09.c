@@ -1292,7 +1292,7 @@ int main(int argc,char *argv[])
   struct a09 a09 =
   {
     .infile          = NULL,
-    .outfile         = "a09.obj",
+    .outfile         = NULL,
     .listfile        = NULL,
     .corefile        = NULL,
     .deps            = NULL,
@@ -1359,7 +1359,7 @@ int main(int argc,char *argv[])
       
   if (fi == argc)
   {
-    a09.infile = "(stdin)";
+    a09.infile = "";
     a09.in     = tmpfile();
     
     if (a09.in == NULL)
@@ -1419,19 +1419,11 @@ int main(int argc,char *argv[])
     return cleanup(&a09,true);
   }
   
-  if (strcmp(a09.outfile,"-") == 0)
+  a09.out = freopen(a09.outfile,"wb",stdout);
+  if (a09.out == NULL)
   {
-    a09.outfile = "(stdout)";
-    a09.out     = stdout;
-  }
-  else
-  {
-    a09.out = fopen(a09.outfile,"wb");
-    if (a09.out == NULL)
-    {
-      perror(a09.outfile);
-      return cleanup(&a09,false);
-    }
+    perror(a09.outfile ? a09.outfile : "");
+    return cleanup(&a09,false);
   }
   
   if (a09.listfile != NULL)
