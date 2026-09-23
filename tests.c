@@ -2251,6 +2251,8 @@ bool test_init(struct a09 *a09)
       a09->tests->prot[addr].read = true;
     mc6809_reset(&a09->tests->cpu);
     
+    symbol_find(a09,&(label){ .text = "__TEST__" , .len = 8 })->value = a09->rndtests ? 2 : 1;
+    
     return true;
   }
   else

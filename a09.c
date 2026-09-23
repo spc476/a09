@@ -1344,6 +1344,7 @@ int main(int argc,char *argv[])
   symbol_add(&a09,&(label){ .text = "__IEEE_754__" , .len = 12 },0)->type = SYM_EQU;
   symbol_add(&a09,&(label){ .text = "__MSFP__"     , .len =  8 },0)->type = SYM_EQU;
   symbol_add(&a09,&(label){ .text = "__LBFP__"     , .len =  8 },0)->type = SYM_EQU;
+  symbol_add(&a09,&(label){ .text = "__TEST__"     , .len =  8 },0)->type = SYM_EQU;
   
   format_bin_init(&a09);
   
