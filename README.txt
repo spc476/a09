@@ -242,6 +242,10 @@ non-standard pesudo operation for most 6809 assemblers.
 		(Non-standard) End a unit test; ignored when not running
 		tests.
 
+	.ERROR 'string'
+
+		(Non-standard) Generate an error message durring assembly.
+
 	.FLOAT float-expr [, float-expr ... ]
 
 		(Non-standard) Format a floating point number; default
@@ -323,8 +327,8 @@ non-standard pesudo operation for most 6809 assemblers.
 				Generate floating point values per the
 				IEEE-754 ('IEEE') format, the Microsoft
 				('MSFP') floating point format, or the
-				format used by Lennart Benschop's floating
-				point routines.
+				format used by Lennart Benschop's ('LBFP')
+				floating point routines.
 
 				Default value depends upon backend.
 
@@ -500,6 +504,10 @@ non-standard pesudo operation for most 6809 assemblers.
 		traced.  At the corresponding .TROFF, the number of CPU
 		cycles will be reported.
 
+	.WARN 'string'
+
+		(Non-standard) Generate a warning message durring assembly.
+
 	ALIGN expr
 
 		(Non-standard) Align the program counter to a multiple of
@@ -544,10 +552,18 @@ non-standard pesudo operation for most 6809 assemblers.
 
 		(Non-standard) Closes out a PHASE directive.
 
+	ELSE
+
+		(Non-standard) Alternative path for conditional assembly.
+
 	END [label]
 
 		Mark the end of the assembly file, with an optional label.
 		This has full support with the 'rsdos' backend.
+
+	ENDIF
+
+		(Non-standard) Mark the end of conditional assembly.
 
 	label EQU expr
 
@@ -599,6 +615,27 @@ non-standard pesudo operation for most 6809 assemblers.
 	FDB expr[,expr...]
 
 		Form Double Byte
+
+	IF expr
+
+		(Non-standard) If the given expression is non-zero, then the
+		following code until the ELSE or ENDIF directive is
+		assembled; otherwise, the code is ignored.  This directive
+		can be nested.
+
+	IFDEF label
+
+		(Non-standard) If the given label is defined prior to this
+		statement on pass 1, then the code following until the ELSE
+		of ENDIF directive is assembled; otherwise the code is
+		ignored.  This directive can be nested.
+
+	IFNDEF label
+
+		(Non-standard) If the given label is not defined by this
+		statment on pass 1, then the code following until the ELSE
+		or ENDIF directive is assembled; otherwise the code is
+		ignored.  This directive can be nested.
 
 	INCBIN "filename"[,offset[,length]]
 
@@ -654,6 +691,10 @@ non-standard pesudo operation for most 6809 assemblers.
 
   Warnings are printed for conditions that aren't exactly errors, but can
 be potential problems.  The defined warnings are:
+
+	W0000
+
+		The directive used is not implemented.
 
 	W0001
 
@@ -806,6 +847,10 @@ be potential problems.  The defined warnings are:
 		A DEPHASE directive was seen without a corresponding PHASE
 		directive.
 
+	W0029
+
+		The warning message from the .WARN directive.
+
   Individual warnings can be supressed by using the appropritate command
 line option.
 
@@ -843,6 +888,14 @@ They are:
 
   The following command line options are supported (on Windows, the leading
 dash '-' is replaced by a slash '/'):
+
+	-D define[=number]
+
+		Define a name as if defined by the EQU directive.  If no
+		value is given, it defaults to 1.  The value is limited
+		currently to a 16-bit value.  You can include a leading '-'
+		to get a negated value, or a leading '~' to get a 1s
+		compliment value.
 
 	-I directory
 
@@ -909,8 +962,8 @@ dash '-' is replaced by a slash '/'):
 
 	-o filename
 
-		Specify the output file name.  Defaults to 'a09.obj'.  To
-		get output on stdout, use a filename of '-'.
+		Specify the output file name.  If no name is given, the the
+		output appears on stdout.
 
 	-r
 
@@ -1064,3 +1117,23 @@ Environment Variables
 		A series of paths, using ':' (or ';' on Windows) between
 		each entry, where includes files can be found.  Include
 		directories specified on the command line take precedence.
+
+Predefined EQU values
+
+	__A09__		always 1
+
+	__BASIC__	1 if basic format is in use; otherwise 0
+	__BIN__		1 if bin format is in use; otherwise 0
+	__DRAGON__	1 if dragon format is in use; otherwise 0
+	__RSDOS__	1 if rsdos format is in use; otherwise 0
+	__SREC__	1 if srec format is in use; otherwise 0
+
+	__IEEE_754__	1 if IEEE-754 floating point selected; otherwise 0
+	__LBFP__	1 if LBFP floating point selected; otherwise 0
+	__MSFP__	1 if MSFP floating point selected; otherwise 0
+
+	__TEST__	0 - no tests being run
+			1 - tests being run in defined order
+			2 - tests being run in random order
+
+NOTE:	All labels starting with '__' are now reserved for use by A09.
