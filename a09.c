@@ -1226,6 +1226,16 @@ int main(int argc,char *argv[])
     .exaddr          = false,
     .notest          = {0},
   };
+
+  symbol_add(&a09,&(label){ .text = "__A09__"      , .len =  7 },1)->type = SYM_EQU;
+  symbol_add(&a09,&(label){ .text = "__BIN__"      , .len =  7 },0)->type = SYM_EQU;
+  symbol_add(&a09,&(label){ .text = "__RSDOS__"    , .len =  9 },0)->type = SYM_EQU;
+  symbol_add(&a09,&(label){ .text = "__SREC__"     , .len =  8 },0)->type = SYM_EQU;
+  symbol_add(&a09,&(label){ .text = "__BASIC__"    , .len =  9 },0)->type = SYM_EQU;
+  symbol_add(&a09,&(label){ .text = "__DRAGON__"   , .len = 10 },0)->type = SYM_EQU;
+  symbol_add(&a09,&(label){ .text = "__IEEE_754__" , .len = 12 },0)->type = SYM_EQU;
+  symbol_add(&a09,&(label){ .text = "__MSFP__"     , .len =  8 },0)->type = SYM_EQU;
+  symbol_add(&a09,&(label){ .text = "__LBFP__"     , .len =  8 },0)->type = SYM_EQU;
   
   format_bin_init(&a09);
   

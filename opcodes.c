@@ -2003,11 +2003,26 @@ static bool pseudo__opt(struct opcdata *opd)
     read_label(opd->buffer,&tmp,c);
     upper_label(&tmp);
     if ((tmp.len == 4) && (memcmp(tmp.text,"IEEE",4) == 0))
+    {
       opd->a09->format.Float = freal__ieee;
+      symbol_find(opd->a09,&(label){ .text = "__IEEE_754__" , .len = 12 })->value = 1;
+      symbol_find(opd->a09,&(label){ .text = "__MSFP__"     , .len =  8 })->value = 0;
+      symbol_find(opd->a09,&(label){ .text = "__LBFP__"     , .len =  8 })->value = 0;
+    }
     else if ((tmp.len == 4) && (memcmp(tmp.text,"MSFP",4) == 0))
+    {
       opd->a09->format.Float = freal__msfp;
+      symbol_find(opd->a09,&(label){ .text = "__IEEE_754__" , .len = 12 })->value = 0;
+      symbol_find(opd->a09,&(label){ .text = "__MSFP__"     , .len =  8 })->value = 1;
+      symbol_find(opd->a09,&(label){ .text = "__LBFP__"     , .len =  8 })->value = 0;
+    }
     else if ((tmp.len == 4) && (memcmp(tmp.text,"LBFP",4) == 0))
+    {
       opd->a09->format.Float = freal__lbfp;
+      symbol_find(opd->a09,&(label){ .text = "__IEEE_754__" , .len = 12 })->value = 0;
+      symbol_find(opd->a09,&(label){ .text = "__MSFP__"     , .len =  8 })->value = 0;
+      symbol_find(opd->a09,&(label){ .text = "__LBFP__"     , .len =  8 })->value = 1;
+    }
     else
       return message(opd->a09,MSG_ERROR,"E0098: Real format '%.*s' not supported",(int)tmp.len,tmp.text);
       
