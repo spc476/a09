@@ -581,10 +581,16 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
       if (a09->inbuf.buf[i] == '\t')
       {
         for (size_t num = 8 - (w & 7) , j = 0 ; j < num ; j++)
-          fputc(' ',a09->list), w++;
+        {
+          fputc(' ',a09->list);
+          w++;
+        }
       }
       else
-        fputc(a09->inbuf.buf[i],a09->list) , w++;
+      {
+        fputc(a09->inbuf.buf[i],a09->list);
+        w++;
+      }
     }
     fputc('\n',a09->list);
   }
