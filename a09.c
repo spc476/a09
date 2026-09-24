@@ -1419,7 +1419,14 @@ int main(int argc,char *argv[])
     return cleanup(&a09,true);
   }
   
-  a09.out = freopen(a09.outfile,"wb",stdout);
+  if (a09.outfile == NULL)
+  {
+    a09.outfile = "";
+    a09.out     = freopen(NULL,"wb",stdout);
+  }
+  else
+    a09.out = fopen(a09.outfile,"wb");
+    
   if (a09.out == NULL)
   {
     perror(a09.outfile ? a09.outfile : "");
