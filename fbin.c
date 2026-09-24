@@ -32,21 +32,6 @@ char const format_bin_usage[] = "";
 
 /**************************************************************************/
 
-static bool fbin_pass_start(struct format *fmt,struct a09 *a09,int pass)
-{
-  assert(fmt != NULL);
-  (void)a09;
-  (void)pass;
-  
-  fmt->Float = freal__ieee;
-  symbol_find(a09,&(label){ .text = "__IEEE_754__" , .len = 12})->value = 1;
-  symbol_find(a09,&(label){ .text = "__MSFP__"     , .len =  8})->value = 0;
-  symbol_find(a09,&(label){ .text = "__LBFP__"     , .len =  8})->value = 0;
-  return true;
-}
-
-/**************************************************************************/
-
 static bool fbin_align(struct format *fmt,struct opcdata *opd)
 {
   assert(fmt != NULL);
@@ -121,7 +106,7 @@ bool format_bin_init(struct a09 *a09)
   {
     .backend    = BACKEND_BIN,
     .cmdline    = fdefault_cmdline,
-    .pass_start = fbin_pass_start,
+    .pass_start = set_ieee,
     .pass_end   = fdefault_pass,
     .write      = fdefault_write,
     .opt        = fdefault__opt,

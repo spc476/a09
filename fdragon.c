@@ -62,28 +62,6 @@ char const format_dragon_usage[] = "";
 
 /**************************************************************************/
 
-static bool fdragon_pass_start(struct format *fmt,struct a09 *a09,int pass)
-{
-  assert(fmt          != NULL);
-  assert(fmt->data    != NULL);
-  assert(fmt->backend == BACKEND_DRAGON);
-  assert(a09          != NULL);
-  assert((pass == 1) || (pass == 2));
-  
-  fmt->Float = freal__msfp; /* XXX okay? */
-  symbol_find(a09,&(label){ .text = "__IEEE_754__" , .len = 12})->value = 0;
-  symbol_find(a09,&(label){ .text = "__MSFP__"     , .len =  8})->value = 1;
-  symbol_find(a09,&(label){ .text = "__LBFP__"     , .len =  8})->value = 0;
-  
-  if (pass == 2)
-    if (fseek(a09->out,9,SEEK_SET) == -1)
-      return message(a09,MSG_ERROR,"E0038: %s",strerror(errno));
-      
-  return true;
-}
-
-/**************************************************************************/
-
 static bool fdragon_pass_end(struct format *fmt,struct a09 *a09,int pass)
 {
   assert(fmt          != NULL);
@@ -242,7 +220,7 @@ bool format_dragon_init(struct a09 *a09)
   {
     .backend    = BACKEND_DRAGON,
     .cmdline    = fdefault_cmdline,
-    .pass_start = fdragon_pass_start,
+    .pass_start = set_msfp,
     .pass_end   = fdragon_pass_end,
     .write      = fdragon_write,
     .opt        = fdefault__opt,
