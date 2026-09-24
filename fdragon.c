@@ -71,6 +71,9 @@ static bool fdragon_pass_start(struct format *fmt,struct a09 *a09,int pass)
   assert((pass == 1) || (pass == 2));
   
   fmt->Float = freal__msfp; /* XXX okay? */
+  symbol_find(a09,&(label){ .text = "__IEEE_754__" , .len = 12})->value = 0;
+  symbol_find(a09,&(label){ .text = "__MSFP__"     , .len =  8})->value = 1;
+  symbol_find(a09,&(label){ .text = "__LBFP__"     , .len =  8})->value = 0;
   
   if (pass == 2)
     if (fseek(a09->out,9,SEEK_SET) == -1)
@@ -270,6 +273,12 @@ bool format_dragon_init(struct a09 *a09)
     data->org        = false;
     a09->format      = callbacks;
     a09->format.data = data;
+    
+    symbol_find(a09,&(label){ .text = "__BIN__"    , .len =  7 })->value = 0;
+    symbol_find(a09,&(label){ .text = "__RSDOS__"  , .len =  9 })->value = 0;
+    symbol_find(a09,&(label){ .text = "__SREC__"   , .len =  8 })->value = 0;
+    symbol_find(a09,&(label){ .text = "__BASIC__"  , .len =  9 })->value = 0;
+    symbol_find(a09,&(label){ .text = "__DRAGON__" , .len = 10 })->value = 1;
     return true;
   }
   else
