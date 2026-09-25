@@ -1408,7 +1408,7 @@ int main(int argc,char *argv[])
     
   if (a09.mkdeps)
   {
-    int len = printf("%s:",a09.outfile);
+    int len = printf("%s:",a09.outfile ? a09.outfile : "");
     
     for (size_t i = 0 ; i < a09.ndeps ; i++)
     {
