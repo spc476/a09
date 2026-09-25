@@ -385,7 +385,7 @@ static bool frsdos_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,ch
     case 'B':
          if ((format->name = arg_arg(arg)) == NULL)
          {
-           fprintf(stderr,OC "B: missing file name\n");
+           fprintf(stderr,OPT "B: missing file name\n");
            return false;
          }
          break;
@@ -397,7 +397,7 @@ static bool frsdos_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,ch
     case 'L':
          if (!arg_uint16_t(&format->line,arg,0,63999u))
          {
-           fprintf(stderr,OC "L: line number must be between 1 and 63999\n");
+           fprintf(stderr,OPT "L: line number must be between 1 and 63999\n");
            return false;
          }
          break;
@@ -405,7 +405,7 @@ static bool frsdos_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,ch
     case 'N':
          if ((format->basicf = arg_arg(arg)) == NULL)
          {
-           fprintf(stderr,OC "N: missing file name\n");
+           fprintf(stderr,OPT "N: missing file name\n");
            return false;
          }
          break;
@@ -413,7 +413,7 @@ static bool frsdos_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,ch
     case 'P':
          if (!arg_uint16_t(&format->strspace,arg,0,22*1024))
          {
-           fprintf(stderr,OC "P: string space must be between 0 and 22528\n");
+           fprintf(stderr,OPT "P: string space must be between 0 and 22528\n");
            return false;
          }
          break;

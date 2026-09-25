@@ -294,7 +294,7 @@ static bool add_define(struct a09 *a09,char const *def)
     
     if (eq[0] == '\0')
     {
-      fprintf(stderr,OC "D missing value\n");
+      fprintf(stderr,OPT "D missing value\n");
       return false;
     }
     else if (eq[0] == '-')
@@ -796,7 +796,7 @@ static bool nowarnlist(struct a09 *a09,char const *warnings)
   
   if (warnings == NULL)
   {
-    fprintf(stderr,OC "n: missing list of warnings\n");
+    fprintf(stderr,OPT "n: missing list of warnings\n");
     return false;
   }
   
@@ -804,7 +804,7 @@ static bool nowarnlist(struct a09 *a09,char const *warnings)
   {
     if (!disable_warning(a09,warnings))
     {
-      fprintf(stderr,OC "n: improper warning tag '%s'\n",warnings);
+      fprintf(stderr,OPT "n: improper warning tag '%s'\n",warnings);
       return false;
     }
     warnings += 5;
@@ -812,7 +812,7 @@ static bool nowarnlist(struct a09 *a09,char const *warnings)
       break;
     if (*warnings++ != ',')
     {
-      fprintf(stderr,OC "n: missing expected comma\n");
+      fprintf(stderr,OPT "n: missing expected comma\n");
       return false;
     }
   }
@@ -828,7 +828,7 @@ static bool notest(struct a09 *a09,char const *list)
   
   if (list == NULL) // XXX
   {
-    fprintf(stderr,OC "x: missing list of tests\n");
+    fprintf(stderr,OPT "x: missing list of tests\n");
     return false;
   }
   
@@ -841,7 +841,7 @@ static bool notest(struct a09 *a09,char const *list)
     v     = strtoul(p,(char **)&p,0);
     if ((errno != 0) || (v > (sizeof(a09->notest) * (size_t)CHAR_BIT) - 1))
     {
-      fprintf(stderr,OC "x: invalid test number\n");
+      fprintf(stderr,OPT "x: invalid test number\n");
       return false;
     }
     res = div((int)v - 1,CHAR_BIT);
@@ -863,13 +863,13 @@ static bool notest(struct a09 *a09,char const *list)
       v2    = strtoul(p,(char **)&p,0);
       if ((errno != 0) || (v2 > 1023uL))
       {
-        fprintf(stderr,OC "x: invalid test number\n");
+        fprintf(stderr,OPT "x: invalid test number\n");
         return false;
       }
       
       if (v2 <= v)
       {
-        fprintf(stderr,OC "x: not a valid range\n");
+        fprintf(stderr,OPT "x: not a valid range\n");
         return false;
       }
       
@@ -888,13 +888,13 @@ static bool notest(struct a09 *a09,char const *list)
       }
       else
       {
-        fprintf(stderr,OC "x: invalid test number\n");
+        fprintf(stderr,OPT "x: invalid test number\n");
         return false;
       }
     }
     else
     {
-      fprintf(stderr,OC "x: invalid specification '%s'\n",list);
+      fprintf(stderr,OPT "x: invalid specification '%s'\n",list);
       return false;
     }
   }
@@ -978,7 +978,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       case 'D':
            if ((def = arg_arg(&arg)) == NULL)
            {
-             fprintf(stderr,OC "D: missing define\n");
+             fprintf(stderr,OPT "D: missing define\n");
              return -1;
            }
            if (!add_define(a09,def))
@@ -988,7 +988,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       case 'I':
            if ((file = arg_arg(&arg)) == NULL)
            {
-             fprintf(stderr,OC "I: missing paths\n");
+             fprintf(stderr,OPT "I: missing paths\n");
              return -1;
            }
            if (!add_include_dir(a09,file))
@@ -1007,7 +1007,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       case 'c':
            if ((a09->corefile = arg_arg(&arg)) == NULL)
            {
-             fprintf(stderr,OC "c: missing file name\n");
+             fprintf(stderr,OPT "c: missing file name\n");
              return -1;
            }
            break;
@@ -1019,7 +1019,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       case 'e':
            if ((extra = arg_arg(&arg)) == NULL)
            {
-             fprintf(stderr,OC "e: missing argument\n");
+             fprintf(stderr,OPT "e: missing argument\n");
              return -1;
            }
            
@@ -1049,7 +1049,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
                a09->cycles_total = true;
              else
              {
-               fprintf(stderr,OC "e: unsupported option '%c'\n",*extra);
+               fprintf(stderr,OPT "e: unsupported option '%c'\n",*extra);
                return -1;
              }
              extra++;
@@ -1065,7 +1065,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            
            if (format == NULL)
            {
-             fprintf(stderr,OC "f: missing format\n");
+             fprintf(stderr,OPT "f: missing format\n");
              return -1;
            }
            else if (strcmp(format,"bin") == 0)
@@ -1095,7 +1095,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
            }
            else
            {
-             fprintf(stderr,OC "f: '%s' not supported\n",format);
+             fprintf(stderr,OPT "f: '%s' not supported\n",format);
              return -1;
            }
            break;
@@ -1106,7 +1106,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       case 'l':
            if ((a09->listfile = arg_arg(&arg)) == NULL)
            {
-             fprintf(stderr,OC "l: missing file name\n");
+             fprintf(stderr,OPT "l: missing file name\n");
              return -1;
            }
            break;
@@ -1119,7 +1119,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       case 'o':
            if ((a09->outfile = arg_arg(&arg)) == NULL)
            {
-             fprintf(stderr,OC "o: missing output file name\n");
+             fprintf(stderr,OPT "o: missing output file name\n");
              return -1;
            }
            break;
@@ -1131,7 +1131,7 @@ static int parse_command(int argc,char *argv[],struct a09 *a09)
       case 's':
            if (!arg_unsigned_int(&a09->seed,&arg,0,UINT_MAX))
            {
-             fprintf(stderr,OC "s: value exceeds limit of %u\n",UINT_MAX);
+             fprintf(stderr,OPT "s: value exceeds limit of %u\n",UINT_MAX);
              return -1;
            }
            break;
