@@ -68,6 +68,12 @@ enum
   INSTRUCTION
 };
 
+enum associative
+{
+  AS_LEFT,
+  AS_RIGHT,
+};
+
 enum backend
 {
   BACKEND_BIN,
@@ -95,12 +101,6 @@ enum symtype
   SYM_SET,
   SYM_PUBLIC,
   SYM_EXTERN,
-};
-
-enum associative
-{
-  AS_LEFT,
-  AS_RIGHT,
 };
 
 enum operator

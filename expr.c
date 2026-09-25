@@ -38,6 +38,121 @@
 
 /**************************************************************************/
 
+struct optable const *get_op(struct buffer *buffer)
+{
+  assert(buffer != NULL);
+  
+  static struct optable const cops[] =
+  {
+    [OP_EXP]  = { OP_EXP  , AS_RIGHT , 1000 } ,
+    [OP_MUL]  = { OP_MUL  , AS_LEFT  ,  900 } ,
+    [OP_DIV]  = { OP_DIV  , AS_LEFT  ,  900 } ,
+    [OP_MOD]  = { OP_MOD  , AS_LEFT  ,  900 } ,
+    [OP_ADD]  = { OP_ADD  , AS_LEFT  ,  800 } ,
+    [OP_SUB]  = { OP_SUB  , AS_LEFT  ,  800 } ,
+    [OP_SHL]  = { OP_SHL  , AS_LEFT  ,  700 } ,
+    [OP_SHR]  = { OP_SHR  , AS_LEFT  ,  700 } ,
+    [OP_BAND] = { OP_BAND , AS_LEFT  ,  600 } ,
+    [OP_BEOR] = { OP_BEOR , AS_LEFT  ,  500 } ,
+    [OP_BOR]  = { OP_BOR  , AS_LEFT  ,  400 } ,
+    [OP_WORD] = { OP_WORD , AS_LEFT  ,  350 } ,
+    [OP_NE]   = { OP_NE   , AS_LEFT  ,  300 } ,
+    [OP_LT]   = { OP_LT   , AS_LEFT  ,  300 } ,
+    [OP_LE]   = { OP_LE   , AS_LEFT  ,  300 } ,
+    [OP_EQ]   = { OP_EQ   , AS_LEFT  ,  300 } ,
+    [OP_GE]   = { OP_GE   , AS_LEFT  ,  300 } ,
+    [OP_GT]   = { OP_GT   , AS_LEFT  ,  300 } ,
+    [OP_LAND] = { OP_LAND , AS_LEFT  ,  200 } ,
+    [OP_LOR]  = { OP_LOR  , AS_LEFT  ,  100 } ,
+  };
+  
+  char c = skip_space(buffer);
+  
+  switch(c)
+  {
+    case '/': return &cops[OP_DIV];
+    case '%': return &cops[OP_MOD];
+    case '+': return &cops[OP_ADD];
+    case '-': return &cops[OP_SUB];
+    case '^': return &cops[OP_BEOR];
+    case '=': return &cops[OP_EQ];
+    
+    case '*':
+         if (buffer->buf[buffer->ridx] == '*')
+         {
+           buffer->ridx++;
+           return &cops[OP_EXP];
+         }
+         else
+           return &cops[OP_MUL];
+           
+    case '&':
+         if (buffer->buf[buffer->ridx] == '&')
+         {
+           buffer->ridx++;
+           return &cops[OP_LAND];
+         }
+         else
+           return &cops[OP_BAND];
+           
+    case '|':
+         if (buffer->buf[buffer->ridx] == '|')
+         {
+           buffer->ridx++;
+           return &cops[OP_LOR];
+         }
+         else
+           return &cops[OP_BOR];
+           
+    case '<':
+         if (buffer->buf[buffer->ridx] == '<')
+         {
+           buffer->ridx++;
+           return &cops[OP_SHL];
+         }
+         else if (buffer->buf[buffer->ridx] == '=')
+         {
+           buffer->ridx++;
+           return &cops[OP_LE];
+         }
+         else if (buffer->buf[buffer->ridx] == '>')
+         {
+           buffer->ridx++;
+           return &cops[OP_NE];
+         }
+         else
+           return &cops[OP_LT];
+           
+    case '>':
+         if (buffer->buf[buffer->ridx] == '>')
+         {
+           buffer->ridx++;
+           return &cops[OP_SHR];
+         }
+         else if (buffer->buf[buffer->ridx] == '=')
+         {
+           buffer->ridx++;
+           return &cops[OP_GE];
+         }
+         else
+           return &cops[OP_GT];
+           
+    case ':':
+         if (buffer->buf[buffer->ridx] == ':')
+         {
+           buffer->ridx++;
+           return &cops[OP_WORD];
+         } /* fallthrough */
+         
+    default:
+         if (c != '\0')
+           buffer->ridx--;
+         return NULL;
+  }
+}
+
+/**************************************************************************/
+
 static bool eval(
                   struct a09   *         a09,
                   struct value *restrict v1,
@@ -317,121 +432,6 @@ static bool factor(struct value *pv,struct a09 *a09,struct buffer *buffer,int pa
     pv->value = ~pv->value;
     
   return true;
-}
-
-/**************************************************************************/
-
-struct optable const *get_op(struct buffer *buffer)
-{
-  assert(buffer != NULL);
-  
-  static struct optable const cops[] =
-  {
-    [OP_EXP]  = { OP_EXP  , AS_RIGHT , 1000 } ,
-    [OP_MUL]  = { OP_MUL  , AS_LEFT  ,  900 } ,
-    [OP_DIV]  = { OP_DIV  , AS_LEFT  ,  900 } ,
-    [OP_MOD]  = { OP_MOD  , AS_LEFT  ,  900 } ,
-    [OP_ADD]  = { OP_ADD  , AS_LEFT  ,  800 } ,
-    [OP_SUB]  = { OP_SUB  , AS_LEFT  ,  800 } ,
-    [OP_SHL]  = { OP_SHL  , AS_LEFT  ,  700 } ,
-    [OP_SHR]  = { OP_SHR  , AS_LEFT  ,  700 } ,
-    [OP_BAND] = { OP_BAND , AS_LEFT  ,  600 } ,
-    [OP_BEOR] = { OP_BEOR , AS_LEFT  ,  500 } ,
-    [OP_BOR]  = { OP_BOR  , AS_LEFT  ,  400 } ,
-    [OP_WORD] = { OP_WORD , AS_LEFT  ,  350 } ,
-    [OP_NE]   = { OP_NE   , AS_LEFT  ,  300 } ,
-    [OP_LT]   = { OP_LT   , AS_LEFT  ,  300 } ,
-    [OP_LE]   = { OP_LE   , AS_LEFT  ,  300 } ,
-    [OP_EQ]   = { OP_EQ   , AS_LEFT  ,  300 } ,
-    [OP_GE]   = { OP_GE   , AS_LEFT  ,  300 } ,
-    [OP_GT]   = { OP_GT   , AS_LEFT  ,  300 } ,
-    [OP_LAND] = { OP_LAND , AS_LEFT  ,  200 } ,
-    [OP_LOR]  = { OP_LOR  , AS_LEFT  ,  100 } ,
-  };
-  
-  char c = skip_space(buffer);
-  
-  switch(c)
-  {
-    case '/': return &cops[OP_DIV];
-    case '%': return &cops[OP_MOD];
-    case '+': return &cops[OP_ADD];
-    case '-': return &cops[OP_SUB];
-    case '^': return &cops[OP_BEOR];
-    case '=': return &cops[OP_EQ];
-    
-    case '*':
-         if (buffer->buf[buffer->ridx] == '*')
-         {
-           buffer->ridx++;
-           return &cops[OP_EXP];
-         }
-         else
-           return &cops[OP_MUL];
-           
-    case '&':
-         if (buffer->buf[buffer->ridx] == '&')
-         {
-           buffer->ridx++;
-           return &cops[OP_LAND];
-         }
-         else
-           return &cops[OP_BAND];
-           
-    case '|':
-         if (buffer->buf[buffer->ridx] == '|')
-         {
-           buffer->ridx++;
-           return &cops[OP_LOR];
-         }
-         else
-           return &cops[OP_BOR];
-           
-    case '<':
-         if (buffer->buf[buffer->ridx] == '<')
-         {
-           buffer->ridx++;
-           return &cops[OP_SHL];
-         }
-         else if (buffer->buf[buffer->ridx] == '=')
-         {
-           buffer->ridx++;
-           return &cops[OP_LE];
-         }
-         else if (buffer->buf[buffer->ridx] == '>')
-         {
-           buffer->ridx++;
-           return &cops[OP_NE];
-         }
-         else
-           return &cops[OP_LT];
-           
-    case '>':
-         if (buffer->buf[buffer->ridx] == '>')
-         {
-           buffer->ridx++;
-           return &cops[OP_SHR];
-         }
-         else if (buffer->buf[buffer->ridx] == '=')
-         {
-           buffer->ridx++;
-           return &cops[OP_GE];
-         }
-         else
-           return &cops[OP_GT];
-           
-    case ':':
-         if (buffer->buf[buffer->ridx] == ':')
-         {
-           buffer->ridx++;
-           return &cops[OP_WORD];
-         } /* fallthrough */
-         
-    default:
-         if (c != '\0')
-           buffer->ridx--;
-         return NULL;
-  }
 }
 
 /**************************************************************************/

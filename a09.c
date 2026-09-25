@@ -256,6 +256,44 @@ static bool add_include_dir(struct a09 *a09,char const *filename)
 
 /**************************************************************************/
 
+static bool default_include_dirs(struct a09 *a09)
+{
+  assert(a09 != NULL);
+  
+  char const *inc = getenv("A09_INCLUDE_PATH");
+  char       *cinc;
+  char       *copy;
+  size_t      len;
+  
+  if (inc == NULL) return true;
+  
+  len  = strlen(inc);
+  copy = malloc(len + 1);
+  if (copy == NULL)
+    return message(a09,MSG_ERROR,"E0046: out of memory");
+  memcpy(copy,inc,len);
+  copy[len] = '\0';
+  cinc      = copy;
+  
+  do
+  {
+    char *path = strchr(copy,PATH_SEPARATOR);
+    if (path != NULL)
+      *path++ = '\0';
+    if (!add_include_dir(a09,copy))
+    {
+      free(cinc);
+      return false;
+    }
+    copy = path;
+  } while (copy != NULL);
+  
+  free(cinc);
+  return true;
+}
+
+/**************************************************************************/
+
 static bool add_define(struct a09 *a09,char const *def)
 {
   label          define;
@@ -1253,44 +1291,6 @@ static int cleanup(struct a09 *a09,bool success)
 
 /**************************************************************************/
 
-static bool default_include_dirs(struct a09 *a09)
-{
-  assert(a09 != NULL);
-  
-  char const *inc = getenv("A09_INCLUDE_PATH");
-  char       *cinc;
-  char       *copy;
-  size_t      len;
-  
-  if (inc == NULL) return true;
-  
-  len  = strlen(inc);
-  copy = malloc(len + 1);
-  if (copy == NULL)
-    return message(a09,MSG_ERROR,"E0046: out of memory");
-  memcpy(copy,inc,len);
-  copy[len] = '\0';
-  cinc      = copy;
-  
-  do
-  {
-    char *path = strchr(copy,PATH_SEPARATOR);
-    if (path != NULL)
-      *path++ = '\0';
-    if (!add_include_dir(a09,copy))
-    {
-      free(cinc);
-      return false;
-    }
-    copy = path;
-  } while (copy != NULL);
-  
-  free(cinc);
-  return true;
-}
-
-/**************************************************************************/
-
 int main(int argc,char *argv[])
 {
   int        fi;
@@ -1339,7 +1339,7 @@ int main(int argc,char *argv[])
     .exaddr          = false,
     .notest          = {0},
   };
-
+  
   symbol_add(&a09,&(label){ .text = "__A09__"      , .len =  7 },1)->type = SYM_EQU;
   symbol_add(&a09,&(label){ .text = "__BIN__"      , .len =  7 },0)->type = SYM_EQU;
   symbol_add(&a09,&(label){ .text = "__RSDOS__"    , .len =  9 },0)->type = SYM_EQU;
