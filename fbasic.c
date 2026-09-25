@@ -136,7 +136,7 @@ static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,ch
     case 'C':
          if (!arg_uint16_t(&basic->cline,arg,0,63999u))
          {
-           fprintf(stderr,"-C: line number must be between 1 and 63999\n");
+           fprintf(stderr,OC "C: line number must be between 1 and 63999\n");
            return false;
          }
          break;
@@ -148,7 +148,7 @@ static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,ch
     case 'L':
          if (!arg_uint16_t(&basic->dline,arg,0,63999u))
          {
-           fprintf(stderr,"-L: line number must be between 1 and 63999\n");
+           fprintf(stderr,OC "L: line number must be between 1 and 63999\n");
            return false;
          }
          break;
@@ -156,7 +156,7 @@ static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,ch
     case 'N':
          if (!arg_uint16_t(&basic->incr,arg,0,65535u))
          {
-           fprintf(stderr,"-N: line increment must be between 1 and 65535\n");
+           fprintf(stderr,OC "N: line increment must be between 1 and 65535\n");
            return false;
          }
          break;
@@ -164,7 +164,7 @@ static bool fbasic_cmdline(struct format *fmt,struct a09 *a09,struct arg *arg,ch
     case 'P':
          if (!arg_uint16_t(&basic->strspace,arg,0,22*1024))
          {
-           fprintf(stderr,"-P: string space must be between 0 and 22528\n");
+           fprintf(stderr,OC "P: string space must be between 0 and 22528\n");
            return false;
          }
          break;
