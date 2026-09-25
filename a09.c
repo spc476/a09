@@ -839,7 +839,7 @@ static bool notest(struct a09 *a09,char const *list)
     
     errno = 0;
     v     = strtoul(p,(char **)&p,0);
-    if ((errno != 0) || (v > 1023uL))
+    if ((errno != 0) || (v > (sizeof(a09->notest) * (size_t)CHAR_BIT) - 1))
     {
       fprintf(stderr,OC "x: invalid test number\n");
       return false;
