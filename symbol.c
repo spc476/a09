@@ -69,13 +69,14 @@ struct symbol *symbol_add(struct a09 *a09,label const *name,uint16_t value)
   assert(a09  != NULL);
   assert(name != NULL);
   
-  if (
-          ((name->len == 1) && (toupper(name->text[0]) == 'A'))
-       || ((name->len == 1) && (toupper(name->text[0]) == 'B'))
-       || ((name->len == 1) && (toupper(name->text[0]) == 'D'))
-     )
-    message(a09,MSG_WARNING,"W0013: label '%.*s' could be mistaken for register in index",name->len,name->text);
-    
+  if (name->len == 1)
+    if (
+            (toupper(name->text[0]) == 'A')
+         || (toupper(name->text[0]) == 'B')
+         || (toupper(name->text[0]) == 'D')
+       )
+      message(a09,MSG_WARNING,"W0013: label '%.*s' could be mistaken for register in index",name->len,name->text);
+      
   struct symbol *sym = symbol_find(a09,name);
   
   if (sym == NULL)
