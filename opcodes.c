@@ -1448,6 +1448,8 @@ static bool pseudo_include(struct opcdata *opd)
     return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
   }
   
+  symbol_find(&new,&(label){ .text = "__INCLUDED__" , .len = 12})->value++;
+  
   if ((opd->pass == 2) && (new.list != NULL))
   {
     print_list(opd->a09,opd,false);
@@ -1469,6 +1471,8 @@ static bool pseudo_include(struct opcdata *opd)
       opd->a09->list_pad,""
     );
   }
+  
+  symbol_find(&new,&(label){ .text = "__INCLUDED__" , .len = 12})->value--;
   
   fclose(new.in);
   opd->a09->pc     = new.pc;
@@ -2376,6 +2380,24 @@ static bool pseudo__warn(struct opcdata *opd)
 
 /**************************************************************************/
 
+static bool pseudo_ifnot(struct opcdata *opd)
+{
+  assert(opd != NULL);
+  assert((opd->pass == 1) || (opd->pass == 2));
+  
+  if (!parse_dirext(opd))
+    return message(opd->a09,MSG_ERROR,"E0053: missing value for IF");
+  
+  if ((opd->pass == 1) && opd->value.unknownpass1)
+    return message(opd->a09,MSG_ERROR,"E0058: value for IF must be defined for pass 1");
+  
+  if (opd->value.value != 0)
+    skip_block(opd);
+  return true;
+}
+
+/**************************************************************************/
+
 static int opcode_cmp(void const *needle,void const *haystack)
 {
   char          const *key    = needle;
@@ -2480,6 +2502,7 @@ bool parse_op(struct buffer *buffer,struct opcode const **pop)
     { "IF"      , ""      , pseudo_if      ,  0 , 0x00 , 0x00 , false } ,
     { "IFDEF"   , ""      , pseudo_ifdef   ,  0 , 0x00 , 0x00 , false } ,
     { "IFNDEF"  , ""      , pseudo_ifndef  ,  0 , 0x00 , 0x00 , false } ,
+    { "IFNOT"   , ""      , pseudo_ifnot   ,  0 , 0x00 , 0x00 , false } ,
     { "INC"     , "-aaa-" , op_die         ,  4 , 0x0C , 0x00 , BYTE  } ,
     { "INCA"    , "-aaa-" , op_inh         ,  2 , 0x4C , 0x00 , BYTE  } ,
     { "INCB"    , "-aaa-" , op_inh         ,  2 , 0x5C , 0x00 , BYTE  } ,

@@ -637,6 +637,13 @@ non-standard pesudo operation for most 6809 assemblers.
 		or ENDIF directive is assembled; otherwise the code is
 		ignored.  This directive can be nested.
 
+	IFNOT expr
+
+		(Non-standard) If the given expression is zero, then the
+		following code until the ELSE or ENDIF directive is
+		assembled; otherwise, the code is ignored.  This directive
+		can be nested.
+
 	INCBIN "filename"[,offset[,length]]
 
 		(Non-standard) Include verbatim the given file into the
@@ -1135,5 +1142,7 @@ Predefined EQU values
 	__TEST__	0 - no tests being run
 			1 - tests being run in defined order
 			2 - tests being run in random order
+
+	__INCLUDED__	0 if main file; increments per include file
 
 NOTE:	All labels starting with '__' are now reserved for use by A09.
