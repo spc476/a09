@@ -1341,6 +1341,7 @@ int main(int argc,char *argv[])
   };
   
   symbol_add(&a09,&(label){ .text = "__A09__"      , .len =  7 },1)->type = SYM_EQU;
+  symbol_add(&a09,&(label){ .text = "__6809__"     , .len =  8 },1)->type = SYM_EQU;
   symbol_add(&a09,&(label){ .text = "__BIN__"      , .len =  7 },0)->type = SYM_EQU;
   symbol_add(&a09,&(label){ .text = "__RSDOS__"    , .len =  9 },0)->type = SYM_EQU;
   symbol_add(&a09,&(label){ .text = "__SREC__"     , .len =  8 },0)->type = SYM_EQU;

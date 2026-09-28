@@ -1128,6 +1128,7 @@ Environment Variables
 Predefined EQU values
 
 	__A09__		always 1
+	__6809__	always 1
 
 	__BASIC__	1 if basic format is in use; otherwise 0
 	__BIN__		1 if bin format is in use; otherwise 0
