@@ -1411,7 +1411,6 @@ int main(int argc,char *argv[])
         return cleanup(&a09,false);
       }
     }
-    rewind(a09.in);
   }
   else
   {
