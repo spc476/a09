@@ -1475,7 +1475,7 @@ static bool pseudo_include(struct opcdata *opd)
   symbol_find(opd->a09,&(label){ .text = "__INCLUDED__" , .len = 12})->value--;
   
   fclose(opd->a09->in);
-  opd->a09->in = in;
+  opd->a09->in     = in;
   opd->a09->infile = infile;
   return rc;
 }
