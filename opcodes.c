@@ -2220,6 +2220,8 @@ static bool skip_block(struct opcdata *opd)
       depth++;
     else if (strcmp(op->name,"IFNDEF") == 0)
       depth++;
+    else if (strcmp(op->name,"IFNOT") == 0)
+      depth++;
     else if (strcmp(op->name,"ELSE") == 0)
     {
       if (depth == 1)
