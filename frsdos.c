@@ -20,15 +20,15 @@
 *
 * --------------------------------------------------------------------
 *
-*	Offset:	Type:	Value:
-*	0	byte	0	; data block - multiple allowed
-*	1:2	word	LENGTH
-*	3:4	word	LOAD
-*	5-xxx	byte[]	DATA LENGTH in size
+*       Offset: Type:   Value:
+*       0       byte    0       ; data block - multiple allowed
+*       1:2     word    LENGTH
+*       3:4     word    LOAD
+*       5-xxx   byte[]  DATA LENGTH in size
 *
-*	0	byte	255	; exec block - one at end of file
-*	1:2	word	0
-*	3:4	word	EXEC address
+*       0       byte    255     ; exec block - one at end of file
+*       1:2     word    0
+*       3:4     word    EXEC address
 *
 ****************************************************************************/
 

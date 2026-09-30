@@ -312,7 +312,7 @@ static bool rfactor(struct fvalue *pv,struct a09 *a09,struct buffer *buffer,int 
     if (!rvalue(pv,a09,buffer,pass,fdouble))
       return false;
   }
-
+  
   /*---------------------------------------------------------------------
   ; Check for an exclamation mark, which we're using to denote factorial.
   ; 0! is 1 (by definition).  A negative number is an error.

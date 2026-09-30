@@ -314,7 +314,7 @@ static bool parse_operand(struct opcdata *opd)
              return false;
            opd->value.postbyte |= index_register(c);
            break;
-      
+           
       case '-':
            c             = opd->buffer->buf[opd->buffer->ridx];
            opd->ecycles += 2;
@@ -1079,7 +1079,7 @@ static bool op_pshpul(struct opcdata *opd)
     if ((opd->op->opcode == 0x35) || (opd->op->opcode == 0x37))
       if (operand == 0x80)
         message(opd->a09,MSG_WARNING,"W0024: only pulling PC, maybe use RTS?");
-      
+        
   opd->bytes[opd->sz++] = opd->op->opcode;
   opd->bytes[opd->sz++] = operand;
   return true;
@@ -1616,7 +1616,7 @@ static bool pseudo_incbin(struct opcdata *opd)
   fp = fopen(filename.buf,"rb");
   if (fp == NULL)
     return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
-
+    
   rc = incbin(opd,fp,len,start,&filename);
   fclose(fp);
   return rc;
@@ -1801,7 +1801,7 @@ static bool pseudo_fcn(struct opcdata *opd)
     return message(opd->a09,MSG_ERROR,"E0010: unexpected end of input");
   if (!collect_string(opd->a09,&textstring,opd->buffer,c))
     return false;
-  
+    
   if (textstring.widx == sizeof(textstring.buf))
     return message(opd->a09,MSG_ERROR,"E0071: string too long");
     
@@ -2144,7 +2144,7 @@ static bool pseudo__pcle(struct opcdata *opd)
   opd->buffer->ridx--;
   if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
     return false;
-  
+    
   if (opd->pass == 2)
   {
     message(opd->a09,MSG_DEBUG,"PC: %04X limit: %04X",opd->a09->pc,opd->value.value);
@@ -2204,7 +2204,7 @@ static bool skip_block(struct opcdata *opd)
     
     if (!read_line(opd->a09,opd->a09->in,&opd->a09->inbuf))
       return false;
-    
+      
     opd->a09->lnum++;
     parse_label(&label,&opd->a09->inbuf,opd->a09,opd->pass);
     c = skip_space(&opd->a09->inbuf);
@@ -2213,7 +2213,7 @@ static bool skip_block(struct opcdata *opd)
     opd->a09->inbuf.ridx--;
     if (!parse_op(&opd->a09->inbuf,&op))
       return message(opd->a09,MSG_ERROR,"E0003: unknown opcode");
-
+      
     if (strcmp(op->name,"IF") == 0)
       depth++;
     else if (strcmp(op->name,"IFDEF") == 0)
@@ -2246,10 +2246,10 @@ static bool pseudo_if(struct opcdata *opd)
   
   if (!parse_dirext(opd))
     return message(opd->a09,MSG_ERROR,"E0053: missing value for IF");
-  
+    
   if ((opd->pass == 1) && opd->value.unknownpass1)
     return message(opd->a09,MSG_ERROR,"E0058: value for IF must be defined for pass 1");
-  
+    
   if (opd->value.value == 0)
     skip_block(opd);
   return true;
@@ -2261,7 +2261,7 @@ static bool pseudo_ifdef(struct opcdata *opd)
 {
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
-
+  
   struct symbol *sym;
   label          label;
   char           c = skip_space(opd->buffer);
@@ -2284,7 +2284,7 @@ static bool pseudo_ifndef(struct opcdata *opd)
 {
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
-
+  
   struct symbol *sym;
   label          label;
   char           c = skip_space(opd->buffer);
@@ -2330,7 +2330,7 @@ static bool pseudo__error(struct opcdata *opd)
   if (opd->pass == 1)
   {
     struct buffer msg;
-  
+    
     if (!parse_string(opd->a09,&msg,opd->buffer))
       return false;
     assert(msg.widx < sizeof(msg.buf));
@@ -2370,10 +2370,10 @@ static bool pseudo_ifnot(struct opcdata *opd)
   
   if (!parse_dirext(opd))
     return message(opd->a09,MSG_ERROR,"E0053: missing value for IF");
-  
+    
   if ((opd->pass == 1) && opd->value.unknownpass1)
     return message(opd->a09,MSG_ERROR,"E0058: value for IF must be defined for pass 1");
-  
+    
   if (opd->value.value != 0)
     skip_block(opd);
   return true;

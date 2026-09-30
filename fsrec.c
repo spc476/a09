@@ -450,7 +450,7 @@ bool format_srec_init(struct a09 *a09)
     symbol_find(a09,&(label){ .text = "__SREC__"   , .len =  8 })->value = 1;
     symbol_find(a09,&(label){ .text = "__BASIC__"  , .len =  9 })->value = 0;
     symbol_find(a09,&(label){ .text = "__DRAGON__" , .len = 10 })->value = 0;
-  
+    
     return true;
   }
   else

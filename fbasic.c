@@ -22,7 +22,7 @@
 *
 * CB: USR
 *       entry:  FP0    - argument (no registers are defined)
-*		VALTYP - type of argument
+*               VALTYP - type of argument
 *       exit:   FP0    - result (no registers defined)
 *
 * ECB/DECB: USRn
@@ -30,8 +30,8 @@
 *                        string descriptor if passed string
 *               A      - 00 if number, 0xFF if string
 *               B      - string length if A == 0xFF
-*		VALTYP - same as A
-*		FP0    - argument to USRn
+*               VALTYP - same as A
+*               FP0    - argument to USRn
 *       exit:   FP0    - result (no registers defined)
 *
 ****************************************************************************/
@@ -63,7 +63,7 @@ options         starting line #
                 .opt    basic line 10
                 .opt    basic incr 10
                 .opt    basic code 20
-
+                
 **************************************************************************/
 
 struct format_basic

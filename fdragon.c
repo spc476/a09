@@ -165,7 +165,7 @@ static bool fdragon_org(struct format *fmt,struct opcdata *opd)
     }
     else
     {
-      dragon->load = opd->value.value;      
+      dragon->load = opd->value.value;
       dragon->org  = true;
     }
   }

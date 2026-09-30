@@ -368,7 +368,7 @@ static bool add_define(struct a09 *a09,char const *def)
   if (define.len == 1)
     if ((toupper(define.text[0]) == 'A') || (toupper(define.text[0]) == 'B') || (toupper(define.text[0]) == 'D'))
       fprintf(stderr,"define '%*s' could be mistaken for register in index",define.len,define.text);
-  
+      
   sym = symbol_find(a09,&define);
   if (sym != NULL)
   {
