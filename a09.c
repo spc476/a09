@@ -883,7 +883,7 @@ static bool notest(struct a09 *a09,char const *list)
 {
   assert(a09  != NULL);
   
-  if (list == NULL) // XXX
+  if (list == NULL)
   {
     fprintf(stderr,OPT "x: missing list of tests\n");
     return false;
