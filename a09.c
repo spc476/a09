@@ -793,10 +793,9 @@ bool assemble_pass(struct a09 *a09,int pass)
   assert(pass    <= 2);
   
   label saved = a09->label;
+  a09->lnum   = 0;
   
   rewind(a09->in);
-  a09->lnum  = 0;
-  
   message(a09,MSG_DEBUG,"Pass %d",pass);
   
   if (a09->runtests)
