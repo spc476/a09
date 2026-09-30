@@ -1452,25 +1452,10 @@ static bool pseudo_include(struct opcdata *opd)
   if ((opd->pass == 2) && (opd->a09->list != NULL))
   {
     print_list(opd->a09,opd,false);
-    fprintf(
-      opd->a09->list,
-      "                            %*s| FILE %s\n",
-      opd->a09->list_pad,"",
-      filename.buf
-    );
     opd->includehack = true;
   }
   
   rc = assemble_pass(opd->a09,opd->pass);
-  
-  if ((opd->pass == 2) && (opd->a09->list != NULL))
-  {
-    fprintf(
-      opd->a09->list,
-      "                            %*s| END-OF-LINE\n",
-      opd->a09->list_pad,""
-    );
-  }
   
   symbol_find(opd->a09,&(label){ .text = "__INCLUDED__" , .len = 12})->value--;
   

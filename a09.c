@@ -806,6 +806,16 @@ bool assemble_pass(struct a09 *a09,int pass)
   if (!a09->format.pass_start(&a09->format,a09,pass))
     return false;
     
+  if ((pass == 2) && (a09->listfile != NULL))
+  {
+    fprintf(
+      a09->list,
+      "                            %*s| FILE %s\n",
+      a09->list_pad,"",
+      a09->infile
+    );
+  }
+  
   while(!feof(a09->in))
   {
     if (!read_line(a09,a09->in,&a09->inbuf))
@@ -813,6 +823,15 @@ bool assemble_pass(struct a09 *a09,int pass)
     a09->lnum++;
     if (!parse_line(a09,&a09->inbuf,pass))
       return false;
+  }
+  
+  if ((pass == 2) && (a09->listfile != NULL))
+  {
+    fprintf(
+      a09->list,
+      "                            %*s| END-OF-LINE\n",
+      a09->list_pad,""
+    );
   }
   
   if (!a09->format.pass_end(&a09->format,a09,pass))
@@ -1449,13 +1468,6 @@ int main(int argc,char *argv[])
       perror(a09.listfile);
       return cleanup(&a09,false);
     }
-    
-    fprintf(
-      a09.list,
-      "                            %*s| FILE %s\n",
-      a09.list_pad,"",
-      a09.infile
-    );
   }
   
   /*-----------------------------------------------------------------------
