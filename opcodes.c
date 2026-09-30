@@ -1410,9 +1410,10 @@ static bool pseudo_include(struct opcdata *opd)
   assert(opd      != NULL);
   assert(opd->a09 != NULL);
   
-  struct buffer filename;
-  bool          rc;
-  struct a09    new = *opd->a09;
+  FILE          *in     = opd->a09->in;
+  char const    *infile = opd->a09->infile;
+  struct buffer  filename;
+  bool           rc;
   
   if (!parse_string(opd->a09,&filename,opd->buffer))
     return false;
@@ -1420,65 +1421,62 @@ static bool pseudo_include(struct opcdata *opd)
   assert(filename.widx < sizeof(filename.buf));
   filename.buf[filename.widx++] = '\0';
   
-  new.inbuf = (struct buffer){ .buf = {0}, .widx = 0 , .ridx = 0 };
-  new.in    = fopen(filename.buf,"r");
+  opd->a09->in = fopen(filename.buf,"r");
   
-  if (new.in == NULL)
+  if (opd->a09->in == NULL)
   {
     char incfile[FILENAME_MAX];
     
     for (size_t i = 0 ; i < opd->a09->nincs ; i++)
     {
       snprintf(incfile,sizeof(incfile),"%s" DS "%s",opd->a09->includes[i],filename.buf);
-      new.in = fopen(incfile,"r");
-      if (new.in != NULL)
+      opd->a09->in = fopen(incfile,"r");
+      if (opd->a09->in != NULL)
       {
-        new.infile = add_file_dep(&new,incfile);
+        opd->a09->infile = add_file_dep(opd->a09,incfile);
         break;
       }
     }
   }
   else
-    new.infile = add_file_dep(&new,filename.buf);
+    opd->a09->infile = add_file_dep(opd->a09,filename.buf);
     
-  if (new.in == NULL)
+  if (opd->a09->in == NULL)
   {
-    opd->a09->deps  = new.deps;
-    opd->a09->ndeps = new.ndeps;
+    opd->a09->in = in;
     return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
   }
   
-  symbol_find(&new,&(label){ .text = "__INCLUDED__" , .len = 12})->value++;
+  symbol_find(opd->a09,&(label){ .text = "__INCLUDED__" , .len = 12})->value++;
   
-  if ((opd->pass == 2) && (new.list != NULL))
+  if ((opd->pass == 2) && (opd->a09->list != NULL))
   {
     print_list(opd->a09,opd,false);
     fprintf(
-      new.list,
+      opd->a09->list,
       "                            %*s| FILE %s\n",
       opd->a09->list_pad,"",
       filename.buf
     );
     opd->includehack = true;
   }
-  rc = assemble_pass(&new,opd->pass);
   
-  if ((opd->pass == 2) && (new.list != NULL))
+  rc = assemble_pass(opd->a09,opd->pass);
+  
+  if ((opd->pass == 2) && (opd->a09->list != NULL))
   {
     fprintf(
-      new.list,
+      opd->a09->list,
       "                            %*s| END-OF-LINE\n",
       opd->a09->list_pad,""
     );
   }
   
-  symbol_find(&new,&(label){ .text = "__INCLUDED__" , .len = 12})->value--;
+  symbol_find(opd->a09,&(label){ .text = "__INCLUDED__" , .len = 12})->value--;
   
-  fclose(new.in);
-  opd->a09->pc     = new.pc;
-  opd->a09->symtab = new.symtab;
-  opd->a09->deps   = new.deps;
-  opd->a09->ndeps  = new.ndeps;
+  fclose(opd->a09->in);
+  opd->a09->in = in;
+  opd->a09->infile = infile;
   return rc;
 }
 
