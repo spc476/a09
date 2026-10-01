@@ -142,7 +142,7 @@ bool message(struct a09 *a09,char const *restrict tag,char const *restrict fmt,.
   ;------------------------------------------------------------------------*/
   
   if (a09->infile == NULL)
-    return true;
+    return tag == MSG_ERROR ? false : true;
     
   if ((tag == MSG_DEBUG) && !a09->debug)
     return true;
