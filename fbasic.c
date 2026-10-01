@@ -186,11 +186,7 @@ static bool fbasic_pass_start(struct format *fmt,struct a09 *a09,int pass)
   (void)a09;
   assert((pass == 1) || (pass == 2));
   
-  fmt->Float = freal__msfp;
-  symbol_find(a09,&(label){ .text = "__IEEE_754__" , .len = 12})->value = 0;
-  symbol_find(a09,&(label){ .text = "__MSFP__"     , .len =  8})->value = 1;
-  symbol_find(a09,&(label){ .text = "__LBFP__"     , .len =  8})->value = 0;
-  
+  set_msfp(fmt,a09,pass);
   if (pass == 2)
   {
     struct format_basic *basic = fmt->data;
