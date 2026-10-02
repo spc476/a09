@@ -2253,7 +2253,7 @@ static bool pseudo_if(struct opcdata *opd)
     return message(opd->a09,MSG_ERROR,"E0058: value for IF must be defined for pass 1");
     
   if (opd->value.value == 0)
-    skip_block(opd);
+    return skip_block(opd);
   return true;
 }
 
@@ -2276,7 +2276,7 @@ static bool pseudo_ifdef(struct opcdata *opd)
   sym = symbol_find(opd->a09,&label);
   
   if (sym == NULL)
-    skip_block(opd);
+    return skip_block(opd);
   return true;
 }
 
@@ -2299,7 +2299,7 @@ static bool pseudo_ifndef(struct opcdata *opd)
   sym = symbol_find(opd->a09,&label);
   
   if (sym != NULL)
-    skip_block(opd);
+    return skip_block(opd);
   return true;
 }
 
@@ -2377,7 +2377,7 @@ static bool pseudo_ifnot(struct opcdata *opd)
     return message(opd->a09,MSG_ERROR,"E0058: value for IF must be defined for pass 1");
     
   if (opd->value.value != 0)
-    skip_block(opd);
+    return skip_block(opd);
   return true;
 }
 
