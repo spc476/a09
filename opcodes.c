@@ -401,7 +401,7 @@ static bool parse_operand(struct opcdata *opd)
       return message(opd->a09,MSG_ERROR,"E0021: syntax error in index mode");
   }
   
-  opd->buffer->ridx--; // ungetc()
+  opd->buffer->ridx--; /*  ungetc() */
   
   /*------------------------------------------------------------------------
   ; Special case here, A,r B,r or D,r needs to be checked, if the 2nd next
@@ -423,7 +423,7 @@ static bool parse_operand(struct opcdata *opd)
       case 'B':
            opd->ecycles        += 1;
            opd->value.postbyte  = acc_register(c);
-           opd->buffer->ridx   += 2; // skip comma
+           opd->buffer->ridx   += 2; /* skip comma */
            c = toupper(opd->buffer->buf[opd->buffer->ridx]);
            switch(c)
            {
@@ -2397,19 +2397,19 @@ bool parse_op(struct buffer *buffer,struct opcode const **pop)
   static struct opcode const opcodes[] =
   {
                /*  HNZVC */
-    { ".ASSERT" , ""      , pseudo__assert ,  0 , 0x00 , 0x00 , false } , // test
+    { ".ASSERT" , ""      , pseudo__assert ,  0 , 0x00 , 0x00 , false } , /* test */
     { ".CODE"   , ""      , pseudo__code   ,  0 , 0x00 , 0x00 , false } ,
     { ".DP"     , ""      , pseudo__dp     ,  0 , 0x00 , 0x00 , false } ,
-    { ".ENDTST" , ""      , pseudo__endtst ,  0 , 0x00 , 0x00 , false } , // test
+    { ".ENDTST" , ""      , pseudo__endtst ,  0 , 0x00 , 0x00 , false } , /* test */
     { ".ERROR"  , ""      , pseudo__error  ,  0 , 0x00 , 0x00 , false } ,
     { ".FLOAT"  , ""      , pseudo__float  ,  0 , 0x00 , 0x00 , false } ,
     { ".FLOATD" , ""      , pseudo__float  ,  0 , 0x01 , 0x00 , false } ,
-    { ".NOTEST" , ""      , pseudo__notest ,  0 , 0x00 , 0x00 , false } , // test
+    { ".NOTEST" , ""      , pseudo__notest ,  0 , 0x00 , 0x00 , false } , /* test */
     { ".OPT"    , ""      , pseudo__opt    ,  0 , 0x00 , 0x00 , false } ,
     { ".PCLE"   , ""      , pseudo__pcle   ,  0 , 0x00 , 0x00 , false } ,
-    { ".TEST"   , ""      , pseudo__test   ,  0 , 0x00 , 0x00 , false } , // test
-    { ".TROFF"  , ""      , pseudo__troff  ,  0 , 0x00 , 0x00 , false } , // test
-    { ".TRON"   , ""      , pseudo__tron   ,  0 , 0x00 , 0x00 , false } , // test
+    { ".TEST"   , ""      , pseudo__test   ,  0 , 0x00 , 0x00 , false } , /* test */
+    { ".TROFF"  , ""      , pseudo__troff  ,  0 , 0x00 , 0x00 , false } , /* test */
+    { ".TRON"   , ""      , pseudo__tron   ,  0 , 0x00 , 0x00 , false } , /* test */
     { ".WARN"   , ""      , pseudo__warn   ,  0 , 0x00 , 0x00 , false } ,
     { "ABX"     , "-----" , op_inh         ,  3 , 0x3A , 0x00 , BYTE  } ,
     { "ADCA"    , "aaaaa" , op_idie        ,  2 , 0x89 , 0x00 , BYTE  } ,
@@ -2422,7 +2422,7 @@ bool parse_op(struct buffer *buffer,struct opcode const **pop)
     { "ANDB"    , "-aa0-" , op_idie        ,  2 , 0xC4 , 0x00 , BYTE  } ,
     { "ANDCC"   , "?????" , op_andcc       ,  3 , 0x1C , 0x00 , BYTE  } ,
     { "ASCII"   , ""      , pseudo_ascii   ,  0 , 0x00 , 0x00 , false } ,
-    { "ASL"     , "?aaaa" , op_die         ,  4 , 0x08 , 0x00 , BYTE  } , // two less than listed
+    { "ASL"     , "?aaaa" , op_die         ,  4 , 0x08 , 0x00 , BYTE  } , /* two less than listed */
     { "ASLA"    , "?aaaa" , op_inh         ,  2 , 0x48 , 0x00 , BYTE  } ,
     { "ASLB"    , "?aaaa" , op_inh         ,  2 , 0x58 , 0x00 , BYTE  } ,
     { "ASR"     , "?aa-a" , op_die         ,  4 , 0x07 , 0x00 , BYTE  } ,
@@ -2493,7 +2493,7 @@ bool parse_op(struct buffer *buffer,struct opcode const **pop)
     { "INCBIN"  , ""      , pseudo_incbin  ,  0 , 0x00 , 0x00 , false } ,
     { "INCLUDE" , ""      , pseudo_include ,  0 , 0x00 , 0x00 , false } ,
     { "JMP"     , "-----" , op_die         ,  1 , 0x0E , 0x00 , BYTE  } ,
-    { "JSR"     , "-----" , op_die         ,  5 , 0x8D , 0x00 , BYTE  } , // see below
+    { "JSR"     , "-----" , op_die         ,  5 , 0x8D , 0x00 , BYTE  } , /* see STA */
     { "LBCC"    , "-----" , op_lbr         ,  5 , 0x24 , 0x10 , WORD  } ,
     { "LBCS"    , "-----" , op_lbr         ,  5 , 0x25 , 0x10 , WORD  } ,
     { "LBEQ"    , "-----" , op_lbr         ,  5 , 0x27 , 0x10 , WORD  } ,
@@ -2552,20 +2552,20 @@ bool parse_op(struct buffer *buffer,struct opcode const **pop)
     { "ROR"     , "-aa-a" , op_die         ,  4 , 0x06 , 0x00 , BYTE  } ,
     { "RORA"    , "-aa-a" , op_inh         ,  2 , 0x46 , 0x00 , BYTE  } ,
     { "RORB"    , "-aa-a" , op_inh         ,  2 , 0x56 , 0x00 , BYTE  } ,
-    { "RTI"     , "-----" , op_inh         ,  6 , 0x3B , 0x00 , BYTE  } , // pessimistic value, 6 if FIRQ
+    { "RTI"     , "-----" , op_inh         ,  6 , 0x3B , 0x00 , BYTE  } , /* pessimistic value, 6 if FIRQ */
     { "RTS"     , "-----" , op_inh         ,  5 , 0x39 , 0x00 , BYTE  } ,
     { "SBCA"    , "?aaaa" , op_idie        ,  2 , 0x82 , 0x00 , BYTE  } ,
     { "SBCB"    , "?aaaa" , op_idie        ,  2 , 0xC2 , 0x00 , BYTE  } ,
     { "SET"     , ""      , pseudo_set     ,  0 , 0x00 , 0x00 , false } ,
     { "SETDP"   , ""      , pseudo_setdp   ,  0 , 0x00 , 0x00 , false } ,
     { "SEX"     , "-aa0-" , op_inh         ,  2 , 0x1D , 0x00 , BYTE  } ,
-    { "STA"     , "-aa0-" , op_die         ,  2 , 0x87 , 0x00 , BYTE  } , // even though the
-    { "STB"     , "-aa0-" , op_die         ,  2 , 0xC7 , 0x00 , BYTE  } , // immediate mode
-    { "STD"     , "-aa0-" , op_die         ,  3 , 0xCD , 0x00 , WORD  } , // is invalid for
-    { "STS"     , "-aa0-" , op_die         ,  4 , 0xCF , 0x10 , WORD  } , // these instructions,
-    { "STU"     , "-aa0-" , op_die         ,  3 , 0xCF , 0x00 , WORD  } , // include the value
-    { "STX"     , "-aa0-" , op_die         ,  3 , 0x8F , 0x00 , WORD  } , // here because the
-    { "STY"     , "-aa0-" , op_die         ,  4 , 0x8F , 0x10 , WORD  } , // way the code works
+    { "STA"     , "-aa0-" , op_die         ,  2 , 0x87 , 0x00 , BYTE  } , /* even though the     */
+    { "STB"     , "-aa0-" , op_die         ,  2 , 0xC7 , 0x00 , BYTE  } , /* immediate mode      */
+    { "STD"     , "-aa0-" , op_die         ,  3 , 0xCD , 0x00 , WORD  } , /* is invalid for      */
+    { "STS"     , "-aa0-" , op_die         ,  4 , 0xCF , 0x10 , WORD  } , /* these instructions, */
+    { "STU"     , "-aa0-" , op_die         ,  3 , 0xCF , 0x00 , WORD  } , /* include the value   */
+    { "STX"     , "-aa0-" , op_die         ,  3 , 0x8F , 0x00 , WORD  } , /* here because the    */
+    { "STY"     , "-aa0-" , op_die         ,  4 , 0x8F , 0x10 , WORD  } , /* way the code works  */
     { "SUBA"    , "?aaaa" , op_idie        ,  2 , 0x80 , 0x00 , BYTE  } ,
     { "SUBB"    , "?aaaa" , op_idie        ,  2 , 0xC0 , 0x00 , BYTE  } ,
     { "SUBD"    , "-aaaa" , op_idie        ,  4 , 0x83 , 0x00 , WORD  } ,

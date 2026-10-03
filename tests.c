@@ -2229,7 +2229,7 @@ bool test_init(struct a09 *a09)
     a09->tests->inittestpc = 0xE000;
     a09->tests->testpc     = 0xE000;
     a09->tests->resumepc   = 0x0000;
-    a09->tests->fill       = 0x01; // illegal instruction
+    a09->tests->fill       = 0x01; /* illegal instruction */
     a09->tests->tron       = false;
     a09->tests->timing     = false;
     a09->tests->errbuf[0]  = '\0';

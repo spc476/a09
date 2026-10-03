@@ -542,7 +542,7 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
     {
       if (opd->data)
       {
-        size_t c = 0; // # byte columns printed
+        size_t c = 0; /* # byte columns printed */
         fprintf(a09->list,"%04X: ",a09->pc);
         for (size_t i = 0 ; i < opd->sz ; i++,c++)
           fprintf(a09->list,"%02X",opd->bytes[i]);
@@ -556,8 +556,8 @@ bool print_list(struct a09 *a09,struct opcdata *opd,bool labelonly)
       }
       else
       {
-        size_t i = 0; // index into opd->bytes[]
-        size_t c = 0; // # byte columns printed
+        size_t i = 0; /* index into opd->bytes[] */
+        size_t c = 0; /* # byte columns printed  */
         
         fprintf(a09->list,"%04X: %02X",a09->pc,opd->bytes[i++]);
         c++;
@@ -717,7 +717,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   if (isEOL(c))
     return print_list(a09,&opd,true);
     
-  a09->inbuf.ridx--; // ungetc()
+  a09->inbuf.ridx--; /*  ungetc() */
   
   if (!parse_op(&a09->inbuf,&opd.op))
     return message(a09,MSG_ERROR,"E0003: unknown opcode");
