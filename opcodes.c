@@ -1451,10 +1451,7 @@ static bool pseudo_include(struct opcdata *opd)
   symbol_find(opd->a09,&(label){ .text = "__INCLUDED__" , .len = 12})->value++;
   
   if ((opd->pass == 2) && (opd->a09->list != NULL))
-  {
     print_list(opd->a09,opd,false);
-    opd->includehack = true;
-  }
   
   rc = assemble_pass(opd->a09,opd->pass);
   
