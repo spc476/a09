@@ -403,14 +403,11 @@ bool read_line(struct a09 *a09,FILE *in,struct buffer *buffer)
     if (c == EOF)
     {
       if (buffer->widx == 0)
-      {
-        buffer->buf[0] = '\0';
-        return true;
-      }
+        break;
       else
         return message(a09,MSG_ERROR,"E0010: unexpected end of input");
     }
-    if (c == '\n')
+    else if (c == '\n')
       break;
     else if ((c == '\t') || ((c >= ' ') && (c <= '~')))
     {

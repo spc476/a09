@@ -20,7 +20,7 @@
 #
 #############################################################################
 
-CC      = gcc -std=c99 -pedantic -Wall -Wextra -Wwrite-strings
+CC      = gcc -std=c99 -pedantic -Wall -Wextra -Wwrite-strings -fmerge-all-constants
 CFLAGS  = -g
 LDFLAGS = -g
 LDLIBS  = -lcgi8 -lmc6809 -lm
