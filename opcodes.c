@@ -1412,6 +1412,7 @@ static bool pseudo_include(struct opcdata *opd)
   
   FILE          *in     = opd->a09->in;
   char const    *infile = opd->a09->infile;
+  size_t         lnum   = opd->a09->lnum;
   struct buffer  filename;
   bool           rc;
   
@@ -1462,6 +1463,7 @@ static bool pseudo_include(struct opcdata *opd)
   fclose(opd->a09->in);
   opd->a09->in     = in;
   opd->a09->infile = infile;
+  opd->a09->lnum   = lnum;
   return rc;
 }
 
