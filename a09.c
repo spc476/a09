@@ -641,7 +641,7 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
   assert(buffer != NULL);
   assert((pass == 1) || (pass == 2));
   
-  int            c;
+  char           c;
   bool           rc;
   struct opcdata opd =
   {
@@ -666,8 +666,8 @@ static bool parse_line(struct a09 *a09,struct buffer *buffer,int pass)
       .defined      = false,
       .external     = false,
     },
-    .bits        = 16,
-    .pcrel       = false,
+    .bits     = 16,
+    .pcrel    = false,
   };
   
   if (parse_label(&opd.label,&a09->inbuf,a09,pass))
