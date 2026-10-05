@@ -41,8 +41,8 @@
     assert(arg->argv[0]             != NULL);
     assert(arg->argv[arg->argc - 1] != NULL);
     assert(arg->argc                >  0);
-    assert(arg->ci                  >  0);
-    assert(arg->ci                  <= arg->argc);
+    assert(arg->si                  >  0);
+    assert(arg->si                  <= arg->argc);
     return 1;
   }
 #endif
@@ -57,8 +57,8 @@ void arg_init(struct arg *arg,char **argv,int argc)
   
   arg->argv = argv;
   arg->argc = argc;
-  arg->ci   = 1; /* skip program name */
-  arg->si   = 0;
+  arg->si   = 1; /* skip program name */
+  arg->ci   = 0;
 }
 
 /**************************************************************************/
@@ -67,36 +67,36 @@ char arg_next(struct arg *arg)
 {
   assert(check_arg(arg));
   
-  if (arg->ci == arg->argc)
+  if (arg->si == arg->argc)
     return '\0';
     
-  if (arg->si == 0)
+  if (arg->ci == 0)
   {
-    assert(arg->argv[arg->ci][0] != '\0');
-    if (arg->argv[arg->ci][0] != *OPT)
+    assert(arg->argv[arg->si][0] != '\0');
+    if (arg->argv[arg->si][0] != *OPT)
       return '\0';
-    arg->si++;
-    if (arg->argv[arg->ci][1] == '\0')
-      return '\0';
-  }
-  
-  if (arg->argv[arg->ci][arg->si] == '\0')
-  {
     arg->ci++;
-    arg->si = 0;
-    if ((arg->ci == arg->argc) || (arg->argv[arg->ci][0] != *OPT))
+    if (arg->argv[arg->si][1] == '\0')
       return '\0';
   }
   
-  if (arg->argv[arg->ci][arg->si] == *OPT)
+  if (arg->argv[arg->si][arg->ci] == '\0')
+  {
     arg->si++;
+    arg->ci = 0;
+    if ((arg->si == arg->argc) || (arg->argv[arg->si][0] != *OPT))
+      return '\0';
+  }
+  
+  if (arg->argv[arg->si][arg->ci] == *OPT)
+    arg->ci++;
     
-  if (arg->argv[arg->ci][arg->si] == '\0')
+  if (arg->argv[arg->si][arg->ci] == '\0')
     return '\0';
-  else if (arg->argv[arg->ci][arg->si] == *OPT)
+  else if (arg->argv[arg->si][arg->ci] == *OPT)
     return '\0';
   else
-    return arg->argv[arg->ci][arg->si++];
+    return arg->argv[arg->si][arg->ci++];
 }
 
 /**************************************************************************/
@@ -107,22 +107,22 @@ char *arg_arg(struct arg *arg)
   
   assert(check_arg(arg));
   
-  if (arg->ci == arg->argc)
+  if (arg->si == arg->argc)
     return NULL;
     
-  if (arg->argv[arg->ci][arg->si] == '\0')
+  if (arg->argv[arg->si][arg->ci] == '\0')
   {
-    if (arg->ci == arg->argc - 1)
+    if (arg->si == arg->argc - 1)
       return NULL;
     else
-      p = arg->argv[++arg->ci];
+      p = arg->argv[++arg->si];
   }
   else
-    p = &arg->argv[arg->ci][arg->si];
+    p = &arg->argv[arg->si][arg->ci];
     
-  arg->ci++;
-  arg->si = 0;
-  assert(arg->ci <= arg->argc);
+  arg->si++;
+  arg->ci = 0;
+  assert(arg->si <= arg->argc);
   return p;
 }
 
@@ -131,10 +131,10 @@ char *arg_arg(struct arg *arg)
 int arg_done(struct arg *arg)
 {
   assert(check_arg(arg));
-  if (arg->si == 0)
-    return arg->ci;
+  if (arg->ci == 0)
+    return arg->si;
   else
-    return arg->ci + 1;
+    return arg->si + 1;
 }
 
 /**************************************************************************/

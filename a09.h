@@ -299,8 +299,8 @@ struct arg
 {
   char   **argv;
   size_t   argc;
-  size_t   ci;
-  size_t   si;
+  size_t   si; /* string index    */
+  size_t   ci; /* character index */
 };
 
 /**************************************************************************/
