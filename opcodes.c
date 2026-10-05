@@ -983,8 +983,8 @@ static bool op_lbr(struct opcdata *opd)
     opd->bytes[opd->sz++] = delta & 255;
   }
   
-  opd->mode    = AM_BRANCH;
-  opd->pcrel   = true;
+  opd->mode  = AM_BRANCH;
+  opd->pcrel = true;
   return true;
 }
 
