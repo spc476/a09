@@ -633,10 +633,12 @@ static bool parse_operand(struct opcdata *opd)
     case 'P':
          if (toupper(opd->buffer->buf[opd->buffer->ridx]) != 'C')
            return message(opd->a09,MSG_ERROR,"E0016: invalid index register");
-         opd->pcrel = true;
          opd->buffer->ridx++;
          if (toupper(opd->buffer->buf[opd->buffer->ridx]) == 'R')
+         {
+           opd->pcrel = true;
            opd->buffer->ridx++;
+         }
          if (!check_pc_register(opd->a09,opd->buffer->buf[opd->buffer->ridx]))
            return false;
            
