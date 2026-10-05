@@ -1424,7 +1424,17 @@ static bool pseudo_include(struct opcdata *opd)
   
   opd->a09->in = fopen(filename.buf,"r");
   
-  if (opd->a09->in == NULL)
+  if (opd->a09->in != NULL)
+  {
+    /*---------------------------------------------------------------------
+    ; GCC -fanalyzer seems to get confused that I'm assigning the result of
+    ; fopen() to a structure, claiming that the reference is lost on the
+    ; following line.  It's not lost.  You have been warned.
+    ;----------------------------------------------------------------------*/
+    
+    opd->a09->infile = add_file_dep(opd->a09,filename.buf);
+  }
+  else
   {
     char incfile[FILENAME_MAX];
     
@@ -1438,14 +1448,14 @@ static bool pseudo_include(struct opcdata *opd)
         break;
       }
     }
-  }
-  else
-    opd->a09->infile = add_file_dep(opd->a09,filename.buf);
     
-  if (opd->a09->in == NULL)
-  {
-    opd->a09->in = in;
-    return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
+    if (opd->a09->in == NULL)
+    {
+      opd->a09->in = in;
+      assert(opd->a09->infile == infile);
+      assert(opd->a09->lnum   == lnum);
+      return message(opd->a09,MSG_ERROR,"E0042: %s: '%s'",filename.buf,strerror(errno));
+    }
   }
   
   symbol_find(opd->a09,&(label){ .text = "__INCLUDED__" , .len = 12})->value++;
