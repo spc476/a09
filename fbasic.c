@@ -323,14 +323,13 @@ static bool fbasic_align(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol const *sym)
+static bool fbasic_end(struct format *fmt,struct opcdata *opd)
 {
   assert(fmt          != NULL);
   assert(fmt->data    != NULL);
   assert(fmt->backend == BACKEND_BASIC);
   assert(opd          != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
-  (void)sym;
   
   if (opd->pass == 2)
   {
@@ -382,9 +381,9 @@ static bool fbasic_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     
     if (basic->exec)
     {
-      if (sym == NULL)
+      if (!opd->value.defined)
         return message(opd->a09,MSG_ERROR,"E0111: missing label on END directive");
-      fprintf(opd->a09->out,":EXEC%u",sym->value);
+      fprintf(opd->a09->out,":EXEC%u",opd->value.value);
     }
     
     fputc('\n',opd->a09->out);

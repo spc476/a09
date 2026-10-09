@@ -1231,8 +1231,8 @@ static bool pseudo_setdp(struct opcdata *opd)
 
 static bool pseudo_end(struct opcdata *opd)
 {
-  struct symbol *sym = NULL;
-  label          label;
+  //struct symbol *sym = NULL;
+  //label          label;
   char           c;
   
   assert(opd != NULL);
@@ -1242,14 +1242,10 @@ static bool pseudo_end(struct opcdata *opd)
   if (!isEOL(c))
   {
     opd->buffer->ridx--;
-    
-    if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))
-      return message(opd->a09,MSG_ERROR,"E0050: not a label");
-    sym = symbol_find(opd->a09,&label);
-    if ((sym != NULL) && (opd->pass == 2))
-      sym->refs++;
+    if (!expr(&opd->value,opd->a09,opd->buffer,opd->pass))
+      return message(opd->a09,MSG_ERROR,"E0050: bad value for ORG");
   }
-  return opd->a09->format.end(&opd->a09->format,opd,sym);
+  return opd->a09->format.end(&opd->a09->format,opd);
 }
 
 /**************************************************************************/

@@ -124,7 +124,7 @@ static bool fdragon_align(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool fdragon_end(struct format *fmt,struct opcdata *opd,struct symbol const *sym)
+static bool fdragon_end(struct format *fmt,struct opcdata *opd)
 {
   assert(fmt          != NULL);
   assert(fmt->data    != NULL);
@@ -136,9 +136,9 @@ static bool fdragon_end(struct format *fmt,struct opcdata *opd,struct symbol con
   {
     struct format_dragon *dragon = fmt->data;
     
-    if (sym == NULL)
+    if (!opd->value.defined)
       return message(opd->a09,MSG_ERROR,"E0111: missing label on END directive");
-    dragon->exec = sym->value;
+    dragon->exec = opd->value.value;
   }
   
   return true;

@@ -208,11 +208,7 @@ static bool fsrec_pass_end(struct format *fmt,struct a09 *a09,int pass)
 
 /**************************************************************************/
 
-static bool fsrec_end(
-        struct format       *fmt,
-        struct opcdata      *opd,
-        struct symbol const *sym
-)
+static bool fsrec_end(struct format *fmt,struct opcdata *opd)
 {
   assert(fmt          != NULL);
   assert(fmt->data    != NULL);
@@ -229,9 +225,9 @@ static bool fsrec_end(
       
     if (format->idx > 0)
       write_record(opd->a09->out,'1',format->addr,format->buffer,format->idx);
-    if (!format->override && (sym != NULL))
-      write_record(opd->a09->out,'9',sym->value,NULL,0);
-    else if (sym != NULL)
+    if (!format->override && opd->value.defined)
+      write_record(opd->a09->out,'9',opd->value.value,NULL,0);
+    else if (opd->value.defined)
       write_record(opd->a09->out,'9',format->exec,NULL,0);
     format->endf  = true;
     format->execf = true;

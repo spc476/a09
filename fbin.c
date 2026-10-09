@@ -113,7 +113,7 @@ bool format_bin_init(struct a09 *a09)
     .dp         = fdefault,
     .code       = fdefault,
     .align      = fbin_align,
-    .end        = fdefault_end,
+    .end        = fdefault,
     .org        = fbin_org,
     .rmb        = fbin_rmb,
     .setdp      = fdefault,

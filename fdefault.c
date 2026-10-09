@@ -57,16 +57,6 @@ bool fdefault(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-bool fdefault_end(struct format *fmt,struct opcdata *opd,struct symbol const *sym)
-{
-  (void)fmt;
-  (void)opd;
-  (void)sym;
-  return true;
-}
-
-/**************************************************************************/
-
 bool fdefault_write(
         struct format  *fmt,
         struct opcdata *opd,

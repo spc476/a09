@@ -157,7 +157,7 @@ struct format
   bool (*dp)        (struct format *,struct opcdata *);
   bool (*code)      (struct format *,struct opcdata *);
   bool (*align)     (struct format *,struct opcdata *);
-  bool (*end)       (struct format *,struct opcdata *,struct symbol const *);
+  bool (*end)       (struct format *,struct opcdata *);
   bool (*org)       (struct format *,struct opcdata *);
   bool (*rmb)       (struct format *,struct opcdata *);
   bool (*setdp)     (struct format *,struct opcdata *);
@@ -353,7 +353,6 @@ extern bool                  format_srec_init   (struct a09 *);
 extern bool                  format_basic_init  (struct a09 *);
 extern bool                  format_dragon_init (struct a09 *);
 extern bool                  fdefault           (struct format *,struct opcdata *);
-extern bool                  fdefault_end       (struct format *,struct opcdata *,struct symbol const *);
 extern bool                  fdefault_cmdline   (struct format *,struct a09 *,struct arg *,char);
 extern bool                  fdefault_pass      (struct format *,struct a09 *,int);
 extern bool                  fdefault_write     (struct format *,struct opcdata *,void const *,size_t,bool);

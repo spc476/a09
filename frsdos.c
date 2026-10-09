@@ -172,7 +172,7 @@ static bool frsdos_align(struct format *fmt,struct opcdata *opd)
 
 /**************************************************************************/
 
-static bool frsdos_end(struct format *fmt,struct opcdata *opd,struct symbol const *sym)
+static bool frsdos_end(struct format *fmt,struct opcdata *opd)
 {
   assert(fmt          != NULL);
   assert(fmt->data    != NULL);
@@ -198,7 +198,7 @@ static bool frsdos_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     hdr[1] = 0;
     hdr[2] = 0;
     
-    if (sym == NULL)
+    if (!opd->value.defined)
     {
       if (format->exec)
         return message(opd->a09,MSG_ERROR,"E0111: missing label on END directive");
@@ -207,8 +207,8 @@ static bool frsdos_end(struct format *fmt,struct opcdata *opd,struct symbol cons
     }
     else
     {
-      hdr[3] = sym->value >>   8;
-      hdr[4] = sym->value &  255;
+      hdr[3] = opd->value.value >>   8;
+      hdr[4] = opd->value.value &  255;
     }
     
     if (fwrite(hdr,1,sizeof(hdr),opd->a09->out) != sizeof(hdr))
@@ -275,7 +275,7 @@ static bool frsdos_end(struct format *fmt,struct opcdata *opd,struct symbol cons
         
       if (format->exec)
       {
-        idx += snprintf(&buffer[idx],sizeof(buffer) - idx,":EXEC%u",sym->value);
+        idx += snprintf(&buffer[idx],sizeof(buffer) - idx,":EXEC%u",opd->value.value);
         assert(idx < sizeof(buffer));
       }
       
