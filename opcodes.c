@@ -985,6 +985,8 @@ static bool op_lbr(struct opcdata *opd)
   
   opd->mode  = AM_BRANCH;
   opd->pcrel = true;
+  if ((opd->op->opcode != 0x16) && (opd->op->opcode != 0x17))
+    opd->acycles = 6;
   return true;
 }
 
