@@ -1231,14 +1231,10 @@ static bool pseudo_setdp(struct opcdata *opd)
 
 static bool pseudo_end(struct opcdata *opd)
 {
-  //struct symbol *sym = NULL;
-  //label          label;
-  char           c;
-  
   assert(opd != NULL);
   assert((opd->pass == 1) || (opd->pass == 2));
   
-  c = skip_space(opd->buffer);
+  char c = skip_space(opd->buffer);
   if (!isEOL(c))
   {
     opd->buffer->ridx--;
