@@ -66,7 +66,7 @@ E0065: Internal error---expression parser mismatch
 E0066: expression too complex
 E0067: IFDEF missing label
 E0068: label must be defined on pass 1
-E0069: IFDEF missing label
+E0069: IFNDEF missing label
 E0070: %s: %s
 E0071: string too long
 E0072: can't use USR and DEFUSRn at the same time

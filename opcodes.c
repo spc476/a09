@@ -2295,7 +2295,7 @@ static bool pseudo_ifndef(struct opcdata *opd)
   char           c = skip_space(opd->buffer);
   
   if (isEOL(c))
-    return message(opd->a09,MSG_ERROR,"E0069: IFDEF missing label");
+    return message(opd->a09,MSG_ERROR,"E0069: IFNDEF missing label");
   opd->buffer->ridx--;
   if (!parse_label(&label,opd->buffer,opd->a09,opd->pass))
     return message(opd->a09,MSG_ERROR,"E0068: label must be defined on pass 1");
