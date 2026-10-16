@@ -1270,6 +1270,26 @@ static void dump_symbols(FILE *out,tree__s *tree)
 
 /**************************************************************************/
 
+static bool copyfile(FILE *out,FILE *in)
+{
+  assert(out != NULL);
+  assert(in  != NULL);
+  
+  while (!feof(in))
+  {
+    char   buffer[BUFSIZ];
+    size_t bytes = fread(buffer,1,sizeof(buffer),in);
+    if (ferror(in))
+      return false;
+    fwrite(buffer,1,bytes,out);
+    if (ferror(out))
+      return false;
+  }
+  return true;
+}
+
+/**************************************************************************/
+
 static int cleanup(struct a09 *a09,bool success)
 {
   assert(a09 != NULL);
@@ -1391,21 +1411,10 @@ int main(int argc,char *argv[])
       return cleanup(&a09,false);
     }
     
-    while(!feof(stdin))
+    if (!copyfile(a09.in,stdin))
     {
-      char   buffer[BUFSIZ];
-      size_t bytes = fread(buffer,1,sizeof(buffer),stdin);
-      if (ferror(stdin))
-      {
-        message(&a09,MSG_ERROR,"E0083: can't process input");
-        return cleanup(&a09,false);
-      }
-      fwrite(buffer,1,bytes,a09.in);
-      if (ferror(a09.in))
-      {
-        message(&a09,MSG_ERROR,"E0083: can't process input");
-        return cleanup(&a09,false);
-      }
+      message(&a09,MSG_ERROR,"E0083: can't process input");
+      return cleanup(&a09,false);
     }
   }
   else
@@ -1496,21 +1505,10 @@ int main(int argc,char *argv[])
   if (a09.outfile[0] == '\0')
   {
     rewind(a09.out);
-    while(!feof(a09.out))
+    if (!copyfile(stdout,a09.out))
     {
-      char buffer[BUFSIZ];
-      size_t bytes = fread(buffer,1,sizeof(buffer),a09.out);
-      if (ferror(a09.out))
-      {
-        message(&a09,MSG_ERROR,"E0040: failed writing object file");
-        return cleanup(&a09,false);
-      }
-      fwrite(buffer,1,bytes,stdout);
-      if (ferror(stdout))
-      {
-        message(&a09,MSG_ERROR,"E0040: failed writing object file");
-        return cleanup(&a09,false);
-      }
+      message(&a09,MSG_ERROR,"E0040: failed writing object file");
+      return cleanup(&a09,false);
     }
   }
   
