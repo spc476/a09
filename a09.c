@@ -1308,7 +1308,7 @@ static int cleanup(struct a09 *a09,bool success)
   {
     if (a09->listfile && a09->error)
       remove(a09->listfile);
-    if (a09->outfile[0] != '\0')
+    if ((a09->outfile != NULL) && (a09->outfile[0] != '\0'))
       remove(a09->outfile);
   }
   
