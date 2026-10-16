@@ -1288,7 +1288,8 @@ static int cleanup(struct a09 *a09,bool success)
   {
     if (a09->listfile && a09->error)
       remove(a09->listfile);
-    remove(a09->outfile);
+    if (a09->outfile[0] != '\0')
+      remove(a09->outfile);
   }
   
   a09->format.fini(&a09->format,a09);
@@ -1443,7 +1444,7 @@ int main(int argc,char *argv[])
   if (a09.outfile == NULL)
   {
     a09.outfile = "";
-    a09.out     = freopen(NULL,"wb",stdout);
+    a09.out     = tmpfile();
   }
   else
     a09.out = fopen(a09.outfile,"wb");
@@ -1490,6 +1491,27 @@ int main(int argc,char *argv[])
     fprintf(a09.list,"\n");
     dump_symbols(a09.list,a09.symtab);
     fclose(a09.list);
+  }
+  
+  if (a09.outfile[0] == '\0')
+  {
+    rewind(a09.out);
+    while(!feof(a09.out))
+    {
+      char buffer[BUFSIZ];
+      size_t bytes = fread(buffer,1,sizeof(buffer),a09.out);
+      if (ferror(a09.out))
+      {
+        message(&a09,MSG_ERROR,"E0040: failed writing object file");
+        return cleanup(&a09,false);
+      }
+      fwrite(buffer,1,bytes,stdout);
+      if (ferror(stdout))
+      {
+        message(&a09,MSG_ERROR,"E0040: failed writing object file");
+        return cleanup(&a09,false);
+      }
+    }
   }
   
   return cleanup(&a09,rc);
