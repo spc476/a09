@@ -53,7 +53,7 @@
 #  define DS             "/"
 #endif
 
-#define OC        "\t" OPT
+#define OC       "\t" OPT
 #define ITEMS(x) (sizeof(x) / sizeof(x[0]))
 
 enum
